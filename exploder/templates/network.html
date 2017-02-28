@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-6">
+        <h2>About this application</h2>
+        <p>Block Exploder is an open-source blockchain explorer made by the <a href="http://gamecredits.com">GameCredits</a> team.</p>
+        <table class="table">
+            <tr>
+                <th>Last indexed block</th>
+                <td>
+                    <a href="{{ url_for('block_details', identifier=last_indexed_block) }}">{{ last_indexed_block }}</a>
+                </td>
+            </tr>
+            <tr>
+                <th>Blockchain size</th>
+                <td>{{ disk_usages.blockchain_size }}</td>
+            </tr>
+            <tr>
+                <th>Exploder DB size</th>
+                <td>{{ disk_usages.database_size }}</td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <div class="well node-information">
+            <p>
+               Node information
+            </p>
+            <script type="text/template" class="js-network-template">
+                <div class="table-responsive">
+                    <table class="table">
+                        <tr>
+                            <th>Blockchain height</th>
+                            <td><%= client.blocks %></td>
+                        </tr>
+                        <tr>
+                            <th>Client connections</th>
+                            <td><%= client.connections %></td>
+                        </tr>
+                        <tr>
+                            <th>Difficulty</th>
+                            <td><%= client.difficulty %></td>
+                        </tr>
+                        <tr>
+                            <th>Protocol version</th>
+                            <td><%= client.protocolversion %></td>
+                        </tr>
+                        <tr>
+                            <th>Version</th>
+                            <td><%= client.version %></td>
+                        </tr>
+                        <tr>
+                            <th>Wallet version</th>
+                            <td><%= client.walletversion %></td>
+                        </tr>
+                    </table>
+                </div>
+            </script>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

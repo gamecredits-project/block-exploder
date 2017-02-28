@@ -1,0 +1,54 @@
+- name: Add FLASK_APP envar to .bashrc
+  lineinfile: >
+    dest={{ ansible_env.HOME }}/.bashrc
+    line="export FLASK_APP=__init__.py"
+    state=present
+    insertafter=EOF
+
+- name: Creates the new app version directory
+  file: path={{ ansible_env.HOME }}/code_new state=directory
+
+- name: Pull the latest version of the code from the repo
+  git: >
+    clone=yes 
+    dest={{ ansible_env.HOME }}/code_new
+    repo=git@bitbucket.org:Gamecred/game-etl-proxy.git
+    version={{ branch_name }}
+    accept_hostkey=True
+
+- name: Copy the configuration file template
+  template: src=templates/config.py dest={{ ansible_env.HOME }}/code_new/proxy/proxy/config.py
+
+- name: Install the requirements
+  pip: requirements={{ ansible_env.HOME }}/code_new/proxy/requirements.txt virtualenv=~/.virtualenvs/{{ venv_name }}
+
+- name: Run the tests 
+  command: "{{ ansible_env.HOME }}/.virtualenvs/{{ venv_name }}/bin/pytest"
+  args:
+    chdir="requirements={{ ansible_env.HOME }}/code_new/proxy/"
+  register: test_output
+
+- name: Upgrade the database
+  command: "{{ ansible_env.HOME }}/.virtualenvs/{{ venv_name }}/bin/flask db upgrade" 
+  args:
+    chdir: "{{ ansible_env.HOME }}/code_new/proxy/proxy"
+  environment:
+        FLASK_APP: "__init__.py"
+
+- name: Debug the test_output
+  debug: var=test_output
+
+- name: Delete the old /code directory
+  file: path=/code state=absent
+  become: True
+
+- name: If tests have passed move this to the /code directory
+  command: mv {{ ansible_env.HOME }}/code_new /code
+  become: True
+
+- name: Restart Gunicorn and Celery
+  supervisorctl: name={{ item }} state=restarted
+  become: True
+  with_items:
+    - gunicorn
+    - celery

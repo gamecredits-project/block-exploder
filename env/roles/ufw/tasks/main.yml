@@ -1,0 +1,15 @@
+- name: Install ufw (firewall manager)
+  apt: name=ufw update_cache=yes state=present
+  become: True
+
+- name: Enable ufw
+  ufw: state=enabled policy=deny
+  become: True
+  
+- name: Enable ssh
+  ufw: rule=allow port=ssh
+  become: True
+
+- name: Limit ssh attempts
+  ufw: rule=limit port=ssh
+  become: True

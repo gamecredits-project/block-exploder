@@ -1,0 +1,15 @@
+- name: Configure the block explorer server
+  hosts: 127.0.0.1
+  connection: local
+  roles:
+    - common
+    - ufw
+    - supervisor
+    - gamecreditsd
+  vars:
+    - client_rpc_user: "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
+    - client_rpc_password: "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
+    - client_rpc_port: 8332
+    - venv_name: "venv"
+    - vpn_deny: ""
+    - regtest: ""

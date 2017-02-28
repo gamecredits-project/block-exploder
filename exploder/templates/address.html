@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="row">
+    <div class="col-xs-12">
+        <h2>
+            GameCredits Address <small>Addresses are identifiers which you use to send bitcoins to another person.</small>
+        </h2>
+        <div class="table-responsive">
+            <table class="table">
+                <tr>
+                    <th>Address</th>
+                    <td>{{ address.address }}</td>
+                </tr>
+                <tr>
+                    <th>Total transactions</th>
+                    <td>{{ address.transactions|length }} transactions</td>
+                </tr>
+                <tr>
+                    <th>Total received</th>
+                    <td>{{ address.total_received }} GAME</td>
+                </tr>
+            </table>
+        </div>
+        <h5>Last 20 transactions</h5>
+        {% for transaction in address.transactions %}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <a href="{{ url_for('transaction_details', txid=transaction.txid) }}">
+                {{ transaction.txid }}
+            </a>
+            <span class="pull-right"><i class="fa fa-calendar"></i> {{ transaction.time }}</span>
+          </div>
+          <div class="panel-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><b>Inputs</b></p>
+                    <ul class="list-unstyled">
+                      {% if not transaction.inputs %}
+                      <li>No Inputs (Newly Generated Coins)</li>
+                      {% endif %}
+                      {% for input in transaction.inputs %}
+                      <li>{{ input.txid }}</li>
+                      {% endfor %}
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <p><b>Outputs</b></p>
+                    <ul class="list-unstyled">
+                      {% for output in transaction.vout %}
+                      <li>Addresses: {{ output.addresses }}, amount sent: {{ output.value }}</li>
+                      {% endfor %}
+                    </ul>
+                </div>
+            </div>
+          </div>
+          <div class="panel-footer text-right">
+              <b>Total:</b> {{ transaction.total }} GAME
+          </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

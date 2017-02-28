@@ -1,0 +1,11 @@
+# Deployment script
+# How to run example:
+# ansible-playbook deploy.yml --extra-vars "branch_name=release-0.3.4 app_version=0.3.4 vars_file=~/ansible-vars-files/proxy-production-vars.yml"
+- name: Configure the proxy server
+  hosts: proxy-production
+  user: gcproxymain
+  roles:
+    - deploy-app
+  vars_files:
+    - "{{ vars_file }}"
+    

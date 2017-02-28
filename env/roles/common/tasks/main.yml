@@ -1,0 +1,22 @@
+- name: Install python virtualenv
+  apt: name=python-virtualenv state=present update_cache=yes
+  become: True
+
+- name: Install python pip
+  apt: name=python-pip state=present update_cache=yes
+  become: True
+
+- name: Install git
+  apt: name=git state=present update_cache=yes
+  become: True
+
+- name: Install unzip
+  apt: name=unzip state=present update_cache=yes
+  become: True
+
+- name: Add locale envar to .bashrc
+  lineinfile: >
+    dest={{ ansible_env.HOME }}/.bashrc
+    line="export LC_ALL='en_US.UTF-8'"
+    state=present
+    insertafter=EOF
