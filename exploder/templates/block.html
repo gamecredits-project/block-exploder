@@ -77,9 +77,13 @@
                 <tr>
                     <td>Next Block</td>
                     <td>
-                    <a href="{{ url_for('block_details', identifier=block.nextblockhash) }}">
+                        {% if block.nextblockhash %}
+                        <a href="{{ url_for('block_details', identifier=block.nextblockhash) }}">
                             {{ block.nextblockhash|truncate(32) }}
                         </a>
+                        {% else %}
+                        Next block doesn't exist (this is the newest block)
+                        {% endif %}
                     </td>
                 </tr>
             </table>
