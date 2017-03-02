@@ -5,6 +5,7 @@ setup(
     packages=['exploder', 'blocker'],
     include_package_data=True,
     install_requires=[
+        'setuptools',
         'flask',
         'appdirs',
         'backports.shutil-get-terminal-size',

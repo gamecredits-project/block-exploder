@@ -2,12 +2,9 @@ import datetime
 
 from flask import Flask, render_template, jsonify, request
 from blocker.core import Blockchain
-from flask_humanize import Humanize
 
 app = Flask(__name__)
 app.config.from_object('exploder.config.Development')
-
-humanize = Humanize(app)
 
 chain = Blockchain(
     rpc_user=app.config['RPC_USER'],
@@ -80,9 +77,16 @@ def transaction_details(txid):
         return "Transaction with txid %s doesn't exist" % txid, 404
 
     transaction.confirmations = chain.calculate_transaction_confirmations(transaction)
-    transaction.time = datetime.datetime.fromtimestamp(transaction.time).strftime("%Y-%m-%d %H:%M:%S")
 
-    transaction.blocktime = datetime.datetime.fromtimestamp(transaction.blocktime).strftime("%Y-%m-%d %H:%M:%S")
+    if transaction.time:
+        transaction.time = datetime.datetime.fromtimestamp(transaction.time).strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        transaction.time = "Not mined yet"
+
+    if transaction.blocktime:
+        transaction.blocktime = datetime.datetime.fromtimestamp(transaction.blocktime).strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        transaction.blocktime = "Not mined yet"
 
     return render_template("transaction.html", transaction=transaction)
 

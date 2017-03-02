@@ -1,1 +1,3 @@
 block-explorer ansible_ssh_host=88.99.173.136 ansible_ssh_private_key_file=/home/divic/.ssh/id_rsa ansible_ssh_user=gameadmin
+blockexplorer ansible_ssh_host=127.0.0.1 ansible_ssh_port=2222 ansible_ssh_private_key_file=/mnt/c/Users/divic/.vagrant.d/insecure_private_key ansible_ssh_user=vagrant
+

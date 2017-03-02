@@ -1,0 +1,12 @@
+- name: Update bashrc, add exploder environment variables
+  lineinfile:
+    dest=~/.bashrc
+    line={{ item }}
+    state=present
+    insertafter=EOF
+    create=True
+  with_items:
+    - "export FLASK_DEBUG=True"
+    - "export RPC_USER={{ client_rpc_user }}"
+    - "export RPC_PASSWORD={{ client_rpc_password }}"
+    - "export DATADIR_PATH={{ ansible_env.HOME }}/.gamecredits"

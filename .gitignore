@@ -2,3 +2,5 @@
 *.retry
 **/*.pyc
 *.cprofile
+exploder.egg-info/*
+*.zip

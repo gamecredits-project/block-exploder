@@ -1,0 +1,22 @@
+# sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+- name: Add mongo apt key
+  apt_key: keyserver=hkp://keyserver.ubuntu.com:80 state=present id=EA312927
+  become: True
+
+# echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+- name: Add apt repository to for mongo
+  apt_repository: filename=mongodb-org-3.2 repo="deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" state=present update_cache=yes
+  become: True
+
+# sudo apt-get install -y mongodb-org
+- name: Install mongodb
+  apt: name=mongodb-org state=present
+  become: True
+
+- name: Copy the mongodb supervisor conf file
+  copy: src=files/mongod-supervisor.conf dest=/etc/supervisor/conf.d/mongod-supervisor.conf
+  become: True
+
+- name: Start the mongod supervisor process
+  supervisorctl: name=mongod state=present
+  become: True

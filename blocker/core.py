@@ -25,6 +25,8 @@ class Block(object):
         self.merkleroot = block_dict['merkleroot']
 
         # Links
+        # TODO: write it like this
+        # self.nexblockhash = block_dict.get('nextblockhash')
         if 'nextblockhash' in block_dict:
             self.nextblockhash = block_dict['nextblockhash']
         else:
@@ -171,7 +173,19 @@ class AddressTransaction(object):
 class Blockchain(object):
     @property
     def height(self):
-        return int(self.blocks.find_one(sort=[("height", -1)])["height"])
+        highest_block = self._get_highest_block()
+
+        if highest_block:
+            return int(highest_block.height)
+        else:
+            return 0
+
+    @height.setter
+    def height(self, value):
+        pass
+
+    def _get_highest_block(self):
+        return Block(self.blocks.find_one(sort=[("height", -1)]))
 
     def __init__(self, rpc_user, rpc_password, datadir_path=DATADIR_PATH):
         self.mongo = MongoClient()
@@ -181,7 +195,6 @@ class Blockchain(object):
         self.blocks = self.exploder_db.blocks
         self.transactions = self.exploder_db.transactions
         self.addresses = self.exploder_db.addresses
-        self.variables = self.exploder_db.variables
 
         self.datadir_path = datadir_path
 
@@ -190,54 +203,62 @@ class Blockchain(object):
                                     % (rpc_user, rpc_password))
 
     def sync(self, limit=None):
-        block_count = self.rpc.getblockcount()
+        """
+        Syncs the database with the blockchain.
 
+        @return: the number of synced blocks
+        """
+        block_count = self.rpc.getblockcount()
         highest_known = self.height
 
         blocks = []
         addresses = []
         transactions = []
 
-        if highest_known < block_count:
-            print("[%s] Sync started. Last synced block: %s, blockchain height: %s"
-                  % (datetime.now(), highest_known, block_count))
-        else:
-            return
+        # If the db is up to date there's nothing to sync
+        if not (highest_known < block_count):
+            return 0
 
+        print("[%s] Sync started. Last synced block: %s, blockchain height: %s"
+              % (datetime.now(), highest_known, block_count))
+
+        # If the db is multiple blocks behind the blockchain
+        # start the sync in bulk mode, for better performance
+        bulk_insert = False
         if block_count - highest_known > 1:
-            print("Behind %s blocks. Starting bulk sync." % (block_count - highest_known))
+            print("[BULK] Behind %s blocks. Starting bulk sync." % (block_count - highest_known))
             bulk_insert = True
-        else:
-            print("New block mined, height: %s" % block_count)
-            bulk_insert = False
 
         for i in xrange(highest_known + 1, block_count + 1):
-
+            # Check if sync has reached the (user provided) limit
             if limit and i > highest_known + limit:
-                print("Synced %s blocks [LIMIT]")
+                print("[LIMIT] Synced %s blocks")
                 break
 
+            # Initialize the i-th Block
             blockhash = self.rpc.getblockhash(i)
             block_dict = self.rpc.getblock(blockhash)
             block = Block(block_dict)
 
-            # In the first iteration check if the current
-            # last known block doesnt have nextblockhash set
-            # and update it if its not
+            # In the first iteration: check if the current last known block
+            # doesn't have nextblockhash, and set it if needed
             if i == highest_known + 1:
-                last_known_block = self.get_block(highest_known)
+                last_known_block = self._get_highest_block()
 
-                if not last_known_block.nextblockhash:
+                if last_known_block and not last_known_block.nextblockhash:
                     last_known_block.update_nextblockhash(block.hash, self.blocks)
 
+            # This list holds all of the transactions for the current block
             block_transactions = []
             for txid in block_dict['tx']:
                 try:
+                    # Initialize the transaction
                     tr_dict = self.rpc.getrawtransaction(txid, 1)
                     transaction = Transaction(tr_dict)
-
                     block_transactions.append(transaction)
 
+                    # If not in bulk insert mode
+                    # write it to the db immediately
                     if not bulk_insert:
                         self.put_transaction(transaction)
 
@@ -296,6 +317,7 @@ class Blockchain(object):
                 self.put_many_blocks(blocks)
 
         print("[%s] Sync complete." % datetime.now())
+        return i - highest_known
 
     ################################
     # TRANSACTION

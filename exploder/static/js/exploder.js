@@ -106,10 +106,8 @@ $(function(){
     getBlocks(BLOCKS_PER_PAGE, blocksOffset, showBlocks);
   });
 
-  
-  if($latestBlocksTable.length > 0){
-    window.setInterval(function(){
-      $.ajax({
+  function getLatestBlocks() {
+    $.ajax({
         url: '/blocks/latest',
       }).done(function(data){
           $latestBlocksTable.find("tbody").html("");
@@ -121,13 +119,10 @@ $(function(){
       }).fail(function(jqXHR, textStatus){
         console.error(textStatus);
       });
-    }, 60000);
   }
 
-  if($latestTransactionsTable.length > 0) {
-    window.setInterval(function(){
-      console.log("Refres");
-      $.ajax({
+  function getLatestTransactions() {
+    $.ajax({
         url: '/transactions/latest',
       }).done(function(data){
           $latestTransactionsTable.find("tbody").html("");
@@ -139,7 +134,20 @@ $(function(){
       }).fail(function(jqXHR, textStatus){
         console.error(textStatus);
       });
-    }, 1000);
+  }
+
+  if($latestBlocksTable.length > 0){
+    getLatestBlocks();
+    window.setInterval(function(){
+      getLatestBlocks();
+    }, 60000);
+  }
+
+  if($latestTransactionsTable.length > 0) {
+    getLatestTransactions();
+    window.setInterval(function(){
+      getLatestTransactions();
+    }, 60000);
   }
 
   function getBlocks(number, offset, callback) {

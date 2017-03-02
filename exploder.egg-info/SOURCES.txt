@@ -1,4 +1,11 @@
+setup.py
+blocker/__init__.py
+blocker/core.py
+blocker/exploder.py
+blocker/tests.py
+blocker/utils.py
 exploder/__init__.py
+exploder/config.py
 exploder.egg-info/PKG-INFO
 exploder.egg-info/SOURCES.txt
 exploder.egg-info/dependency_links.txt
