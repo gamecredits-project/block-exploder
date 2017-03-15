@@ -15,10 +15,10 @@
                 <div class="col-md-6">
                     <p><b>Inputs</b></p>
                     <ol class="list-unstyled">
-                      {% if not transaction.inputs %}
+                      {% if not transaction.vin %}
                       <li>No Inputs (Newly Generated Coins)</li>
                       {% endif %}
-                      {% for input in transaction.inputs %}
+                      {% for input in transaction.vin %}
                       <li>{{ input.txid }}</li>
                       {% endfor %}
                     </ol>
