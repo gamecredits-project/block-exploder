@@ -4,6 +4,7 @@ import subprocess
 import copy
 from pymongo import MongoClient
 import humanize
+from datparser.parser import BlockchainParser
 
 DATABASE_DIRECTORY = "/home/vagrant/.blocker"
 DATADIR_PATH = "/home/vagrant/.gamecredits"
@@ -197,6 +198,7 @@ class Blockchain(object):
         self.addresses = self.exploder_db.addresses
 
         self.datadir_path = datadir_path
+        self.dat_parser = BlockchainParser(os.path.join(self.datadir_path, 'blocks'))
 
         # RPC_USER and RPC_PASSWORD are set in the bitcoin.conf file
         self.rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
@@ -214,6 +216,8 @@ class Blockchain(object):
         blocks = []
         addresses = []
         transactions = []
+
+        rpc_sync = False
 
         # If the db is up to date there's nothing to sync
         if not (highest_known < block_count):
@@ -236,8 +240,12 @@ class Blockchain(object):
                 break
 
             # Initialize the i-th Block
-            blockhash = self.rpc.getblockhash(i)
-            block_dict = self.rpc.getblock(blockhash)
+            if rpc_sync:
+                blockhash = self.rpc.getblockhash(i)
+                block_dict = self.rpc.getblock(blockhash)
+            else:
+                parsed_block = next(self.dat_parser)
+                
             block = Block(block_dict)
 
             # In the first iteration: check if the current last known block
