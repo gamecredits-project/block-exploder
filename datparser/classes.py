@@ -56,6 +56,8 @@ class ParsedBlock(object):
             print "Problematic block: %s" % self.header.hash
             raise
 
+        self.chain = None
+
     @property
     def block_work(self):
         # Block work is calculated as 2^256 / (target + 1)
@@ -164,6 +166,8 @@ class ParsedTransaction(object):
         tr_bytes = stream.read(tr_end - tr_start)
         self.txid = double_sha(tr_bytes, reverse=True)
 
+        self.total = round(sum([vout.value for vout in self.vout]), 8)
+
     def to_dict(self):
         formatted = copy.deepcopy(self.__dict__)
 
@@ -182,10 +186,10 @@ class ParsedTransaction(object):
 class ParsedTransactionInput(object):
     def __init__(self, stream, coinbase=False):
         if not coinbase:
-            self.prevhash = hash32(stream)
-            self.tx_out_id = uint4(stream)
+            self.prev_txid = hash32(stream)
+            self.vout_index = uint4(stream)
             script_len = varint(stream)
-            self.script_sig = binascii.hexlify(stream.read(script_len))
+            self.hex = binascii.hexlify(stream.read(script_len))
             self.sequence = uint4(stream)
         else:
             # Throw away these values for coinbase ParsedTransactions
