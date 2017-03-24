@@ -91,7 +91,7 @@ class BlockchainParser(object):
                 # if not has_length(dat, 80):
                 #     self.filepos = 0
 
-                # parsed += 1
+                parsed += 1
 
                 yield block
 

@@ -25,6 +25,8 @@ class ScriptOperator(enum.Enum):
 
 class ParsedBlock(object):
     def __init__(self, stream):
+        self.dat_file = stream.name
+        self.block_start = stream.tell()
         # Skip first 4 bytes bcs the contain the magic number
         # which is a protocol identifier and always the same
         stream.seek(4, 1)
@@ -56,7 +58,11 @@ class ParsedBlock(object):
             print "Problematic block: %s" % self.header.hash
             raise
 
-        self.chain = None
+        self.block_end = stream.tell()
+
+        self.nextblockhash = None
+        self.height = None
+        self.chainwork = None
 
     @property
     def block_work(self):
@@ -67,12 +73,25 @@ class ParsedBlock(object):
         return int(float(2 ** 256) / (self.target + 1))
 
     def to_dict(self):
-        formatted = copy.deepcopy(self.__dict__)
-
-        for i in range(0, len(formatted['tx'])):
-            formatted['tx'][i] = formatted['tx'][i].to_dict()
-
-        return formatted
+        return {
+            "hash": self.hash,
+            "size": self.size,
+            "height": self.height,
+            "version": self.version,
+            "merkleroot": self.merkleroot,
+            "tx": [tr.txid for tr in self.tx],
+            "time": self.time,
+            "nonce": self.nonce,
+            "bits": self.bits,
+            "difficulty": self.difficulty,
+            "chainwork": self.chainwork,
+            "previousblockhash": self.previousblockhash,
+            "nextblockhash": self.nextblockhash,
+            "target": self.target,
+            "dat_file": self.dat_file,
+            "block_start": self.block_start,
+            "block_end": self.block_end
+        }
 
     def __str__(self):
         return json.dumps(self.to_dict(), indent=4)
@@ -169,13 +188,20 @@ class ParsedTransaction(object):
         self.total = round(sum([vout.value for vout in self.vout]), 8)
 
     def to_dict(self):
-        formatted = copy.deepcopy(self.__dict__)
+        formatted = {
+            "txid": self.txid,
+            "version": self.version,
+            "locktime": self.locktime,
+            "total": self.total,
+            "vin": [],
+            "vout": []
+        }
 
-        for i in range(0, len(formatted['vin'])):
-            formatted['vin'][i] = formatted['vin'][i].to_dict()
+        for vin in self.vin:
+            formatted['vin'].append(vin.to_dict())
 
-        for i in range(0, len(formatted['vout'])):
-            formatted['vout'][i] = formatted['vout'][i].to_dict()
+        for vout in self.vout:
+            formatted['vout'].append(vout.to_dict())
 
         return formatted
 

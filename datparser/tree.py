@@ -1,10 +1,13 @@
 import sys
 from collections import deque
-from pymongo import MongoClient
 from factories import BlockFactory, VinFactory, VoutFactory
+from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+
 
 MAIN_CHAIN = 0
 PERSIST_EVERY = 1000  # blocks
+RPC_USER = "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
+RPC_PASSWORD = "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
 
 
 # TODO: Rename to blockchain
@@ -44,6 +47,9 @@ class ChainTree(object):
         self.block_factory = BlockFactory()
         self.vin_factory = VinFactory()
         self.vout_factory = VoutFactory()
+
+        self.rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
+                                    % (RPC_USER, RPC_PASSWORD))
 
     def add_block(self, block):
         if self.coinbase is None:
@@ -112,6 +118,7 @@ class ChainTree(object):
             if new_node.chainwork > self.best_chain.chainwork:
                 print "[RECONVERGE] Reconverge, new top is now %s" % new_node.block_hash
                 self.best_chain = new_node
+                self.num_convergences += 1
 
                 self.reconverge(block)
 
@@ -119,7 +126,6 @@ class ChainTree(object):
 
     def persist_block(self, block, chain):
         # Write block to cache and flush to database if necessary
-        # If block is on the main chain write his trs, vins and vouts
         mongo_block = self.block_factory.parsed_to_dict(block, chain)
 
         # Persist the block
@@ -168,12 +174,14 @@ class ChainTree(object):
             if parent['chain'] == MAIN_CHAIN:
                 first_in_sidechain_hash = current['hash']
 
+            current = parent
+
         # Save tne fork points hash
         fork_point_hash = current['hash']
 
         # Traverse down the fork point and mark all main chain nodes part
         # of the sidechain
-        while 'nextblockhash' in current:
+        while current['nextblockhash'] is not None:
             next_block = self.find_block(current['nextblockhash'])
             self.update_block(next_block['hash'], {"chain": self.num_forks + 1})
             current = next_block
