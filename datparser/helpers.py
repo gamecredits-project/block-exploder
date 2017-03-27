@@ -62,3 +62,20 @@ def double_sha(input_bytes, reverse=False):
         hash = hash[::-1]
 
     return binascii.hexlify(hash)
+
+
+def is_block_file(path):
+    return path[-4:] == '.dat' and path[:3] == 'blk'
+
+
+def calculate_work(target):
+    return int(float(2 ** 256) / (target + 1))
+
+
+def calculate_target(bits):
+    # Extract exponent and coefficient from bits
+    exp = int(bits[2:4], 16)
+    coef = int(bits[4:], 16)
+
+    # Calculate target, formula from Mastering Bitcoin book
+    return coef * 2 ** (8 * (exp - 3))
