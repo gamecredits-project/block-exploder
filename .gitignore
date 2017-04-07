@@ -4,3 +4,4 @@
 *.cprofile
 exploder.egg-info/*
 *.zip
+.cache

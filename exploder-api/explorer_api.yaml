@@ -1,0 +1,317 @@
+swagger: '2.0'
+info:
+  title: GAME Blockchain Explorer API
+  description: Explore the GameCredits Network
+  version: "0.0.1"
+basePath: /api
+produces:
+  - application/json
+paths:
+  /blocks/latest:
+    get:
+      summary: Latest blocks
+      operationId: api.latest_blocks
+      description: |
+        List latest  <limit> blocks in the GameCredit blockchain and skip <offset> blocks
+      parameters:
+        - name: limit
+          in: query
+          description: Number of blocks to return.
+          required: true
+          type: integer
+          minimum: 1
+          maximum: 50
+        - name: offset
+          in: query
+          description: Number of blocks to skip.
+          required: false
+          type: integer
+          minimum: 0
+          default: 0
+      tags:
+        - Blocks
+      responses:
+        200:
+          description: An array of blocks
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Block'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /blocks/{block_hash}:
+    get:
+      tags: 
+        - Blocks
+      operationId: api.get_block
+      summary: Get a single block by hash
+      parameters:
+        - $ref: '#/parameters/block_hash'
+      responses:
+        200:
+          description: Return block
+          schema:
+            $ref: '#/definitions/Block'
+        404:
+          description: Block with given hash doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /transactions:
+    get:
+      tags:
+        - Transactions
+      operationId: api.get_transactions
+      summary: Get transactions filtered by blockhash or address
+      parameters:
+        - name: blockhash
+          in: query
+          description: Block identifier.
+          required: false
+          type: string
+        - name: address
+          in: query
+          description: GameCredits address
+          required: false
+          type: string
+      responses:
+        200:
+          description: Return array of transactions filtered by blockhash or address
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+        400:
+          description: Provide at least one filter - blockhash or address
+        404:
+          description: Block with given hash doesn't exist or given address doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /transactions/{txid}:
+    get:
+      tags:
+        - Transactions
+      operationId: api.get_transaction
+      summary: Get a single transaction by ID
+      parameters:
+        - $ref: '#/parameters/txid'
+      responses:
+        200:
+          description: Return transaction
+          schema:
+            $ref: '#/definitions/Transaction'
+        404:
+          description: Transaction with given ID not found
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /transactions/send:
+    post:
+      operationId: api.send_raw_transaction
+      summary: Submit a raw transaction to the GameCredits network
+      consumes:
+        - application/json
+      parameters:
+        - name: hex
+          in: formData
+          description: Raw transaction in hexadecimal format
+          required: true
+          type: string
+      responses:
+        200:
+          description: Transmitted the transaction successfully
+        400:
+          description: Bad transaction
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /unspent:
+    get:
+      operationId: api.get_unspent
+      summary: Return all unspent outputs for a given address
+      parameters:
+        - name: address
+          in: query
+          description: GameCredits address
+          required: true
+          type: string
+      responses:
+          200:
+            description: An array of transaction outputs
+            schema:
+              type: array
+              items:
+                $ref: '#/definitions/Vout'
+          404:
+            description: Given address doesn't appear in any known transaction
+          default:
+            description: Unexpected error
+            schema:
+              $ref: '#/definitions/Error'
+parameters:
+  block_hash:
+    name: block_hash
+    description: Unique block identifier
+    in: path
+    type: string
+    required: true
+  txid:
+    name: txid
+    description: Unique transaction identifier
+    in: path
+    type: string
+    required: true
+definitions:
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
+
+  Transaction:
+    type: object
+    properties:
+      txid:
+        type: string
+        description: Unique identifier of a transaction
+      blocktime:
+        type: integer
+        description: |
+          Unix timestamp representing the time the block 
+          containing this transaction was mined
+      version:
+        type: integer
+        description: A version number to track software/protocol upgrades
+      blockhash:
+        type: string
+        description: Identifier of the block containing this transaction
+      locktime:
+        type: string
+        description: Transaction lock time
+      total:
+        type: number
+        format: float
+        description: Total value transfered in this transaction
+      vin:
+        type: array
+        items:
+          $ref: '#/definitions/Vin'
+        description: List of transaction inputs
+      vout:
+        type: array
+        items:
+          $ref: '#/definitions/Vout'
+        description: List of transaction outputs
+
+  Vout:
+    type: object
+    properties:
+      index:
+        type: integer
+        description: Index of this output in the parent transaction
+      reqSigs:
+        type: integer
+        description: Number of signatures required to spend this transaction
+      value:
+        type: number
+        format: float
+        description: Value of this output in GAME
+      txid:
+        type: string
+        description: Identifier of the parent transaction
+      address:
+        type: string
+        description: Address this output is referencing
+      type:
+        type: string
+        description: Type of the output
+      asm:
+        type: string
+        description: Output Script
+
+  Vin:
+    type: object
+    properties:
+      vout_index:
+        type: integer
+        description: Index of the output to spend in it's containing transaction
+      prev_txid:
+        type: string
+        description: Identifier of the transaction containing the output to be spent
+      sequence:
+        type: integer
+        description: Sequence number
+      hex:
+        type: string
+        description: Input Script in hexadecimal format
+      txid:
+        type: string
+        description: Identifier of the parent transaction
+      coinbase:
+        type: string
+        description: Coinbase data for generation transactions
+  
+  Block:
+    type: object
+    properties:
+      hash:
+        type: string
+        description: Unique identifier, a hash of the block header
+      size:
+        type: number
+        description: Size of the block in bytes
+      height:
+        type: number
+        description: Position of the block in the blockchain
+      version:
+        type: number
+        description: A version number to track software/protocol upgrades
+      merkleroot:
+        type: string
+        description: Root of the merkle tree
+      tx:
+        type: array
+        items:
+          type: string
+        description: Array of id's of transactions in this block
+      time:
+        type: string
+        description: Unix timestamp representing the time when this block was mined
+      nonce:
+        type: number
+        description: A counter used for the proof-of-work algorithm
+      bits:
+        type: string
+        description: Difficulty bits in hexadeximal format
+      difficulty:
+        type: string
+        description: Mining difficulty in hexadecimal format
+      chainwork:
+        type: string
+        description: Cumulative work produced to get to this block in the chain
+      previousblockhash:
+        type: string
+        description: Hash of the previous block in the chain
+      nextblockhash:
+        type: string
+        description: Hash of the next block in the chain
+      target:
+        type: string
+        description: Mining target in hexadecimal format
+      total:
+        type: number
+        format: double
+        description: Total GAME transfered in all transactions inside this block

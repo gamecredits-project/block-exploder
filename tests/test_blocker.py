@@ -1,4 +1,5 @@
 import unittest
+
 from mock import patch, MagicMock, PropertyMock
 from exploder import chain as unmocked
 from blocker.core import Block, Transaction

@@ -1,6 +1,7 @@
 import struct
 import binascii
 import hashlib
+import os
 
 
 def uint1(stream):
@@ -42,6 +43,9 @@ def varint(stream):
 
 
 def has_length(stream, size):
+    if not os.path.isfile(stream.name):
+        return False
+
     curPos = stream.tell()
     stream.seek(0, 2)
 

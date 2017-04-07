@@ -15,17 +15,18 @@ class Block(object):
         # List of block transactions
         self.tx = kwargs.get('tx')
 
-        # Information about the blocks position
-        # in a dat file: {
+        # Information about the blocks position in a dat file:
+        # {
         #  "index": <index of dat file>
         #  "start": <block start byte>
         #  "end": <block end byte>
         # }
-        # None if block is loaded from RPC
         self.dat = kwargs.get('dat')
 
+        # Hash of the next block in the chain
         self.nextblockhash = kwargs.get('nextblockhash')
 
+        # Position of the block in the chain
         self.height = kwargs.get('height')
 
         # Cumulative amount of work done to get to this block
@@ -39,27 +40,16 @@ class Block(object):
         # Total amount in all transactions
         self.total = kwargs.get('total')
 
-    def to_mongo(self):
-        return {
-            "hash": self.hash,
-            "size": self.size,
-            "height": self.height,
-            "version": self.version,
-            "merkleroot": self.merkleroot,
-            "tx": self.tx,
-            "time": self.time,
-            "nonce": self.nonce,
-            "bits": self.bits,
-            "difficulty": self.difficulty,
-            "chainwork": hex(self.chainwork),
-            "previousblockhash": self.previousblockhash,
-            "nextblockhash": self.nextblockhash,
-            "target": hex(self.target),
-            "dat": self.dat,
-            "total": self.total,
-            "work": self.work,
-            "chain": self.chain
-        }
+    def __eq__(self, other):
+        """Override the default Equals behavior"""
+        if isinstance(other, self.__class__):
+            return self.hash == other.hash and self.previousblockhash == other.previousblockhash \
+                and self.height == other.height
+        return False
+
+    def __ne__(self, other):
+        """Define a non-equality test"""
+        return not self.__eq__(other)
 
 
 class BlockHeader(object):
@@ -98,6 +88,16 @@ class BlockHeader(object):
         # Block work
         self.work = kwargs.get('work')
 
+    def __eq__(self, other):
+        """Override the default Equals behavior"""
+        if isinstance(other, self.__class__):
+            return self.hash == other.hash and self.previousblockhash == other.previousblockhash
+        return False
+
+    def __ne__(self, other):
+        """Define a non-equality test"""
+        return not self.__eq__(other)
+
 
 class Transaction(object):
     def __init__(self, **kwargs):
@@ -118,50 +118,32 @@ class Transaction(object):
         # Total value of all outputs
         self.total = kwargs.get('total')
 
-    def to_mongo(self):
-        formatted = {
-            "version": self.version,
-            "locktime": self.locktime,
-            "txid": self.txid,
-            "vin": [],
-            "vout": [],
-            "total": self.total
-        }
+        # Hash of the block this transaction belongs to
+        self.blockhash = kwargs.get('blockhash')
 
-        for v in self.vin:
-            formatted['vin'].append({
-                "prev_txid": v.prev_txid,
-                "vout_index": v.vout_index,
-                "coinbase": v.coinbase
-            })
-
-        for v in self.vout:
-            formatted['vout'].append({
-                "addresses": v.addresses,
-                "type": v.type,
-                "value": v.value
-            })
-
-        return formatted
+        # Block mined time
+        self.blocktime = kwargs.get('blocktime')
 
 
 class Vin(object):
     def __init__(self, **kwargs):
-        self.prev_txid = kwargs.get('prev_txid')
-        self.vout_index = kwargs.get('vout_index')
-        self.hex = kwargs.get('hex')
-        self.sequence = kwargs.get('sequence')
-        self.coinbase = kwargs.get('coinbase')
+        # Identifier of the parent transaction
+        self.txid = kwargs.get('txid')
 
-    def to_mongo(self, spender_txid):
-        return {
-            "txid": spender_txid,
-            "prev_txid": self.prev_txid,
-            "vout_index": self.vout_index,
-            "hex": self.hex,
-            "sequence": self.sequence,
-            "coinbase": self.coinbase
-        }
+        # Identifier of the tr that holds the output to be spent
+        self.prev_txid = kwargs.get('prev_txid')
+
+        # Position of the output in previous transaction
+        self.vout_index = kwargs.get('vout_index')
+
+        # Spending script in hexadecimal format
+        self.hex = kwargs.get('hex')
+
+        # Sequence number
+        self.sequence = kwargs.get('sequence')
+
+        # Coinbase hex for generation transactions
+        self.coinbase = kwargs.get('coinbase')
 
 
 class Vout(object):
@@ -172,30 +154,6 @@ class Vout(object):
         self.addresses = kwargs.get('addresses')
         self.type = kwargs.get('type')
         self.reqSigs = kwargs.get('reqSigs')
+        self.txid = kwargs.get('txid')
+        self.index = kwargs.get('index')
 
-    def to_mongo(self, spender_txid, index):
-        formatted = []
-
-        if self.addresses:
-            for adr in self.addresses:
-                formatted.append({
-                    "txid": spender_txid,
-                    "index": index,
-                    "value": self.value,
-                    "asm": self.asm,
-                    "address": adr,
-                    "type": self.type,
-                    "reqSigs": self.reqSigs
-                })
-        else:
-            formatted = [{
-                "txid": spender_txid,
-                "index": index,
-                "value": self.value,
-                "asm": self.asm,
-                "address": None,
-                "type": self.type,
-                "reqSigs": self.reqSigs
-            }]
-
-        return formatted

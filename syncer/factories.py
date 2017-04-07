@@ -4,7 +4,7 @@ import enum
 
 from pybitcointools import bin_to_b58check, pubkey_to_address
 
-from classes import *
+from entities import *
 
 # GameCredits specific constants
 GAME_MAGIC_BYTE = 38
@@ -104,11 +104,11 @@ class BlockFactory(object):
             # First ParsedTransaction in a block is a "coinbase" transction
             # that transfers newly generated coins to a miner
             # and has a slightly different input format
-            tx = [TransactionFactory.from_stream(stream, coinbase=True)]
+            tx = [TransactionFactory.from_stream(stream, header.hash, header.time, coinbase=True)]
 
             # Append other ParsedTransactions (if there are any)
             for i in range(1, txcount):
-                tx.append(TransactionFactory.from_stream(stream))
+                tx.append(TransactionFactory.from_stream(stream, header.hash, header.time))
         except Exception:
             print "Problematic block: %s" % header.hash
             raise
@@ -173,7 +173,7 @@ class BlockFactory(object):
             size=rpc_block['size'],
             header=header,
             tx=rpc_block['tx'],
-            nextblockhash=rpc_block['nextblockhash'],
+            nextblockhash=rpc_block.get('nextblockhash'),
             height=rpc_block['height'],
             chainwork=int(rpc_block['chainwork'], 16),
         )
@@ -181,7 +181,7 @@ class BlockFactory(object):
 
 class TransactionFactory(object):
     @staticmethod
-    def from_stream(stream, coinbase=False):
+    def from_stream(stream, blockhash, blocktime, coinbase=False):
         tr_start = stream.tell()
 
         # A version number to track software/protocol upgrades
@@ -206,7 +206,7 @@ class TransactionFactory(object):
         vout_count = varint(stream)
 
         # Parse the ParsedTransaction outputs
-        vout = [VoutFactory.from_stream(stream) for i in range(0, vout_count)]
+        vout = [VoutFactory.from_stream(stream) for index in range(0, vout_count)]
 
         # ParsedTransaction locktime
         locktime = uint4(stream)
@@ -219,6 +219,15 @@ class TransactionFactory(object):
         tr_bytes = stream.read(tr_end - tr_start)
         txid = double_sha(tr_bytes, reverse=True)
 
+        # Set the output indexes and parent txid
+        for (i, v) in enumerate(vout):
+            v.txid = txid
+            v.index = i
+
+        # Set the input parent txids
+        for v in vin:
+            v.txid = txid
+
         total = round(sum([v.value for v in vout]), 8)
 
         return Transaction(
@@ -227,7 +236,53 @@ class TransactionFactory(object):
             vout=vout,
             locktime=locktime,
             txid=txid,
+            total=total,
+            blockhash=blockhash,
+            blocktime=blocktime
+        )
+
+    @staticmethod
+    def from_rpc(rpc_tr):
+        vin = [VinFactory.from_rpc(vin) for vin in rpc_tr['vin']]
+        vout = [VoutFactory.from_rpc(vout) for vout in rpc_tr['vout']]
+        total = sum([v.value for v in vout])
+
+        return Transaction(
+            version=rpc_tr['version'],
+            vin=vin,
+            vout=vout,
+            locktime=rpc_tr['locktime'],
+            txid=rpc_tr['txid'],
             total=total
+        )
+
+    @staticmethod
+    def from_mongo(tr):
+        vout = []
+        for v in tr['vout']:
+            vout.append({
+                "type": v["type"],
+                "addresses": v.get("addresses"),
+                "value": v.get("value")
+            })
+
+        vin = []
+        for v in tr['vin']:
+            vin.append({
+                "coinbase": v.get("coinbase"),
+                "vout_index": v.get("vout_index"),
+                "prev_txid": v.get("prev_txid")
+            })
+
+        return Transaction(
+            blocktime=tr['blocktime'],
+            version=tr['version'],
+            blockhash=tr['blockhash'],
+            vout=vout,
+            locktime=tr['locktime'],
+            total=tr['total'],
+            vin=vin,
+            txid=tr['txid']
         )
 
 
@@ -258,6 +313,21 @@ class VinFactory(object):
             return Vin(
                 coinbase=coinbase,
                 sequence=sequence
+            )
+
+    @staticmethod
+    def from_rpc(rpc_vin):
+        if 'coinbase' not in rpc_vin:
+            return Vin(
+                prev_txid=rpc_vin['txid'],
+                vout_index=rpc_vin['vout'],
+                hex=rpc_vin['scriptSig']['hex'],
+                sequence=rpc_vin['sequence'],
+            )
+        else:
+            return Vin(
+                coinbase=rpc_vin['coinbase'],
+                sequence=rpc_vin['sequence']
             )
 
 
@@ -371,4 +441,27 @@ class VoutFactory(object):
             addresses=addresses,
             type=script_type,
             reqSigs=reqSigs
+        )
+
+    @staticmethod
+    def from_rpc(rpc_vout):
+        return Vout(
+            value=float(rpc_vout['value']),
+            hex=rpc_vout['scriptPubKey']['hex'],
+            asm=rpc_vout['scriptPubKey']['asm'],
+            type=rpc_vout['scriptPubKey']['type'],
+            addresses=rpc_vout['scriptPubKey'].get('addresses'),
+            reqSigs=rpc_vout['scriptPubKey'].get('reqSigs'),
+        )
+
+    @staticmethod
+    def from_mongo(mongo_vout):
+        return Vout(
+            index=mongo_vout.get('index'),
+            reqSigs=mongo_vout.get('reqSigs'),
+            value=mongo_vout.get('value'),
+            txid=mongo_vout.get('txid'),
+            addresses=[mongo_vout.get('address')],
+            type=mongo_vout['type'],
+            asm=mongo_vout['asm']
         )
