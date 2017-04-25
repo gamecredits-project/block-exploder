@@ -12,14 +12,14 @@ class VoutSerializer(object):
         }
 
     @staticmethod
-    def to_database(vout):
+    def to_database(vout, txid, index):
         formatted = []
 
         if vout.addresses:
             for adr in vout.addresses:
                 formatted.append({
-                    "txid": vout.txid,
-                    "index": vout.index,
+                    "txid": txid,
+                    "index": index,
                     "value": vout.value,
                     "asm": vout.asm,
                     "address": adr,
@@ -53,9 +53,9 @@ class VinSerializer(object):
         }
 
     @staticmethod
-    def to_database(vin):
+    def to_database(vin, txid):
         return {
-            "txid": vin.txid,
+            "txid": txid,
             "prev_txid": vin.prev_txid,
             "vout_index": vin.vout_index,
             "hex": vin.hex,
@@ -117,7 +117,7 @@ class BlockSerializer(object):
             "height": block.height,
             "version": block.version,
             "merkleroot": block.merkleroot,
-            "tx": block.tx,
+            "tx": [tr.txid for tr in block.tx],
             "time": block.time,
             "nonce": block.nonce,
             "bits": block.bits,
@@ -137,17 +137,17 @@ class BlockSerializer(object):
             "height": block.height,
             "version": block.version,
             "merkleroot": block.merkleroot,
-            "tx": block.tx,
+            "tx": [tr.txid for tr in block.tx],
             "time": block.time,
             "nonce": block.nonce,
             "bits": block.bits,
-            "difficulty": block.difficulty,
+            "difficulty": str(block.difficulty),
             "chainwork": hex(block.chainwork),
             "previousblockhash": block.previousblockhash,
             "nextblockhash": block.nextblockhash,
             "target": hex(block.target),
             "dat": block.dat,
-            "total": block.total,
+            "total": str(block.total),
             "work": block.work,
             "chain": block.chain
         }

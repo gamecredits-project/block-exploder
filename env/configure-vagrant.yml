@@ -1,15 +1,17 @@
 - name: Configure the block explorer server
-  hosts: blockexplorer
-  user: vagrant
+  hosts: 127.0.0.1
+  connection: local
   roles:
-    - common
-    - ufw
-    - supervisor
-    - gamecreditsd
-    - mongod
-    - devenv
+    # - common
+    # - ufw
+    # - supervisor
+    # - mongod
+    # - python-deps
+    - syncer
   vars:
-    - client_rpc_user: "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
-    - client_rpc_password: "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
+    - client_rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
+    - client_rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"
     - client_rpc_port: 8332
     - regtest: ""
+    - code_dir: "/code"
+    - log_dir: "{{ ansible_env.HOME }}/logs"

@@ -49,7 +49,7 @@ def listen(path):
 
     while True:
         time.sleep(5)
-        if rpc.getblockcount() > db.highest_block.height:
+        if db.highest_block is None or rpc.getblockcount() > db.highest_block.height:
             syncer.sync()
             sys.stdout.flush()
 

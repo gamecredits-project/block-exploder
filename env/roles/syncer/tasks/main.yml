@@ -1,0 +1,7 @@
+- name: Copy the supervisor conf file
+  template: src=templates/syncer-supervisor.conf dest=/etc/supervisor/conf.d/syncer-supervisor.conf
+  become: True
+
+- name: Start the syncer supervisor process
+  supervisorctl: name=syncer state=present
+  become: True

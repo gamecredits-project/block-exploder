@@ -1,7 +1,6 @@
 import os
 from factories import BlockFactory, TransactionFactory
-from helpers import has_length, is_block_file, calculate_target, calculate_work
-import pdb
+from gamecredits.helpers import has_length, is_block_file, calculate_target, calculate_work
 import datetime
 
 MAIN_CHAIN = 0
@@ -9,108 +8,18 @@ PERSIST_EVERY = 1000  # blocks
 RPC_USER = "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
 RPC_PASSWORD = "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
 RPC_SYNC_PERCENT_DEFAULT = 97
+MIN_STREAM_THRESH = 1500000
 
 
-class ExploderSyncer(object):
-    """
-    Supports syncing from block dat files and using RPC.
-    """
-    def __init__(self, database, blocks_dir, rpc_client, rpc_sync_percent=RPC_SYNC_PERCENT_DEFAULT):
-        # Num of forks encountered while building the tree
-        self.num_forks = 0
-
-        # Num of reconvergences done while building the tree
-        self.num_convergences = 0
-
-        # Instance of BlockchainDatabase
+class Blockchain(object):
+    def __init__(self, database):
+        # Instance of MongoDatabaseGateway
         self.db = database
-
-        # We keep a reference to the previous block so
-        # we can update it's nextblockhash when we encounter the next block
-        # without fetching it from the db
-        self.chain_peak = self.db.highest_block
 
         # Flag to check if sync is in the first iteration
         self.first_iter = True
 
-        # Find all of the block dat files inside the given block directory
-        if os.path.isdir(blocks_dir):
-            self.blk_files = sorted(
-                [os.path.join(blocks_dir, f) for f in os.listdir(blocks_dir) if is_block_file(f)]
-            )
-        else:
-            raise Exception("[BLOCKCHAIN_INIT] Given path is not a directory")
-
-        self.sync_progress = 0
-
-        # When to stop reading from .dat files and start syncing from RPC
-        self.rpc_sync_percent = rpc_sync_percent
-
-        # Client RPC connection
-        self.rpc = rpc_client
-
-    ######################
-    # SYNC METHODS       #
-    ######################
-    def sync(self, limit=0):
-        start_time = datetime.datetime.now()
-        print "[SYNC_STARTED] %s" % start_time
-
-        client_height = self.rpc.getblockcount()
-        highest_known = self.db.highest_block
-
-        if highest_known:
-            self.sync_progress = float(highest_known.height * 100) / client_height
-        else:
-            self.sync_progress = 0
-
-        parsed = 0
-        if self.sync_progress < self.rpc_sync_percent:
-            parsed = self._sync_stream(highest_known, client_height, limit)
-
-        if (limit == 0 or parsed < limit):
-            self._sync_rpc(client_height, limit)
-
-        end_time = datetime.datetime.now()
-        diff_time = end_time - start_time
-        print "[SYNC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds())
-
-    def _sync_stream(self, highest_known, client_height, limit):
-        print "[SYNC_STREAM] Started sync from .dat files"
-        parsed = 0
-
-        # Continue parsing where we left off
-        if highest_known:
-            self.blk_files = self.blk_files[highest_known.dat["index"]:]
-            self._update_progress(highest_known.height, client_height)
-
-        for (i, f) in enumerate(self.blk_files):
-            stream = open(f, 'r')
-
-            # Seek to the end of the last parsed block in the first iteration
-            if i == 0 and highest_known:
-                stream.seek(highest_known.dat['end'])
-
-            while self._should_stream_sync(stream, limit, parsed):
-                # parse block from stream
-                res = BlockFactory.from_stream(stream)
-
-                # Persist block and transactions
-                block = self.handle_stream_block(res['block'])
-                self.db.put_transactions(res['transactions'])
-
-                parsed += 1
-
-                # Update and print progress if necessary
-                self._update_progress(block.height, client_height)
-
-                if block.height % 1000 == 0:
-                    self._print_progress()
-
-        self.db.flush_cache()
-        return parsed
-
-    def handle_stream_block(self, block):
+    def insert_block(self, block):
         # If the chain_peak is None the db is empty
         if not self.chain_peak:
             block.height = 0
@@ -195,34 +104,6 @@ class ExploderSyncer(object):
 
         return new_top_block
 
-    def _sync_rpc(self, client_height, limit):
-        print "[SYNC_RPC] Started sync from rpc"
-
-        our_highest_block = self.db.highest_block
-        our_highest_block_in_rpc = self._get_rpc_block_by_hash(our_highest_block.hash)
-
-        # Compare our highest known block to it's repr in RPC
-        # if they have the same height and previousblockhash there was no reconverge
-        # and we can just insert the blocks sequentially by following the nextblockhash links
-        if our_highest_block == our_highest_block_in_rpc:
-            if our_highest_block_in_rpc.nextblockhash:
-                next_block = self._get_rpc_block_by_hash(our_highest_block_in_rpc.nextblockhash)
-                self.db.update_block(our_highest_block.hash, {"nextblockhash": next_block.hash})
-                self._follow_chain_and_insert(start=next_block, limit=limit)
-        else:
-            print("[SYNC_RPC] Reconverge")
-            # Else find the reconverge point by going backwards and finding the first block
-            # that is the same in our db and rpc and then sync upwards from there
-            (our_block, rpc_block) = self._find_reconverge_point(start=our_highest_block)
-
-            # Delete all blocks upwards from reconverge point (including the point)
-            self._follow_chain_and_delete(our_block)
-
-            # Insert all blocks from rpc to the end of the chain
-            self._follow_chain_and_insert(rpc_block, limit=limit)
-
-        self.db.flush_cache()
-
     def _find_reconverge_point(self, start):
         our_block = self.db.get_block(start.previousblockhash, no_cache=True)
         rpc_block = BlockFactory.from_rpc(self.rpc.getblock(our_block.hash))
@@ -288,6 +169,129 @@ class ExploderSyncer(object):
 
         return deleted
 
+
+class ExploderSyncer(object):
+    """
+    Supports syncing from block dat files and using RPC.
+    """
+    def __init__(self, database, blockchain, blocks_dir, rpc_client, rpc_sync_percent=RPC_SYNC_PERCENT_DEFAULT):
+        # Num of forks encountered while building the tree
+        self.num_forks = 0
+
+        # Num of reconvergences done while building the tree
+        self.num_convergences = 0
+
+        # Instance of MongoDatabaseGateway (to keep track of syncs)
+        self.db = database
+
+        # Reference to the Blockchain interactor
+        self.blockchain = blockchain
+
+        # Find all of the block dat files inside the given block directory
+        if os.path.isdir(blocks_dir):
+            self.blk_files = sorted(
+                [os.path.join(blocks_dir, f) for f in os.listdir(blocks_dir) if is_block_file(f)]
+            )
+        else:
+            raise Exception("[BLOCKCHAIN_INIT] Given path is not a directory")
+
+        self.sync_progress = 0
+
+        # When to stop reading from .dat files and start syncing from RPC
+        self.rpc_sync_percent = rpc_sync_percent
+
+        # Client RPC connection
+        self.rpc = rpc_client
+
+    ######################
+    # SYNC METHODS       #
+    ######################
+    def sync_auto(self, limit=0):
+        start_time = datetime.datetime.now()
+        print "[SYNC_STARTED] %s" % start_time
+
+        client_height = self.rpc.getblockcount()
+        highest_known = self.db.highest_block
+
+        if highest_known:
+            self.sync_progress = float(highest_known.height * 100) / client_height
+        else:
+            self.sync_progress = 0
+
+        parsed = 0
+        if (highest_known and highest_known.height < MIN_STREAM_THRESH) or self.sync_progress < self.rpc_sync_percent:
+            parsed = self._sync_stream(highest_known, client_height, limit)
+
+        if (limit == 0 or parsed < limit):
+            self._sync_rpc(client_height, limit)
+
+        end_time = datetime.datetime.now()
+        diff_time = end_time - start_time
+        print "[SYNC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds())
+
+    def sync_stream(self, highest_known, client_height, limit):
+        print "[SYNC_STREAM] Started sync from .dat files"
+        parsed = 0
+
+        # Continue parsing where we left off
+        if highest_known:
+            self.blk_files = self.blk_files[highest_known.dat["index"]:]
+            self._update_progress(highest_known.height, client_height)
+
+        for (i, f) in enumerate(self.blk_files):
+            stream = open(f, 'r')
+
+            # Seek to the end of the last parsed block in the first iteration
+            if i == 0 and highest_known:
+                stream.seek(highest_known.dat['end'])
+
+            while self._should_stream_sync(stream, limit, parsed):
+                # parse block from stream
+                res = BlockFactory.from_stream(stream)
+
+                # Persist block and transactions
+                block = self.handle_stream_block(res['block'])
+                self.db.put_transactions(res['transactions'])
+
+                parsed += 1
+
+                # Update and print progress if necessary
+                self._update_progress(block.height, client_height)
+
+                if block.height % 1000 == 0:
+                    self._print_progress()
+
+        self.db.flush_cache()
+        return parsed
+
+    def sync_rpc(self, client_height, limit):
+        print "[SYNC_RPC] Started sync from rpc"
+
+        our_highest_block = self.db.highest_block
+        our_highest_block_in_rpc = self._get_rpc_block_by_hash(our_highest_block.hash)
+
+        # Compare our highest known block to it's repr in RPC
+        # if they have the same height and previousblockhash there was no reconverge
+        # and we can just insert the blocks sequentially by following the nextblockhash links
+        if our_highest_block == our_highest_block_in_rpc:
+            if our_highest_block_in_rpc.nextblockhash:
+                next_block = self._get_rpc_block_by_hash(our_highest_block_in_rpc.nextblockhash)
+                self.db.update_block(our_highest_block.hash, {"nextblockhash": next_block.hash})
+                self._follow_chain_and_insert(start=next_block, limit=limit)
+        else:
+            print("[SYNC_RPC] Reconverge")
+            # Else find the reconverge point by going backwards and finding the first block
+            # that is the same in our db and rpc and then sync upwards from there
+            (our_block, rpc_block) = self._find_reconverge_point(start=our_highest_block)
+
+            # Delete all blocks upwards from reconverge point (including the point)
+            self._follow_chain_and_delete(our_block)
+
+            # Insert all blocks from rpc to the end of the chain
+            self._follow_chain_and_insert(rpc_block, limit=limit)
+
+        self.db.flush_cache()
+
     ######################
     #  HELPER FUNCTIONS  #
     ######################
@@ -300,6 +304,3 @@ class ExploderSyncer(object):
     def _should_stream_sync(self, stream, limit, parsed):
         return self.sync_progress < self.rpc_sync_percent and \
             has_length(stream, 80) and (limit == 0 or parsed < limit)
-
-    def _get_rpc_block_by_hash(self, hash):
-        return BlockFactory.from_rpc(self.rpc.getblock(hash))

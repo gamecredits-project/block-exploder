@@ -1,0 +1,32 @@
+# GameCredits escrow #
+
+Application running inside a Docker container exposing the following HTTP API:
+
+* /addresses/new - Creates and returns a new GameCredits address
+* /addresses - Returns all addresses and received by address statistics
+* /transactions - Returns all transactions related to the application (both send and receive)
+* /transactions/{txid} - Returns a transaction with a given txid if it exists in the application
+
+The application accepts the following configuration parameters:
+
+* escrow_address - the address the application will transfer all of the recieved GAME to
+* num_confirmations_required - number of confirmations required for a transaction to be considered confirmed
+
+How the application works:
+
+* Whenever there's GameCredits sent to an address that belongs to the application it stores the transaction
+* When a transaction is confirmed (reached num_confirmations_required) the application transfers the value of that transaction
+to the escrow_address
+
+What the application DOESN'T DO:
+
+* Keep track of the users
+* Support multi-signature transactions
+* Implement authentication, this has to be done on some other level, it should be accessible only from localhost
+as a part of some bigger escrow app
+* Back up the keys, this is a responsibility of the app user
+
+Docker caveats
+
+* Persist the private keys - make sure that you run Docker in a correct way (specify a data volume) so the data is persisted to the disk and not only virtual. If this is not done properly you may lose all your data (including private keys) when you restart the container process
+* Persist the GameCredits data directory - make sure you persist the GameCredits data directory so you don't have to sync the whole wallet every time you restart Docker.
