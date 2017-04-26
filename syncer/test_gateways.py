@@ -15,11 +15,7 @@ def generate_test_data(num_blocks):
         rpc_port=8332
     )
 
-    block_count = rpc.getblockcount()
-    block_heights = set()
-
-    for i in range(num_blocks):
-        block_heights.add(random.randint(0, block_count))
+    block_heights = range(123321, 123321 + num_blocks)
 
     block_hashes = [rpc.getblockhash(height) for height in block_heights]
     rpc_blocks = [rpc.getblock(block_hash) for block_hash in block_hashes]

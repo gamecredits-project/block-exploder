@@ -11,7 +11,7 @@ class MongoBlockFactory(object):
             merkleroot=mongo_block['merkleroot'],
             time=mongo_block['time'],
             bits=mongo_block['bits'],
-            target=mongo_block['target'],
+            target=long(mongo_block['target'], base=16),
             difficulty=mongo_block['difficulty'],
             nonce=mongo_block['nonce'],
             work=mongo_block['work']

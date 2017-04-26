@@ -5,6 +5,8 @@ from serializers import BlockSerializer, TransactionSerializer, VinSerializer, V
 from pymongo import MongoClient
 
 
+MAIN_CHAIN = 'main_chain'
+
 def get_mongo_connection():
     return MongoClient()
 
@@ -56,6 +58,9 @@ class MongoDatabaseGateway(object):
         self.tr_cache = {}
         self.vin_cache = []
         self.vout_cache = []
+
+    def get_chain_identifiers(self):
+        return self.blocks.distinct("chain")
 
     ###################
     #  BLOCK METHODS  #
@@ -135,6 +140,27 @@ class MongoDatabaseGateway(object):
             }, {
                 '$set': update_dict
             })
+
+    def get_blocks_by_chain(self, chain):
+        in_cache = [block for (key, block) in self.block_cache.iteritems() if block['chain'] == chain]
+        in_db = self.blocks.find({"chain": chain})
+
+        return [MongoBlockFactory.from_mongo(block) for block in (in_cache + list(in_db))]
+
+    def get_blocks_higher_than(self, height):
+        """
+        Returns blocks in the MAIN_CHAIN with block.height > height
+        """
+        cache_blocks = sorted([block for (key, block) in self.block_cache.iteritems() if block['chain'] == MAIN_CHAIN],
+                              key=lambda b: b['height'])
+
+        if cache_blocks[0]['height'] < height:
+            result = [block for block in cache_blocks if block['height'] > height]
+        else:
+            result = list(self.blocks.find({"height": {"$gt": height}, "chain": MAIN_CHAIN}))
+            result += cache_blocks
+
+        return [MongoBlockFactory.from_mongo(block) for block in result]
 
     #########################
     #  TRANSACTION METHODS  #

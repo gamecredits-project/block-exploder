@@ -126,22 +126,7 @@ class SyncStreamTestCase(unittest.TestCase):
 
 class HandleStreamBlockTestCase(unittest.TestCase):
     def setUp(self):
-        self.fake_mongo = MagicMock()
-        self.fake_mongo.blocks.find_one.return_value = None
-
-        self.fake_rpc = MagicMock()
-        self.fake_rpc.getblockcount = MagicMock(return_value=10000)
-
-        self.db = DatabaseGateway(database=self.fake_mongo, cache_size=1000)
-        self.db.highest_block = PropertyMock(return_value=None)
-
-        self.chain = ExploderSyncer(
-            database=self.db,
-            blocks_dir="/home/vagrant/.gamecredits/blocks/",
-            rpc_client=self.fake_rpc
-        )
-
-        self.example_block = BlockFactory.from_mongo(EXAMPLE_MONGO_BLOCK)
+        mongoDatabaseGateway = MagicMock()
 
     def test_chain_peak_is_none_should_create_coinbase(self):
         self.chain.chain_peak = None

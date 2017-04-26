@@ -131,13 +131,18 @@ class BlockSerializer(object):
 
     @staticmethod
     def to_database(block):
+        if not type(block.tx[0]) == unicode:
+            tx = [tr.txid for tr in block.tx]
+        else:
+            tx = block.tx
+
         return {
             "hash": block.hash,
             "size": block.size,
             "height": block.height,
             "version": block.version,
             "merkleroot": block.merkleroot,
-            "tx": [tr.txid for tr in block.tx],
+            "tx": tx,
             "time": block.time,
             "nonce": block.nonce,
             "bits": block.bits,

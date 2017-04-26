@@ -1,9 +1,9 @@
 import os
-from factories import BlockFactory, TransactionFactory
 from gamecredits.helpers import has_length, is_block_file, calculate_target, calculate_work
 import datetime
+import itertools
 
-MAIN_CHAIN = 0
+MAIN_CHAIN = "main_chain"
 PERSIST_EVERY = 1000  # blocks
 RPC_USER = "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
 RPC_PASSWORD = "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
@@ -16,45 +16,86 @@ class Blockchain(object):
         # Instance of MongoDatabaseGateway
         self.db = database
 
+        # We keep a reference to the previous block so
+        # we can update it's nextblockhash when we encounter the next block
+        # without fetching it from the db - LOOK AHEAD THEN INSERT
+        self.chain_peak = None
+
         # Flag to check if sync is in the first iteration
         self.first_iter = True
 
+        # Global counter for creating unique identifiers
+        self._counter = itertools.count()
+        # Skip the taken identifiers
+        while self._get_unique_chain_identifier() in self.db.get_chain_identifiers():
+            pass
+
+    def _create_coinbase(self, block):
+        block.height = 0
+        block.chainwork = block.work
+        block.chain = MAIN_CHAIN
+        self.chain_peak = block
+        self.first_iter = False
+
+        for tr in block.tx:
+            self.db.put_transaction(tr)
+        return block
+
+    def _append_to_main_chain(self, block):
+        self.chain_peak.nextblockhash = block.hash
+
+        # Do not insert the chain_peak on first iter
+        # because it's already fetched from the DB -> already exists
+        if not self.first_iter:
+            self.db.put_block(self.chain_peak)
+
+        block.height = self.chain_peak.height + 1
+
+        block.chainwork = self.chain_peak.chainwork + block.work
+        block.chain = MAIN_CHAIN
+        self.chain_peak = block
+        return block
+
+    def _get_unique_chain_identifier(self):
+        return "chain%s" % next(self._counter)
+
     def insert_block(self, block):
-        # If the chain_peak is None the db is empty
-        if not self.chain_peak:
-            block.height = 0
-            block.chainwork = block.work
-            block.chain = MAIN_CHAIN
-            self.chain_peak = block
-            self.first_iter = False
-            return block
+        # Try to get the peak from the db
+        if self.chain_peak is None:
+            self.chain_peak = self.db.get_highest_block()
+
+        # If it's still None then the db is empty
+        # and we should create the coinbase block
+        if self.chain_peak is None:
+            added_block = self._create_coinbase(block)
+            return {
+                "block": added_block,
+                "fork": "",
+                "reconverge": False
+            }
 
         # Current block appends to the main chain
         if block.previousblockhash == self.chain_peak.hash:
-            self.chain_peak.nextblockhash = block.hash
-
-            if not self.first_iter:
-                self.db.put_block(self.chain_peak)
-
-            block.height = self.chain_peak.height + 1
-            block.chainwork = self.chain_peak.chainwork + block.work
-            block.chain = MAIN_CHAIN
-            self.chain_peak = block
+            added_block = self._append_to_main_chain(block)
+            return {
+                "block": added_block,
+                "fork": "",
+                "reconverge": False
+            }
         # Current block is a fork
         else:
-            fork_point = self.db.get_block(block.previousblockhash)
+            fork_point = self.db.get_block_by_hash(block.previousblockhash)
 
             if fork_point.chain == MAIN_CHAIN:
                 print "[FORK] Fork on block %s" % block.previousblockhash
-                self.num_forks += 1
                 block.height = fork_point.height + 1
                 block.chainwork = fork_point.chainwork + block.work
-                block.chain = self.num_forks
+                block.chain = self._get_unique_chain_identifier()
             else:
                 print "[FORK_GROW] A sidechain is growing."
                 block.height = fork_point.height + 1
                 block.chainwork = fork_point.chainwork + block.work
-                block.chain = self.num_forks
+                block.chain = fork_point.chain
                 self.db.update_block(block.previousblockhash, {"nextblockhash": block.hash})
 
             if block.chainwork > self.chain_peak.chainwork:
@@ -65,109 +106,74 @@ class Blockchain(object):
 
                 self.chain_peak = block
                 block = self.reconverge(block)
+
+                return {
+                    "block": block,
+                    "fork": fork_point.hash,
+                    "reconverge": True
+                }
             else:
-                if not self.first_iter:
-                    self.db.put_block(block)
+                self.db.put_block(block)
+                return {
+                    "block": block,
+                    "fork": fork_point.hash,
+                    "reconverge": False
+                }
 
         self.first_iter = False
-        return block
+
+    # OLD RECONVERGE IMPLEMENTATION
+    # def reconverge(self, new_top_block):
+    #     new_top_block.chain = MAIN_CHAIN
+    #     first_in_sidechain_hash = new_top_block.hash
+    #     current = self.db.get_block(new_top_block.previousblockhash)
+
+    #     # Traverse up to the fork point and mark all nodes in sidechain as
+    #     # part of main chain
+    #     while current.chain != MAIN_CHAIN:
+    #         self.db.update_block(current.hash, {"chain": MAIN_CHAIN})
+    #         parent = self.db.get_block(current.previousblockhash)
+
+    #         if parent.chain == MAIN_CHAIN:
+    #             first_in_sidechain_hash = current.hash
+
+    #         current = parent
+
+    #     # Save the fork points hash
+    #     fork_point_hash = current.hash
+
+    #     # Traverse down the fork point and mark all main chain nodes part
+    #     # of the sidechain
+    #     while current.nextblockhash is not None:
+    #         next_block = self.db.get_block(current.nextblockhash)
+    #         self.db.update_block(next_block.hash, {"chain": self.num_forks + 1})
+    #         current = next_block
+
+    #     self.db.update_block(fork_point_hash, {"nextblockhash": first_in_sidechain_hash})
+
+    #     self.num_convergences += 1
+
+    #     return new_top_block
 
     def reconverge(self, new_top_block):
+        sidechain_blocks = sorted(self.db.get_blocks_by_chain(chain=new_top_block.chain), key=lambda b: b.height)
+
+        sidechain_blocks.append(new_top_block)
+
+        first_in_sidechain = sidechain_blocks[0]
+        fork_point = self.db.get_block_by_hash(first_in_sidechain.previousblockhash)
+        main_chain_blocks = self.db.get_blocks_higher_than(height=fork_point.height)
+
+        new_sidechain_id = self._get_unique_chain_identifier()
+        for block in main_chain_blocks:
+            self.db.update_block(block.hash, {"chain": new_sidechain_id})
+
+        for block in sidechain_blocks:
+            self.db.update_block(block.hash, {"chain": MAIN_CHAIN})
+        self.db.update_block(fork_point.hash, {"nextblockhash": first_in_sidechain.hash})
+
         new_top_block.chain = MAIN_CHAIN
-        first_in_sidechain_hash = new_top_block.hash
-        current = self.db.get_block(new_top_block.previousblockhash)
-
-        # Traverse up to the fork point and mark all nodes in sidechain as
-        # part of main chain
-        while current.chain != MAIN_CHAIN:
-            self.db.update_block(current.hash, {"chain": MAIN_CHAIN})
-            parent = self.db.get_block(current.previousblockhash)
-
-            if parent.chain == MAIN_CHAIN:
-                first_in_sidechain_hash = current.hash
-
-            current = parent
-
-        # Save the fork points hash
-        fork_point_hash = current.hash
-
-        # Traverse down the fork point and mark all main chain nodes part
-        # of the sidechain
-        while current.nextblockhash is not None:
-            next_block = self.db.get_block(current.nextblockhash)
-            self.db.update_block(next_block.hash, {"chain": self.num_forks + 1})
-            current = next_block
-
-        self.db.update_block(fork_point_hash, {"nextblockhash": first_in_sidechain_hash})
-
-        self.num_convergences += 1
-
         return new_top_block
-
-    def _find_reconverge_point(self, start):
-        our_block = self.db.get_block(start.previousblockhash, no_cache=True)
-        rpc_block = BlockFactory.from_rpc(self.rpc.getblock(our_block.hash))
-
-        while not our_block == rpc_block:
-            our_block = self.db.get_block(our_block.previousblockhash, no_cache=True)
-            rpc_block = BlockFactory.from_rpc(self.rpc.getblock(our_block.hash))
-
-        return (our_block, rpc_block)
-
-    def _follow_chain_and_insert(self, start, limit=0):
-        """
-        Follow nextblockhash links and insert new RPC blocks into the DB
-        """
-        current = start
-        inserted = 0
-        client_height = self.rpc.getblockcount()
-
-        while current is not None and (limit == 0 or inserted < limit):
-            current.chain = MAIN_CHAIN
-            current.target = calculate_target(current.bits)
-            current.work = calculate_work(current.target)
-            current.difficulty = float(current.difficulty)
-
-            block_transactions = [
-                TransactionFactory.from_rpc(self.rpc.getrawtransaction(tr, 1)) for tr in current.tx
-            ]
-
-            current.total = sum([tr.total for tr in block_transactions])
-
-            self.db.put_block(current)
-            self.db.put_transactions(block_transactions)
-
-            if current.nextblockhash:
-                current = BlockFactory.from_rpc(self.rpc.getblock(current.nextblockhash))
-                # Update and print progress if necessary
-                self._update_progress(current.height, client_height)
-            else:
-                current = None
-
-            inserted += 1
-
-            if inserted % 500 == 0:
-                self._print_progress()
-
-        return inserted
-
-    def _follow_chain_and_delete(self, start):
-        """
-        Delete all blocks from the given block to the end of the chain
-        """
-        current = start
-
-        deleted = 0
-        while current is not None:
-            self.delete_block(current.hash)
-            deleted += 1
-
-            if current.nextblockhash:
-                current = self.get_block(current.nextblockhash)
-            else:
-                current = None
-
-        return deleted
 
 
 class ExploderSyncer(object):
@@ -175,12 +181,6 @@ class ExploderSyncer(object):
     Supports syncing from block dat files and using RPC.
     """
     def __init__(self, database, blockchain, blocks_dir, rpc_client, rpc_sync_percent=RPC_SYNC_PERCENT_DEFAULT):
-        # Num of forks encountered while building the tree
-        self.num_forks = 0
-
-        # Num of reconvergences done while building the tree
-        self.num_convergences = 0
-
         # Instance of MongoDatabaseGateway (to keep track of syncs)
         self.db = database
 
