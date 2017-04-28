@@ -3,7 +3,10 @@ from gamecredits.entities import Block, BlockHeader, Transaction, Vout, Vin
 
 class MongoBlockFactory(object):
     @staticmethod
-    def from_mongo(mongo_block):
+    def from_mongo(mongo_block, mongo_block_transactions):
+        if mongo_block is None:
+            return None
+
         header = BlockHeader(
             hash=mongo_block['hash'],
             version=mongo_block['version'],
@@ -20,7 +23,7 @@ class MongoBlockFactory(object):
         return Block(
             size=mongo_block['size'],
             header=header,
-            tx=mongo_block['tx'],
+            tx=[MongoTransactionFactory.from_mongo(tr) for tr in mongo_block_transactions],
             dat=mongo_block['dat'],
             nextblockhash=mongo_block['nextblockhash'],
             height=mongo_block['height'],
@@ -33,6 +36,9 @@ class MongoBlockFactory(object):
 class MongoTransactionFactory(object):
     @staticmethod
     def from_mongo(tr):
+        if tr is None:
+            return None
+
         vout = []
         for v in tr['vout']:
             vout.append({

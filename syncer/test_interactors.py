@@ -2,8 +2,6 @@ import unittest
 import copy
 from mock import MagicMock
 from interactors import Blockchain, MAIN_CHAIN
-from fixtures import EXAMPLE_MONGO_BLOCK
-from factories import MongoBlockFactory
 from test_gateways import generate_test_data
 from gateways import get_mongo_connection, MongoDatabaseGateway
 from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer
@@ -13,7 +11,7 @@ class InsertBlockTestCaseWithMocking(unittest.TestCase):
     def setUp(self):
         self.db = MagicMock()
         self.chain = Blockchain(self.db)
-        self.example_block = MongoBlockFactory.from_mongo(EXAMPLE_MONGO_BLOCK)
+        self.example_block = generate_test_data(1)[0]
 
     def test_chain_peak_is_none_should_create_coinbase(self):
         self.db.get_highest_block.return_value = None
@@ -22,14 +20,13 @@ class InsertBlockTestCaseWithMocking(unittest.TestCase):
         self.assertEqual(block.height, 0)
         self.assertEqual(block.chainwork, block.work)
         self.assertEqual(block.chain, MAIN_CHAIN)
-        self.assertEqual(self.chain.chain_peak, block)
-        self.assertFalse(self.chain.first_iter, False)
 
     def test_append_to_main_chain(self):
-        self.chain.chain_peak = self.example_block
         block2 = copy.deepcopy(self.example_block)
         block2.hash = "somefakehash"
         block2.previousblockhash = self.example_block.hash
+        self.db.get_highest_block.return_value = self.example_block
+        self.db.get_block_by_hash.return_value = self.example_block
 
         result = self.chain.insert_block(block2)
         added_block = result['block']
@@ -40,7 +37,6 @@ class InsertBlockTestCaseWithMocking(unittest.TestCase):
         self.assertEqual(added_block.height, self.example_block.height + 1)
         self.assertEqual(added_block.chainwork, self.example_block.chainwork + block2.work)
         self.assertEqual(added_block.chain, MAIN_CHAIN)
-        self.assertEqual(self.chain.chain_peak.hash, block2.hash)
 
 
 class InsertBlockTestCaseWithTestData(unittest.TestCase):
@@ -118,7 +114,6 @@ class InsertBlockTestCaseWithTestData(unittest.TestCase):
         to_add.previousblockhash = fork_point.hash
         # Force reconverge
         to_add.work = 10000000000
-
         some_block_on_main_chain = self.db_gateway.get_block_by_hash(self.blocks[11].hash)
         self.assertEqual(some_block_on_main_chain.chain, MAIN_CHAIN)
         added = self.chain.insert_block(to_add)

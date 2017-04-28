@@ -1,11 +1,10 @@
 import unittest
-import random
 
 from gamecredits.helpers import get_rpc_connection
 from gamecredits.factories import BlockFactory
-from gamecredits.entities import Vin
 from gateways import get_mongo_connection, MongoDatabaseGateway
 from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer
+from interactors import MAIN_CHAIN
 
 
 def generate_test_data(num_blocks):
@@ -34,6 +33,9 @@ class MongoDbGatewayTestCase(unittest.TestCase):
         cls.client = get_mongo_connection()
         cls.db = cls.client.test_database
         blocks = generate_test_data(50)
+
+        for block in blocks:
+            block.chain = MAIN_CHAIN
         transactions = []
         for block in blocks:
             transactions += block.tx
@@ -81,25 +83,6 @@ class MongoDbGatewayTestCase(unittest.TestCase):
         some_block = self.blocks[14]
         fetched_block = self.db_gateway.get_block_by_height(some_block.height)
         self.assertEqual(some_block, fetched_block)
-
-    def test_get_latest_blocks_without_offset(self):
-        blocks = sorted(self.blocks, key=lambda block: block.height, reverse=True)[:5]
-        fetched_blocks = self.db_gateway.get_latest_blocks(limit=5, offset=0)
-
-        self.assertEqual(len(blocks), len(fetched_blocks))
-
-        for i in range(len(fetched_blocks)):
-            self.assertEqual(blocks[i], fetched_blocks[i])
-
-    def test_get_latest_blocks_with_offset(self):
-        offset = 5
-        blocks = sorted(self.blocks, key=lambda block: block.height, reverse=True)[offset:offset + 5]
-        fetched_blocks = self.db_gateway.get_latest_blocks(limit=5, offset=5)
-
-        self.assertEqual(len(blocks), len(fetched_blocks))
-
-        for i in range(len(fetched_blocks)):
-            self.assertEqual(blocks[i], fetched_blocks[i])
 
     def test_put_block(self):
         block = self.blocks_to_insert[0]
@@ -172,21 +155,21 @@ class MongoDbGatewayTestCase(unittest.TestCase):
         address = self.transactions[5].vout[0].addresses[0]
         self.assertGreater(len(self.db_gateway.get_vouts_by_address(address)), 0)
 
-    def test_get_vin_by_vout(self):
-        vout = self.transactions[5].vout[0]
-        vout.index = 0
-        vout.txid = self.transactions[5].txid
-        fake_vin = Vin(
-            txid=self.transactions[7].txid,
-            prev_txid=vout.txid,
-            vout_index=vout.index,
-            hex="xexexeex",
-            sequence=1
-        )
-        # First we create a vin that references an existing vout
-        self.db_gateway.put_vin(fake_vin, fake_vin.txid)
+    # def test_get_vin_by_vout(self):
+    #     vout = self.transactions[5].vout[0]
+    #     vout.index = 0
+    #     vout.txid = self.transactions[5].txid
+    #     fake_vin = Vin(
+    #         txid=self.transactions[7].txid,
+    #         prev_txid=vout.txid,
+    #         vout_index=vout.index,
+    #         hex="xexexeex",
+    #         sequence=1
+    #     )
+    #     # First we create a vin that references an existing vout
+    #     self.db_gateway.put_vin(fake_vin, fake_vin.txid)
 
-        self.assertEqual(fake_vin, self.db_gateway.get_vin_by_vout(vout))
+    #     self.assertEqual(fake_vin, self.db_gateway.get_vin_by_vout(vout))
 
 
 if __name__ == "__main__":
