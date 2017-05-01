@@ -1,0 +1,30 @@
+# wget http://download.redis.io/redis-stable.tar.gz
+- name: Download Redis stable
+  get_url: url=http://download.redis.io/redis-stable.tar.gz dest={{ ansible_env.HOME }}
+
+# tar xvzf redis-stable.tar.gz
+- name: Untar redis-stable.tar.gz
+  unarchive: src={{ ansible_env.HOME }}/redis-stable.tar.gz dest={{ ansible_env.HOME }}
+
+# cd redis-stable
+# make
+- name: Run make
+  command: make chdir={{ ansible_env.HOME }}/redis-stable
+  args:
+    chdir: "{{ ansible_env.HOME }}/redis-stable"
+    creates: "{{ ansible_env.HOME }}/redis-stable/src/redis-server"
+
+# sudo make install
+- name: Run make install
+  command: make install chdir={{ ansible_env.HOME }}/redis-stable
+  become: True
+
+- name: Copy the redis supervisor conf file
+  template: src=templates/redis-supervisor.conf dest=/etc/supervisor/conf.d/redis-supervisor.conf
+  become: True
+
+- name: Update supervisor
+  supervisorctl:
+    name: redis
+    state: restarted
+  become: True

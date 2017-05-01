@@ -1,0 +1,19 @@
+- name: Configure the block explorer server
+  hosts: 127.0.0.1
+  connection: local
+  roles:
+    - common
+    - ufw
+    - gamecreditsd
+    - supervisor
+    - mongod
+    - redis
+    # - application
+    # - celery
+  vars:
+    - client_rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
+    - client_rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"
+    - client_rpc_port: 8332
+    - regtest: ""
+    - code_dir: "/code"
+    - log_dir: "{{ ansible_env.HOME }}/logs"

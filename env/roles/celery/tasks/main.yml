@@ -1,0 +1,3 @@
+- name: Install Celery
+  pip: name="celery[redis]" state=present
+  become: True

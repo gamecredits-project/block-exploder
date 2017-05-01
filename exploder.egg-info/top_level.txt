@@ -1,2 +1,2 @@
-blocker
-exploder
+exploder_api
+syncer

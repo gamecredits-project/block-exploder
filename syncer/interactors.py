@@ -2,6 +2,7 @@ import os
 from gamecredits.helpers import has_length, is_block_file
 import datetime
 import itertools
+import logging
 from gamecredits.factories import BlockFactory
 
 MAIN_CHAIN = "main_chain"
@@ -10,6 +11,8 @@ RPC_USER = "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
 RPC_PASSWORD = "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
 STREAM_SYNC_LIMIT_DEFAULT = 99
 MIN_STREAM_THRESH = 1500000
+
+logging.basicConfig(filename='/home/vagrant/logs/blockchain-syncer.log', level=logging.INFO)
 
 
 class Blockchain(object):
@@ -45,7 +48,7 @@ class Blockchain(object):
         return block
 
     def _create_fork_of_main_chain(self, block, fork_point):
-        print "[FORK] Fork on block %s" % block.previousblockhash
+        logging.info("[FORK] Fork on block %s" % block.previousblockhash)
         block.height = fork_point.height + 1
         block.chainwork = fork_point.chainwork + block.work
         block.chain = self._get_unique_chain_identifier()
@@ -53,7 +56,7 @@ class Blockchain(object):
         return block
 
     def _grow_sidechain(self, block, fork_point):
-        print "[FORK_GROW] A sidechain is growing."
+        logging.info("[FORK_GROW] A sidechain is growing.")
         block.height = fork_point.height + 1
         block.chainwork = fork_point.chainwork + block.work
         block.chain = fork_point.chain
@@ -106,7 +109,7 @@ class Blockchain(object):
                 }
 
     def reconverge(self, new_top_block):
-        print "[RECONVERGE] New top block is now %s" % new_top_block
+        logging.info("[RECONVERGE] New top block is now %s" % new_top_block)
         sidechain_blocks = sorted(self.db.get_blocks_by_chain(chain=new_top_block.chain), key=lambda b: b.height)
 
         sidechain_blocks.append(new_top_block)
@@ -169,7 +172,7 @@ class BlockchainSyncer(object):
     ######################
     def sync_auto(self, limit=None):
         start_time = datetime.datetime.now()
-        print "[SYNC_STARTED] %s" % start_time
+        logging.info("[SYNC_STARTED] %s" % start_time)
 
         self._update_sync_progress()
 
@@ -183,10 +186,10 @@ class BlockchainSyncer(object):
 
         end_time = datetime.datetime.now()
         diff_time = end_time - start_time
-        print "[SYNC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds())
+        logging.info("[SYNC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
 
     def sync_stream(self, sync_limit):
-        print "[SYNC_STREAM] Started sync from .dat files"
+        logging.info("[SYNC_STREAM] Started sync from .dat files")
         highest_known = self.db.get_highest_block()
 
         blocks_in_db = 0
@@ -200,8 +203,6 @@ class BlockchainSyncer(object):
         else:
             limit = limit_calc
 
-        import pdb
-        pdb.set_trace()
         # Continue parsing where we left off
         if highest_known:
             self.blk_files = self.blk_files[highest_known.dat["index"]:]
@@ -227,7 +228,7 @@ class BlockchainSyncer(object):
         return parsed
 
     def sync_rpc(self):
-        print "[SYNC_RPC] Started sync from rpc"
+        logging.info("[SYNC_RPC] Started sync from rpc")
 
         our_highest_block = self.db.get_highest_block()
         rpc_block = self.rpc.getblock(our_highest_block.hash)
@@ -251,8 +252,4 @@ class BlockchainSyncer(object):
     ######################
     def _print_progress(self):
         self._update_sync_progress()
-        print "Progress: %s%%" % self.sync_progress
-
-    def _should_stream_sync(self, stream, limit, parsed):
-        return self.sync_progress < self.rpc_sync_percent and \
-            has_length(stream, 80) and (limit == 0 or parsed < limit)
+        logging.info("Progress: %s%%" % self.sync_progress)

@@ -1,0 +1,18 @@
+- name: Install the application
+  pip: chdir=/code state=present name=.
+
+- name: Allow the ports in ufw
+  ufw: 
+    port: 5000
+    rule: allow
+  become: True
+
+- name: Copy the app supervisor conf file
+  template: src=templates/exploder-supervisor.conf dest=/etc/supervisor/conf.d/exploder-supervisor.conf
+  become: True
+
+- name: Restart the supervisor app
+  supervisorctl:
+    name: exploder-api
+    state: restarted
+  become: True
