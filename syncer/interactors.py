@@ -11,8 +11,9 @@ RPC_USER = "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
 RPC_PASSWORD = "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
 STREAM_SYNC_LIMIT_DEFAULT = 99
 MIN_STREAM_THRESH = 1500000
+LOGS_DIR = os.path.join(os.environ['HOME'], 'logs')
 
-logging.basicConfig(filename='/home/vagrant/logs/blockchain-syncer.log', level=logging.INFO)
+logging.basicConfig(filename=os.path.join(LOGS_DIR, 'blockchain-syncer.log'), level=logging.INFO)
 
 
 class Blockchain(object):
