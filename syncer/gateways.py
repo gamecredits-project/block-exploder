@@ -49,14 +49,15 @@ class MongoDatabaseGateway(object):
         if self.tr_cache:
             self.transactions.insert_many([TransactionSerializer.to_database(tr) for tr in self.tr_cache.values()])
 
+        vins_to_insert = []
+        vouts_to_insert = []
         for tr in self.tr_cache.values():
-            self.vins.insert_many([VinSerializer.to_database(vin, tr.txid) for vin in tr.vin])
-
-            vouts_to_insert = []
+            vins_to_insert += [VinSerializer.to_database(vin, tr.txid) for vin in tr.vin]
             for (index, vout) in enumerate(tr.vout):
                 vouts_to_insert += VoutSerializer.to_database(vout, tr.txid, index)
-            self.vouts.insert_many(vouts_to_insert)
 
+        self.vins.insert_many(vins_to_insert)
+        self.vouts.insert_many(vouts_to_insert)
         self.block_cache = {}
         self.tr_cache = {}
 
@@ -267,11 +268,3 @@ class MongoDatabaseGateway(object):
         else:
             self.vins.insert_one(VinSerializer.to_database(vin, txid))
 
-    def get_unspent_vouts_for_address(self, address):
-        outs = self.get_vouts_by_address(address)
-
-        if not outs:
-            raise KeyError("No outputs to that address")
-
-        unspent = [o for o in outs if not self.get_vin_by_vout(o)]
-        return [MongoVoutFactory.from_mongo(out) for out in unspent]

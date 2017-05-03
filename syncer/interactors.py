@@ -4,6 +4,7 @@ import datetime
 import itertools
 import logging
 from gamecredits.factories import BlockFactory
+from bitcoinrpc.authproxy import JSONRPCException
 
 MAIN_CHAIN = "main_chain"
 PERSIST_EVERY = 1000  # blocks
@@ -198,7 +199,7 @@ class BlockchainSyncer(object):
             blocks_in_db = highest_known.height
 
         client_height = self.rpc.getblockcount()
-        limit_calc = (client_height - blocks_in_db) * (self.stream_sync_limit - self.sync_progress)
+        limit_calc = int((client_height - blocks_in_db) * self.stream_sync_limit / 100)
         if sync_limit:
             limit = min([sync_limit, limit_calc])
         else:
@@ -232,7 +233,14 @@ class BlockchainSyncer(object):
         logging.info("[SYNC_RPC] Started sync from rpc")
 
         our_highest_block = self.db.get_highest_block()
-        rpc_block = self.rpc.getblock(our_highest_block.hash)
+
+        rpc_block = None
+        while rpc_block is None:
+            try:
+                rpc_block = self.rpc.getblock(our_highest_block.hash)
+            except JSONRPCException:
+                our_highest_block = self.db.get_block_by_hash(our_highest_block.previousblockhash)
+
         rpc_block_transactions = [
             self.rpc.getrawtransaction(tr, 1) for tr in rpc_block['tx']
         ]

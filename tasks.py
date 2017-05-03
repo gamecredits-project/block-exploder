@@ -38,7 +38,7 @@ def only_one(function=None, key="", timeout=None):
 
 
 class SyncTask(Task):
-    @only_one(key="SingleTask", timeout=60 * 5)
+    @only_one(key="SingleTask", timeout=60 * 60)
     def run(self, **kwargs):
         client = MongoClient()
         database = MongoDatabaseGateway(client.exploder)

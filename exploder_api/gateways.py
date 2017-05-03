@@ -1,5 +1,4 @@
 import pymongo
-from serializers import BlockSerializer
 MAIN_CHAIN = 'main_chain'
 
 
@@ -18,14 +17,71 @@ class DatabaseGateway(object):
         return self.blocks.find_one({"hash": hash})
 
     def get_address_unspent(self, address):
-        pass
+        vouts = self.vout.find({"address": address})
+
+        if not vouts:
+            return []
+
+        unspent_vouts = []
+
+        for vout in vouts:
+            spent = self.vin.find_one({"prev_txid": vout["txid"], "vout_index": vout["index"]})
+
+            if not spent:
+                unspent_vouts.append(vout)
+
+        return unspent_vouts
 
     def get_transactions_by_address(self, address):
         txids = [v['txid'] for v in self.vout.find({"address": address})]
         return list(self.transactions.find({"txid": {"$in": txids}}))
 
     def get_transaction_by_txid(self, txid):
-        pass
+        tr = self.transactions.find_one({"txid": txid})
+
+        if not tr:
+            raise KeyError("Transaction with txid %s doesn't exist in the database" % txid)
+
+        tr_block = self.get_block_by_hash(tr["blockhash"])
+        tr['confirmations'] = self._calculate_confirmations(tr_block)
+
+        return tr
 
     def get_transactions_by_blockhash(self, blockhash):
-        pass
+        tr = self.transactions.find({"blockhash": blockhash})
+
+        if not tr:
+            raise KeyError("Block with hash %s doesn't exist in the database" % blockhash)
+
+        return list(tr)
+
+    def get_network_hash_rate(self):
+        highest = self.get_highest_in_chain(MAIN_CHAIN)
+        end = highest['time']
+        start = highest['time'] - 86400
+        blocks_in_interval = self.blocks.find({"time": {"$gt": start, "$lt": end}})
+        cum_work = sum([block['work'] for block in blocks_in_interval])
+        hps = float(cum_work) / 86400
+
+        if hps >= 10e8:
+            return {
+                "rate": int(hps / 10e8),
+                "unit": "GH/s"
+            }
+        elif hps >= 10e5:
+            return {
+                "rate": int(hps / 10e5),
+                "unit": "MH/s"
+            }
+        else:
+            return {
+                "rate": int(hps),
+                "unit": "H/s"
+            }
+
+    def get_highest_in_chain(self, chain):
+        return self.blocks.find_one({"chain": chain}, sort=[("height", -1)])
+
+    def _calculate_confirmations(self, block):
+        highest_in_chain = self.get_highest_in_chain(block['chain'])
+        return highest_in_chain['height'] - block['height']
