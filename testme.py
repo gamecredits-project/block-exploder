@@ -2,8 +2,6 @@ from syncer.interactors import Blockchain, BlockchainSyncer
 from syncer.gateways import MongoDatabaseGateway
 from pymongo import MongoClient
 from bitcoinrpc.authproxy import AuthServiceProxy
-from celery import Celery
-from celery.task import Task
 import redis
 
 REDIS_CLIENT = redis.Redis()

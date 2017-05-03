@@ -19,8 +19,6 @@ rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
 #  BLOCKS  #
 ############
 def get_latest_blocks(limit, offset):
-    import pdb
-    pdb.set_trace()
     blocks = db.get_latest_blocks(limit, offset)
     return [BlockSerializer.to_web(block) for block in blocks]
 

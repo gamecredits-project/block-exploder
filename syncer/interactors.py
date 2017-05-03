@@ -3,27 +3,26 @@ from gamecredits.helpers import has_length, is_block_file
 import datetime
 import itertools
 import logging
+import ConfigParser
 from gamecredits.factories import BlockFactory
 from bitcoinrpc.authproxy import JSONRPCException
 
-MAIN_CHAIN = "main_chain"
-PERSIST_EVERY = 1000  # blocks
-RPC_USER = "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
-RPC_PASSWORD = "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
-STREAM_SYNC_LIMIT_DEFAULT = 99
-MIN_STREAM_THRESH = 1500000
-LOGS_DIR = os.path.join(os.environ['HOME'], 'logs')
-
-logging.basicConfig(filename=os.path.join(LOGS_DIR, 'blockchain-syncer.log'), level=logging.INFO)
-
 
 class Blockchain(object):
-    def __init__(self, database):
+    def __init__(self, database, conf_path):
+        self.config = ConfigParser.RawConfigParser()
+        self.config.read(conf_path)
+
+        logging.basicConfig(
+            filename=os.path.join(self.config.get('logs_dir'), 'blockchain-syncer.log'), level=logging.INFO
+        )
+
         # Instance of MongoDatabaseGateway
         self.db = database
 
         # Global counter for creating unique identifiers
         self._counter = itertools.count()
+
         # Skip the taken identifiers
         while self._get_unique_chain_identifier() in self.db.get_chain_identifiers():
             pass
@@ -34,7 +33,7 @@ class Blockchain(object):
     def _create_coinbase(self, block):
         block.height = 0
         block.chainwork = block.work
-        block.chain = MAIN_CHAIN
+        block.chain = self.config.get('main_chain')
         self.db.put_block(block)
         return block
 
@@ -43,7 +42,7 @@ class Blockchain(object):
 
         block.height = chain_peak.height + 1
         block.chainwork = chain_peak.chainwork + block.work
-        block.chain = MAIN_CHAIN
+        block.chain = self.config.get('main_chain')
 
         self.db.put_block(block)
         self.db.update_block(chain_peak.hash, {"nextblockhash": block.hash})
@@ -90,7 +89,7 @@ class Blockchain(object):
         else:
             fork_point = self.db.get_block_by_hash(block.previousblockhash)
 
-            if fork_point.chain == MAIN_CHAIN:
+            if fork_point.chain == self.config.get('main_chain'):
                 block = self._create_fork_of_main_chain(block, fork_point)
             else:
                 block = self._grow_sidechain(block, fork_point)
@@ -125,10 +124,10 @@ class Blockchain(object):
             self.db.update_block(block.hash, {"chain": new_sidechain_id})
 
         for block in sidechain_blocks:
-            self.db.update_block(block.hash, {"chain": MAIN_CHAIN})
+            self.db.update_block(block.hash, {"chain": self.config.get('main_chain')})
         self.db.update_block(fork_point.hash, {"nextblockhash": first_in_sidechain.hash})
 
-        new_top_block.chain = MAIN_CHAIN
+        new_top_block.chain = self.config.get('main_chain')
         self.db.set_highest_block(new_top_block)
         return new_top_block
 
@@ -137,7 +136,7 @@ class BlockchainSyncer(object):
     """
     Supports syncing from block dat files and using RPC.
     """
-    def __init__(self, database, blockchain, blocks_dir, rpc_client, stream_sync_limit=STREAM_SYNC_LIMIT_DEFAULT):
+    def __init__(self, database, blockchain, blocks_dir, rpc_client):
         # Instance of MongoDatabaseGateway (to keep track of syncs)
         self.db = database
 
@@ -173,9 +172,6 @@ class BlockchainSyncer(object):
     # SYNC METHODS       #
     ######################
     def sync_auto(self, limit=None):
-        start_time = datetime.datetime.now()
-        logging.info("[SYNC_STARTED] %s" % start_time)
-
         self._update_sync_progress()
 
         if self.sync_progress < self.stream_sync_limit:
@@ -186,12 +182,9 @@ class BlockchainSyncer(object):
         if self.sync_progress >= self.stream_sync_limit and self.sync_progress < 100:
             self.sync_rpc()
 
-        end_time = datetime.datetime.now()
-        diff_time = end_time - start_time
-        logging.info("[SYNC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
-
     def sync_stream(self, sync_limit):
-        logging.info("[SYNC_STREAM] Started sync from .dat files")
+        start_time = datetime.datetime.now()
+        logging.info("[SYNC_STREAM_STARTED] %s" % start_time)
         highest_known = self.db.get_highest_block()
 
         blocks_in_db = 0
@@ -227,10 +220,15 @@ class BlockchainSyncer(object):
                     self._print_progress()
 
         self.db.flush_cache()
+
+        end_time = datetime.datetime.now()
+        diff_time = end_time - start_time
+        logging.info("[SYNC_STREAM_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
         return parsed
 
     def sync_rpc(self):
-        logging.info("[SYNC_RPC] Started sync from rpc")
+        start_time = datetime.datetime.now()
+        logging.info("[SYNC_RPC_STARTED] %s" % start_time)
 
         our_highest_block = self.db.get_highest_block()
 
@@ -255,6 +253,9 @@ class BlockchainSyncer(object):
             self.blockchain.insert_block(block)
 
         self.db.flush_cache()
+        end_time = datetime.datetime.now()
+        diff_time = end_time - start_time
+        logging.info("[SYNC_RPC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
 
     ######################
     #  HELPER FUNCTIONS  #
