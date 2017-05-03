@@ -14,7 +14,10 @@ class DatabaseGateway(object):
                     .sort("height", pymongo.DESCENDING).skip(offset).limit(limit))
 
     def get_block_by_hash(self, hash):
-        return self.blocks.find_one({"hash": hash})
+        block = self.blocks.find_one({"hash": hash})
+        if block:
+            return block
+        raise KeyError("Block not found")
 
     def get_address_unspent(self, address):
         vouts = self.vout.find({"address": address})
