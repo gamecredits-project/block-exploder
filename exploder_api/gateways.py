@@ -19,6 +19,12 @@ class DatabaseGateway(object):
             return block
         raise KeyError("Block not found")
 
+    def get_block_by_height(self, height):
+        block = self.blocks.find_one({"height": height})
+        if block:
+            return block
+        raise KeyError("Block not found")
+
     def get_address_unspent(self, address):
         vouts = self.vout.find({"address": address})
 
@@ -48,7 +54,7 @@ class DatabaseGateway(object):
             raise KeyError("Transaction with txid %s doesn't exist in the database" % txid)
 
         tr_block = self.get_block_by_hash(tr["blockhash"])
-        tr['confirmations'] = self._calculate_confirmations(tr_block)
+        tr['confirmations'] = self.calculcate_block_confirmations(tr_block)
 
         return tr
 
@@ -59,6 +65,10 @@ class DatabaseGateway(object):
             raise KeyError("Block with hash %s doesn't exist in the database" % blockhash)
 
         return list(tr)
+
+    def get_latest_transactions(self, limit, offset):
+        return list(self.transactions.find()
+                    .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit))
 
     def get_network_hash_rate(self):
         highest = self.get_highest_in_chain(self.config.get('syncer', 'main_chain'))
@@ -87,6 +97,6 @@ class DatabaseGateway(object):
     def get_highest_in_chain(self, chain):
         return self.blocks.find_one({"chain": chain}, sort=[("height", -1)])
 
-    def _calculate_confirmations(self, block):
+    def calculcate_block_confirmations(self, block):
         highest_in_chain = self.get_highest_in_chain(block['chain'])
         return highest_in_chain['height'] - block['height']
