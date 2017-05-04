@@ -34,3 +34,17 @@ class TransactionSerializer(object):
             "vin": tr["vin"],
             "vout": tr["vout"]
         }
+
+
+class VoutSerializer(object):
+    @staticmethod
+    def to_web(vout):
+        return {
+            "index": vout["index"],
+            "reqSigs": vout["reqSigs"],
+            "value": vout["value"],
+            "txid": vout["txid"],
+            "address": vout["address"],
+            "type": vout["type"],
+            "asm": vout["asm"]
+        }

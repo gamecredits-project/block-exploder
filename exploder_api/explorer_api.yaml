@@ -222,7 +222,7 @@ paths:
       tags:
         - Addresses
       operationId: api.get_address
-      summary: Return an array of transactions containing this address ant it's total volume
+      summary: Return an array of transactions containing this address and it's total volume
       parameters:
         - $ref: '#/parameters/address_hash'
       responses:

@@ -4,7 +4,7 @@ import os
 import ConfigParser
 from gateways import DatabaseGateway
 from pymongo import MongoClient
-from serializers import TransactionSerializer, BlockSerializer
+from serializers import TransactionSerializer, BlockSerializer, VoutSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
 
@@ -90,11 +90,24 @@ def get_transactions_by_blockhash(blockhash):
 #  ADDRESSES  #
 ###############
 def get_address(address_hash):
-    pass
+    trs, volume = db.get_address_statistics(address_hash)
+    transactions = [TransactionSerializer.to_web(tr) for tr in trs]
+    return {
+        "address": address_hash,
+        "volume": volume,
+        "transactions": transactions,
+    }
 
 
 def get_address_unspent(address_hash):
-    pass
+    vouts = db.get_address_unspent(address_hash)
+    unspent = [VoutSerializer.to_web(vout) for vout in vouts]
+    balance = sum([vout["value"] for vout in unspent])
+    return {
+        "address": address_hash,
+        "balance": balance,
+        "unspent": unspent
+    }
 
 
 #############
