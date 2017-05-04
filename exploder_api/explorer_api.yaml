@@ -10,7 +10,7 @@ paths:
   /blocks/latest:
     get:
       summary: Latest blocks
-      operationId: api.get_latest_blocks
+      operationId: exploder_api.api.get_latest_blocks
       description: |
         List latest  <limit> blocks in the GameCredit blockchain and skip <offset> blocks
       parameters:
@@ -45,7 +45,7 @@ paths:
   /blocks/{block_hash}:
     get:
       summary: Get a single block by hash
-      operationId: api.get_block_by_hash
+      operationId: exploder_api.api.get_block_by_hash
       description: |
         Return a single block with a given blockhash
       tags: 
@@ -67,7 +67,7 @@ paths:
   /blocks/{block_hash}/confirmations:
     get:
       summary: Get number of confirmations for the block with the given blockhash
-      operationId: api.get_block_confirmations
+      operationId: exploder_api.api.get_block_confirmations
       description: |
         Returns number of confirmations for the given block. Confirmations are calculated
         as the number of blocks after this block in the blockchain.
@@ -90,7 +90,7 @@ paths:
   /blocks:
     get:
       summary: Get block by height
-      operationId: api.get_block_by_height
+      operationId: exploder_api.api.get_block_by_height
       description: |
         Provide height as a query parameter and get the block with that eight
       tags:
@@ -117,7 +117,7 @@ paths:
   /transactions/latest:
     get:
       summary: Latest transactions
-      operationId: api.get_latest_transactions
+      operationId: exploder_api.api.get_latest_transactions
       description: |
         List latest  <limit> transactions in the GameCredit blockchain and skip <offset> transactions
       parameters:
@@ -154,7 +154,7 @@ paths:
     get:
       tags:
         - Transactions
-      operationId: api.get_transaction_by_txid
+      operationId: exploder_api.api.get_transaction_by_txid
       summary: Get a single transaction by ID
       parameters:
         - $ref: '#/parameters/txid'
@@ -173,7 +173,7 @@ paths:
   /transactions/{txid}/confirmations:
     get:
       summary: Get number of confirmations for the transaction with the given txid
-      operationId: api.get_transaction_confirmations
+      operationId: exploder_api.api.get_transaction_confirmations
       description: |
         Returns number of confirmations for the given transaction. Confirmations are calculated
         as the number of blocks in the blockchain after the block that contains this transaction.
@@ -197,7 +197,7 @@ paths:
     get:
       tags:
         - Transactions
-      operationId: api.get_transactions_by_blockhash
+      operationId: exploder_api.api.get_transactions_by_blockhash
       summary: Get transactions by blockhash
       parameters:
         - name: blockhash
@@ -221,7 +221,7 @@ paths:
     get:
       tags:
         - Addresses
-      operationId: api.get_address
+      operationId: exploder_api.api.get_address
       summary: Return an array of transactions containing this address and it's total volume
       parameters:
         - $ref: '#/parameters/address_hash'
@@ -239,7 +239,7 @@ paths:
     get:
       tags:
         - Addresses
-      operationId: api.get_address_unspent
+      operationId: exploder_api.api.get_address_unspent
       summary: Return an array of unspent outputs to given address and it's estimated balance
       parameters:
         - $ref: '#/parameters/address_hash'
@@ -255,7 +255,7 @@ paths:
 
   /transactions/send:
     post:
-      operationId: api.send_raw_transaction
+      operationId: exploder_api.api.send_raw_transaction
       summary: Submit a raw transaction to the GameCredits network
       consumes:
         - application/json

@@ -42,8 +42,8 @@ class Blockchain(object):
         block.chainwork = chain_peak.chainwork + block.work
         block.chain = self.config.get('syncer', 'main_chain')
 
-        self.db.put_block(block)
         self.db.update_block(chain_peak.hash, {"nextblockhash": block.hash})
+        self.db.put_block(block)
         return block
 
     def _create_fork_of_main_chain(self, block, fork_point):
@@ -59,8 +59,8 @@ class Blockchain(object):
         block.height = fork_point.height + 1
         block.chainwork = fork_point.chainwork + block.work
         block.chain = fork_point.chain
-        self.db.put_block(block)
         self.db.update_block(block.previousblockhash, {"nextblockhash": block.hash})
+        self.db.put_block(block)
         return block
 
     def insert_block(self, block):
