@@ -66,6 +66,10 @@ class DatabaseGateway(object):
 
         return list(tr)
 
+    def get_latest_transactions(self, limit, offset):
+        return list(self.transactions.find()
+                    .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit))
+
     def get_network_hash_rate(self):
         highest = self.get_highest_in_chain(MAIN_CHAIN)
         end = highest['time']
