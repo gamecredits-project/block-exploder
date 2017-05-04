@@ -54,7 +54,7 @@ def get_block_confirmations(block_hash):
 ##################
 def get_transaction_by_txid(txid):
     try:
-        return TransactionSerializer.to_web(db.get_transaction(txid))
+        return TransactionSerializer.to_web(db.get_transaction_by_txid(txid))
     except KeyError:
         return "Transaction with given ID not found", 404
 
