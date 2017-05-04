@@ -35,9 +35,11 @@ class DatabaseGateway(object):
 
         return unspent_vouts
 
-    def get_transactions_by_address(self, address):
-        txids = [v['txid'] for v in self.vout.find({"address": address})]
-        return list(self.transactions.find({"txid": {"$in": txids}}))
+    def get_address_statistics(self, address):
+        vouts = list(self.vout.find({"address": address}))
+        volume = sum([vout["value"] for vout in vouts])
+        txids = [v['txid'] for v in vouts]
+        return list(self.transactions.find({"txid": {"$in": txids}})), volume
 
     def get_transaction_by_txid(self, txid):
         tr = self.transactions.find_one({"txid": txid})
