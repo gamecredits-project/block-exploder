@@ -43,7 +43,10 @@ def get_block_confirmations(block_hash):
     except KeyError:
         return "Block with given hash doesn't exist", 404
 
-    return db.calculcate_block_confirmations(block)
+    return {
+        "hash": block_hash,
+        "confirmations": db.calculcate_block_confirmations(block)
+    }
 
 
 ##################

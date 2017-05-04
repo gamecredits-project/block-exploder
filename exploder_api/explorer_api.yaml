@@ -12,7 +12,7 @@ paths:
       summary: Latest blocks
       operationId: api.get_latest_blocks
       description: |
-        List latest  <limit> blocks in the GameCredit blockchain and skip <offset> blocks
+        List latest :limit: blocks in the GameCredits blockchain and skip :offset: blocks
       parameters:
         - name: limit
           in: query
@@ -69,8 +69,9 @@ paths:
       summary: Get number of confirmations for the block with the given blockhash
       operationId: api.get_block_confirmations
       description: |
-        Returns number of confirmations for the given block. Confirmations are calculated
-        as the number of blocks after this block in the blockchain.
+        Returns number of confirmations for the given block.
+
+        Confirmations are calculated as the number of blocks after this block in the blockchain.
       tags:
         - Blocks
       parameters:
@@ -79,7 +80,7 @@ paths:
         200:
           description: Number of confirmations
           schema:
-            type: integer
+            $ref: '#/definitions/Confirmations'
         404:
           description: Block with given hash doesn't exist
         default:
@@ -119,7 +120,7 @@ paths:
       summary: Latest transactions
       operationId: api.get_latest_transactions
       description: |
-        List latest  <limit> transactions in the GameCredit blockchain and skip <offset> transactions
+        List latest  <limit> transactions in the GameCredits blockchain and skip <offset> transactions
       parameters:
         - name: limit
           in: query
@@ -472,3 +473,13 @@ definitions:
         type: number
         format: double
         description: Block work
+
+  Confirmations:
+    type: object
+    properties:
+      hash:
+        type: string
+        description: Unique identifier, a hash of the block header
+      confirmations:
+        type: integer
+        description: Number of blocks in the blockchain after this block
