@@ -19,6 +19,12 @@ class DatabaseGateway(object):
             return block
         raise KeyError("Block not found")
 
+    def get_block_by_height(self, height):
+        block = self.blocks.find_one({"height": height})
+        if block:
+            return block
+        raise KeyError("Block not found")
+
     def get_address_unspent(self, address):
         vouts = self.vout.find({"address": address})
 

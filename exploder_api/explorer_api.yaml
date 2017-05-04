@@ -92,7 +92,7 @@ paths:
       summary: Get block by height
       operationId: api.get_block_by_height
       description: |
-        Provide height as a query parameter and get the block with that eight
+        Provide height as a query parameter and get the block with that height
       tags:
         - Blocks
       parameters:
