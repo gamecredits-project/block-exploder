@@ -244,6 +244,9 @@ class BlockchainSyncer(object):
             except JSONRPCException:
                 our_highest_block = self.db.get_block_by_hash(our_highest_block.previousblockhash)
 
+        while rpc_block['confirmations'] == -1:
+            rpc_block = rpc_block['previousblockhash']
+
         rpc_block_transactions = [
             self.rpc.getrawtransaction(tr, 1) for tr in rpc_block['tx']
         ]
