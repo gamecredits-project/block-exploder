@@ -1,16 +1,16 @@
 import pymongo
-MAIN_CHAIN = 'main_chain'
 
 
 class DatabaseGateway(object):
-    def __init__(self, database):
+    def __init__(self, database, config):
         self.blocks = database.blocks
         self.transactions = database.transactions
         self.vin = database.vin
         self.vout = database.vout
+        self.config = config
 
     def get_latest_blocks(self, limit=25, offset=0):
-        return list(self.blocks.find({"chain": MAIN_CHAIN})
+        return list(self.blocks.find({"chain": self.config.get('syncer', 'main_chain')})
                     .sort("height", pymongo.DESCENDING).skip(offset).limit(limit))
 
     def get_block_by_hash(self, hash):
@@ -71,7 +71,7 @@ class DatabaseGateway(object):
                     .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit))
 
     def get_network_hash_rate(self):
-        highest = self.get_highest_in_chain(MAIN_CHAIN)
+        highest = self.get_highest_in_chain(self.config.get('syncer', 'main_chain'))
         end = highest['time']
         start = highest['time'] - 86400
         blocks_in_interval = self.blocks.find({"time": {"$gt": start, "$lt": end}})

@@ -7,12 +7,17 @@
     - supervisor
     - mongod
     - redis
+    - nginx
     - application
     - celery
   vars:
-    - client_rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
-    - client_rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"
-    - client_rpc_port: 8332
-    - regtest: ""
+    - rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
+    - rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"
+    - rpc_port: 8332
     - code_dir: "/code"
     - log_dir: "{{ ansible_env.HOME }}/logs"
+    - blocks_dir: "{{ ansible_env.HOME }}/.gamecredits/blocks"
+    - exploder_conf_dir: "{{ ansible_env.HOME }}/.exploder"
+    - syncer_cache_size: 1000
+    - syncer_stream_sync_limit: 99
+    - syncer_task_lock_timeout: 3600

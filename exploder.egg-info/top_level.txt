@@ -1,2 +1,0 @@
-exploder_api
-syncer

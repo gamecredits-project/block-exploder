@@ -1,3 +1,11 @@
 - name: Install Celery
   pip: name="celery[redis]" state=present
   become: True
+
+- name: Copy the Celery supervisor conf file
+  template: src=templates/celery-supervisor.conf dest=/etc/supervisor/conf.d/celery-supervisor.conf
+  become: True
+
+- name: Restart the supervisor process
+  supervisorctl: name=celery state=restarted
+  become: True

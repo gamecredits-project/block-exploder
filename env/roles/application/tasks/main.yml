@@ -1,11 +1,8 @@
-- name: Install the application
-  pip: chdir=/code state=present name=.
+- name: Copy the configuration file
+  template: src=templates/exploder.conf dest={{ exploder_conf_dir }}/exploder.conf
 
-- name: Allow the ports in ufw
-  ufw: 
-    port: 5000
-    rule: allow
-  become: True
+- name: Install the application
+  pip: chdir={{ code_dir }} state=present name=.
 
 - name: Copy the app supervisor conf file
   template: src=templates/exploder-supervisor.conf dest=/etc/supervisor/conf.d/exploder-supervisor.conf
@@ -13,6 +10,25 @@
 
 - name: Restart the supervisor app
   supervisorctl:
-    name: exploder-api
+    name: "{{ item }}"
     state: restarted
+  with_items:
+    - exploder-api1
+    - exploder-api2
+  become: True
+
+- name: Copy the nginx conf file
+  template: src=templates/exploder-nginx.conf dest=/etc/nginx/sites-available/exploder-nginx.conf
+  become: True
+
+- name: Disable the default website
+  file: path=/etc/nginx/sites-enabled/default state=absent
+  become: True
+
+- name: Enable the application in nginx
+  file: src=/etc/nginx/sites-available/exploder-nginx.conf dest=/etc/nginx/sites-enabled/exploder-nginx.conf state=link
+  become: True
+
+- name: Restart nginx
+  service: name=nginx state=restarted
   become: True

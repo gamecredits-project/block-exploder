@@ -1,18 +1,25 @@
 import connexion
+import sys
+import os
+import ConfigParser
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
 
-RPC_USER = "62ca2d89-6d4a-44bd-8334-fa63ce26a1a3"
-RPC_PASSWORD = "CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup"
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
 
+rpc_user = config.get('syncer', 'rpc_user')
+rpc_password = config.get('syncer', 'rpc_password')
+rpc_port = config.getint('syncer', 'rpc_port')
 
 mongo = MongoClient()
-db = DatabaseGateway(database=mongo.exploder)
-rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
-                       % (RPC_USER, RPC_PASSWORD))
+db = DatabaseGateway(database=mongo.exploder, config=config)
+rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:%s"
+                       % (rpc_user, rpc_password, rpc_port))
 
 
 ############
@@ -118,6 +125,15 @@ def send_raw_transaction(hex):
         return e.error, 400
 
 
-api = connexion.App(__name__)
-api.add_api('explorer_api.yaml')
-api.run(server='tornado', port=5000)
+def create_and_run_app(port=5000):
+    api = connexion.App(__name__)
+    api.add_api('explorer_api.yaml')
+    api.run(server='tornado', port=port)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("USAGE: python api.py [PORT]")
+        sys.exit(1)
+
+    create_and_run_app(int(sys.argv[1]))

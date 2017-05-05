@@ -3,18 +3,16 @@ from gamecredits.helpers import has_length, is_block_file
 import datetime
 import itertools
 import logging
-import ConfigParser
 from gamecredits.factories import BlockFactory
 from bitcoinrpc.authproxy import JSONRPCException
 
 
 class Blockchain(object):
-    def __init__(self, database, conf_path):
-        self.config = ConfigParser.RawConfigParser()
-        self.config.read(conf_path)
+    def __init__(self, database, config):
+        self.config = config
 
         logging.basicConfig(
-            filename=os.path.join(self.config.get('logs_dir'), 'blockchain-syncer.log'), level=logging.INFO
+            filename=os.path.join(self.config.get('syncer', 'logs_dir'), 'blockchain-syncer.log'), level=logging.INFO
         )
 
         # Instance of MongoDatabaseGateway
@@ -33,7 +31,7 @@ class Blockchain(object):
     def _create_coinbase(self, block):
         block.height = 0
         block.chainwork = block.work
-        block.chain = self.config.get('main_chain')
+        block.chain = self.config.get('syncer', 'main_chain')
         self.db.put_block(block)
         return block
 
@@ -42,10 +40,10 @@ class Blockchain(object):
 
         block.height = chain_peak.height + 1
         block.chainwork = chain_peak.chainwork + block.work
-        block.chain = self.config.get('main_chain')
+        block.chain = self.config.get('syncer', 'main_chain')
 
-        self.db.put_block(block)
         self.db.update_block(chain_peak.hash, {"nextblockhash": block.hash})
+        self.db.put_block(block)
         return block
 
     def _create_fork_of_main_chain(self, block, fork_point):
@@ -61,8 +59,8 @@ class Blockchain(object):
         block.height = fork_point.height + 1
         block.chainwork = fork_point.chainwork + block.work
         block.chain = fork_point.chain
-        self.db.put_block(block)
         self.db.update_block(block.previousblockhash, {"nextblockhash": block.hash})
+        self.db.put_block(block)
         return block
 
     def insert_block(self, block):
@@ -89,7 +87,7 @@ class Blockchain(object):
         else:
             fork_point = self.db.get_block_by_hash(block.previousblockhash)
 
-            if fork_point.chain == self.config.get('main_chain'):
+            if fork_point.chain == self.config.get('syncer', 'main_chain'):
                 block = self._create_fork_of_main_chain(block, fork_point)
             else:
                 block = self._grow_sidechain(block, fork_point)
@@ -124,10 +122,10 @@ class Blockchain(object):
             self.db.update_block(block.hash, {"chain": new_sidechain_id})
 
         for block in sidechain_blocks:
-            self.db.update_block(block.hash, {"chain": self.config.get('main_chain')})
+            self.db.update_block(block.hash, {"chain": self.config.get('syncer', 'main_chain')})
         self.db.update_block(fork_point.hash, {"nextblockhash": first_in_sidechain.hash})
 
-        new_top_block.chain = self.config.get('main_chain')
+        new_top_block.chain = self.config.get('syncer', 'main_chain')
         self.db.set_highest_block(new_top_block)
         return new_top_block
 
@@ -136,7 +134,13 @@ class BlockchainSyncer(object):
     """
     Supports syncing from block dat files and using RPC.
     """
-    def __init__(self, database, blockchain, blocks_dir, rpc_client):
+    def __init__(self, database, blockchain, rpc_client, config):
+        self.config = config
+
+        logging.basicConfig(
+            filename=os.path.join(self.config.get('syncer', 'logs_dir'), 'blockchain-syncer.log'), level=logging.INFO
+        )
+
         # Instance of MongoDatabaseGateway (to keep track of syncs)
         self.db = database
 
@@ -144,9 +148,10 @@ class BlockchainSyncer(object):
         self.blockchain = blockchain
 
         # Find all of the block dat files inside the given block directory
-        if os.path.isdir(blocks_dir):
+        if os.path.isdir(config.get('syncer', 'blocks_dir')):
             self.blk_files = sorted(
-                [os.path.join(blocks_dir, f) for f in os.listdir(blocks_dir) if is_block_file(f)]
+                [os.path.join(config.get('syncer', 'blocks_dir'), f)
+                 for f in os.listdir(config.get('syncer', 'blocks_dir')) if is_block_file(f)]
             )
         else:
             raise Exception("[BLOCKCHAIN_INIT] Given path is not a directory")
@@ -154,7 +159,7 @@ class BlockchainSyncer(object):
         self.sync_progress = 0
 
         # When to stop reading from .dat files and start syncing from RPC
-        self.stream_sync_limit = stream_sync_limit
+        self.stream_sync_limit = config.getint('syncer', 'stream_sync_limit')
 
         # Client RPC connection
         self.rpc = rpc_client

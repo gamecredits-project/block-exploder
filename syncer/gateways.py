@@ -13,17 +13,14 @@ def get_mongo_connection():
 
 
 class MongoDatabaseGateway(object):
-    def __init__(self, database, cache=True, cache_size=1000):
-        self.cache_size = cache_size
-
+    def __init__(self, database, config):
         # Mongo collections to persist the blockchain
         self.blocks = database.blocks
         self.transactions = database.transactions
         self.vins = database.vin
         self.vouts = database.vout
 
-        # Cache mode enabled?
-        self.cache = cache
+        self.cache_size = config.getint('syncer', 'cache_size')
 
         # Caches for batch writing
         self.block_cache = {}
@@ -96,7 +93,7 @@ class MongoDatabaseGateway(object):
         """
         Tries to find it in cache and if it misses finds it in the DB
         """
-        if self.cache and block_hash in self.block_cache:
+        if block_hash in self.block_cache:
             return self.block_cache[block_hash]
 
         mongo_block = self.blocks.find_one({"hash": block_hash})
@@ -108,18 +105,15 @@ class MongoDatabaseGateway(object):
         return MongoBlockFactory.from_mongo(mongo_block, mongo_block_transactions)
 
     def get_block_by_height(self, block_height):
-        found = None
-        if self.cache:
-            found = [block for block in self.block_cache.values() if block.height == block_height]
-            if found:
-                found = found[0]
+        found = [block for block in self.block_cache.values() if block.height == block_height]
+        if found:
+            return found[0]
 
-        if not self.cache or not found:
-            mongo_block = self.blocks.find_one({"height": block_height})
+        mongo_block = self.blocks.find_one({"height": block_height})
 
-            if mongo_block:
-                mongo_block_transactions = self.transactions.find({"blockhash": mongo_block['hash']})
-                found = MongoBlockFactory.from_mongo(mongo_block, mongo_block_transactions)
+        if mongo_block:
+            mongo_block_transactions = self.transactions.find({"blockhash": mongo_block['hash']})
+            found = MongoBlockFactory.from_mongo(mongo_block, mongo_block_transactions)
 
         if not found:
             raise KeyError("[get_block_by_height] Block with height %s not found." % block_height)
@@ -197,7 +191,7 @@ class MongoDatabaseGateway(object):
     #  TRANSACTION METHODS  #
     #########################
     def get_transaction_by_txid(self, txid):
-        if self.cache and txid in self.tr_cache:
+        if txid in self.tr_cache:
             return self.tr_cache[txid]
 
         transaction = MongoTransactionFactory.from_mongo(self.transactions.find_one({"txid": txid}))
@@ -220,51 +214,8 @@ class MongoDatabaseGateway(object):
         return transactions
 
     def put_transaction(self, tr):
-        if self.cache:
-            self.tr_cache[tr.txid] = tr
-            # for vin in tr.vin:
-            #     self.vin_cache.append(VinSerializer.to_database(vin, tr.txid))
+        if tr.txid in self.tr_cache:
+            raise KeyError("[put_transaction] Transaction with txid %s already exists in the database" % tr.txid)
 
-            # for (index, vout) in enumerate(tr.vout):
-            #     self.vout_cache += VoutSerializer.to_database(vout, tr.txid, index)
-        else:
-            vins = []
-            vouts = []
-            for vin in tr.vin:
-                vins.append(VinSerializer.to_database(vin, tr.txid))
-
-            for vout in tr.vout:
-                vouts += VoutSerializer.to_database(vout, tr.txid, tr.index)
-
-            self.transactions.insert_one(TransactionSerializer.to_database(tr))
-            self.vin.insert_many(vins)
-            self.vout.insert_many(vouts)
-
-    ########################
-    #  INPUTS AND OUTPUTS  #
-    ########################
-    def get_vouts_by_address(self, address):
-        return [MongoVoutFactory.from_mongo(vout) for vout in self.vouts.find({"address": address})]
-
-    def get_vin_by_vout(self, vout):
-        if self.cache:
-            found = [
-                vin for vin in self.vin_cache if vin['prev_txid'] == vout.txid and vin['vout_index'] == vout.index
-            ]
-            if found:
-                return MongoVinFactory.from_mongo(found[0])
-
-        found = self.vins.find_one({"prev_txid": vout.txid, "vout_index": vout.index})
-
-        if not found:
-            raise KeyError("[get_vin_by_vout] Input with prev_txid=%s and vout_index=%s doesn't exist"
-                           % (vout.txid, vout.index))
-
-        return found
-
-    def put_vin(self, vin, txid):
-        if self.cache:
-            self.vin_cache.append(VinSerializer.to_database(vin, txid))
-        else:
-            self.vins.insert_one(VinSerializer.to_database(vin, txid))
+        self.tr_cache[tr.txid] = tr
 

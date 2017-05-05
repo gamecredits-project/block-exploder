@@ -1,10 +1,11 @@
 import unittest
+import os
+import ConfigParser
 
 from gamecredits.helpers import get_rpc_connection
 from gamecredits.factories import BlockFactory
 from gateways import get_mongo_connection, MongoDatabaseGateway
 from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer
-from interactors import MAIN_CHAIN
 
 
 def generate_test_data(num_blocks):
@@ -30,12 +31,16 @@ def generate_test_data(num_blocks):
 class MongoDbGatewayTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+        cls.config = ConfigParser.RawConfigParser()
+        cls.config.read(CONFIG_FILE)
+
         cls.client = get_mongo_connection()
         cls.db = cls.client.test_database
         blocks = generate_test_data(50)
 
         for block in blocks:
-            block.chain = MAIN_CHAIN
+            block.chain = cls.config.get('syncer', 'main_chain')
         transactions = []
         for block in blocks:
             transactions += block.tx
@@ -44,6 +49,7 @@ class MongoDbGatewayTestCase(unittest.TestCase):
         cls.blocks_to_insert = blocks[45:]
         cls.transactions = transactions[:45]
         cls.transactions_to_insert = transactions[45:]
+
 
     @classmethod
     def tearDownClass(cls):
@@ -60,8 +66,7 @@ class MongoDbGatewayTestCase(unittest.TestCase):
 
         self.db_gateway = MongoDatabaseGateway(
             database=self.db,
-            cache=True,
-            cache_size=5
+            config=self.config
         )
 
     def tearDown(self):
@@ -150,26 +155,6 @@ class MongoDbGatewayTestCase(unittest.TestCase):
         # Insert it and then check that it's there
         self.db_gateway.put_transaction(transaction)
         self.assertEqual(self.db_gateway.get_transaction_by_txid(transaction.txid), transaction)
-
-    def test_get_vouts_by_address(self):
-        address = self.transactions[5].vout[0].addresses[0]
-        self.assertGreater(len(self.db_gateway.get_vouts_by_address(address)), 0)
-
-    # def test_get_vin_by_vout(self):
-    #     vout = self.transactions[5].vout[0]
-    #     vout.index = 0
-    #     vout.txid = self.transactions[5].txid
-    #     fake_vin = Vin(
-    #         txid=self.transactions[7].txid,
-    #         prev_txid=vout.txid,
-    #         vout_index=vout.index,
-    #         hex="xexexeex",
-    #         sequence=1
-    #     )
-    #     # First we create a vin that references an existing vout
-    #     self.db_gateway.put_vin(fake_vin, fake_vin.txid)
-
-    #     self.assertEqual(fake_vin, self.db_gateway.get_vin_by_vout(vout))
 
 
 if __name__ == "__main__":
