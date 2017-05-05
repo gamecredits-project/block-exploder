@@ -52,7 +52,7 @@ def get_block_confirmations(block_hash):
 
     return {
         "hash": block_hash,
-        "confirmations": db.calculcate_block_confirmations(block)
+        "confirmations": db.calculate_block_confirmations(block)
     }
 
 
@@ -61,7 +61,7 @@ def get_block_confirmations(block_hash):
 ##################
 def get_transaction_by_txid(txid):
     try:
-        return TransactionSerializer.to_web(db.get_transaction(txid))
+        return TransactionSerializer.to_web(db.get_transaction_by_txid(txid))
     except KeyError:
         return "Transaction with given ID not found", 404
 
@@ -73,8 +73,10 @@ def get_transaction_confirmations(txid):
         return "Transaction with given txid not found", 404
 
     block = db.get_block_by_hash(tr['blockhash'])
-
-    return db.calculate_block_confirmations(block)
+    return {
+        "txid": txid,
+        "confirmations": db.calculate_block_confirmations(block)
+    }
 
 
 def get_latest_transactions(limit, offset):

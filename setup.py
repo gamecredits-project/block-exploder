@@ -2,6 +2,7 @@ from setuptools import setup
 
 setup(
     name='exploder',
+    version='0.0.1',
     packages=['exploder_api', 'syncer'],
     install_requires=[
         'gamecredits',

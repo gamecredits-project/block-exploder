@@ -80,7 +80,7 @@ paths:
         200:
           description: Number of confirmations
           schema:
-            $ref: '#/definitions/Confirmations'
+            $ref: '#/definitions/BlockConfirmations'
         404:
           description: Block with given hash doesn't exist
         default:
@@ -176,8 +176,9 @@ paths:
       summary: Get number of confirmations for the transaction with the given txid
       operationId: exploder_api.api.get_transaction_confirmations
       description: |
-        Returns number of confirmations for the given transaction. Confirmations are calculated
-        as the number of blocks in the blockchain after the block that contains this transaction.
+        Returns number of confirmations for the given transaction.
+
+        Confirmations are calculated as the number of blocks in the blockchain after the block that contains this transaction.
       tags:
         - Transactions
       parameters:
@@ -186,7 +187,7 @@ paths:
         200:
           description: Number of confirmations
           schema:
-            type: integer
+            $ref: '#/definitions/TransactionConfirmations'
         404:
           description: Transaction with given txid doesn't exist
         default:
@@ -474,7 +475,7 @@ definitions:
         format: double
         description: Block work
 
-  Confirmations:
+  BlockConfirmations:
     type: object
     properties:
       hash:
@@ -483,3 +484,13 @@ definitions:
       confirmations:
         type: integer
         description: Number of blocks in the blockchain after this block
+
+  TransactionConfirmations:
+    type: object
+    properties:
+      txid:
+        type: string
+        description: Unique identifier of a transaction
+      confirmations:
+        type: integer
+        description: Number of blocks in the blockchain after the block containing this transaction
