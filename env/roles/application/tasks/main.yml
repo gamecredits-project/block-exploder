@@ -1,3 +1,6 @@
+- name: Create exploder configuration directory
+  file: path={{ exploder_conf_dir }} state=directory
+
 - name: Copy the configuration file
   template: src=templates/exploder.conf dest={{ exploder_conf_dir }}/exploder.conf
 
