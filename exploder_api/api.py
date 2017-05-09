@@ -6,6 +6,7 @@ from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from gamecredits.constants import SUBSIDY_HALVING_INTERVAL, PAY_TO_PUBKEY_VERSION_PREFIX, MAGIC_NUMBER
 
 
 CONFIG_FILE = os.environ['EXPLODER_CONFIG']
@@ -123,6 +124,34 @@ def send_raw_transaction(hex):
         rpc.sendrawtransaction(hex)
     except JSONRPCException as e:
         return e.error, 400
+
+
+def get_network_info():
+    highest = db.get_latest_blocks(1)
+
+    supply = None
+    if highest:
+        height = highest[0]['height']
+        supply = _calculate_supply(height)
+
+    return {
+        "rewardHalvingInterval": SUBSIDY_HALVING_INTERVAL,
+        "networkMagicNumber": hex(MAGIC_NUMBER),
+        "pubkeyAddressVersionPrefix": PAY_TO_PUBKEY_VERSION_PREFIX,
+        "coinSupply": supply
+    }
+
+
+def _calculate_supply(height):
+    reward = 50
+    supply = 0
+    while height > SUBSIDY_HALVING_INTERVAL:
+        supply += SUBSIDY_HALVING_INTERVAL * reward
+        height -= SUBSIDY_HALVING_INTERVAL
+        reward /= 2
+
+    supply += height * reward
+    return supply
 
 
 def create_and_run_app(port=5000):

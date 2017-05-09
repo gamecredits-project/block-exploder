@@ -276,6 +276,21 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /network/info:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_network_info
+      summary: Get basic network information
+      responses:
+        200:
+          description: Return network information
+          schema:
+            $ref: '#/definitions/NetworkInfo'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
 parameters:
   block_hash:
     name: block_hash
@@ -306,6 +321,21 @@ definitions:
         type: string
       fields:
         type: string
+
+  NetworkInfo:
+    type: object
+    properties:
+      rewardHalvingInterval: 
+        type: integer
+        format: int32
+      networkMagicNumber:
+        type: string
+      pubkeyAddressVersionPrefix:
+        type: integer
+        format: int32
+      coinSupply:
+        type: integer
+        format: int32
 
   Address:
     type: object
