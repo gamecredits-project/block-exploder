@@ -4,7 +4,7 @@ import os
 import ConfigParser
 from gateways import DatabaseGateway
 from pymongo import MongoClient
-from serializers import TransactionSerializer, BlockSerializer, VoutSerializer
+from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
 
@@ -123,6 +123,11 @@ def send_raw_transaction(hex):
         rpc.sendrawtransaction(hex)
     except JSONRPCException as e:
         return e.error, 400
+
+
+def get_latest_hashrates(limit):
+    hash_rates = db.get_latest_hashrates(limit)
+    return [HashrateSerializer.to_web(hash_rate) for hash_rate in hash_rates]
 
 
 def create_and_run_app(port=5000):

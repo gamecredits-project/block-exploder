@@ -48,3 +48,12 @@ class VoutSerializer(object):
             "type": vout["type"],
             "asm": vout["asm"]
         }
+
+
+class HashrateSerializer(object):
+    @staticmethod
+    def to_web(hash_rate):
+        return {
+            "hashrate": hash_rate["hashrate"],
+            "timestamp": hash_rate["timestamp"]
+        }

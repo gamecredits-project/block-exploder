@@ -267,6 +267,8 @@ paths:
           description: Raw transaction in hexadecimal format
           required: true
           type: string
+      tags:
+        - Network
       responses:
         200:
           description: Transmitted the transaction successfully
@@ -276,6 +278,36 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+
+  /hashrates/latest:
+    get:
+      summary: Latest hashrates
+      operationId: exploder_api.api.get_latest_hashrates
+      description: |
+        List latest  <limit> hashrates in the GameCredits blockchain
+      parameters:
+        - name: limit
+          in: query
+          description: Number of hashrates to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 10
+      tags:
+        - Network
+      responses:
+        200:
+          description: An array of hashrates
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Hashrate'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
 parameters:
   block_hash:
     name: block_hash
@@ -494,3 +526,15 @@ definitions:
       confirmations:
         type: integer
         description: Number of blocks in the blockchain after the block containing this transaction
+
+  Hashrate:
+    type: object
+    properties:
+      hashrate:
+        type: integer
+        description: The estimated number of hashes per second the GameCredits network is performing.
+      timestamp:
+        type: number
+        format: float
+        description: |
+          Unix timestamp representing the time the hashrate was calculated

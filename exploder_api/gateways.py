@@ -7,6 +7,7 @@ class DatabaseGateway(object):
         self.transactions = database.transactions
         self.vin = database.vin
         self.vout = database.vout
+        self.hashrate = database.hashrate
         self.config = config
 
     def get_latest_blocks(self, limit=25, offset=0):
@@ -70,33 +71,12 @@ class DatabaseGateway(object):
         return list(self.transactions.find()
                     .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit))
 
-    def get_network_hash_rate(self):
-        highest = self.get_highest_in_chain(self.config.get('syncer', 'main_chain'))
-        end = highest['time']
-        start = highest['time'] - 86400
-        blocks_in_interval = self.blocks.find({"time": {"$gt": start, "$lt": end}})
-        cum_work = sum([block['work'] for block in blocks_in_interval])
-        hps = float(cum_work) / 86400
-
-        if hps >= 10e8:
-            return {
-                "rate": int(hps / 10e8),
-                "unit": "GH/s"
-            }
-        elif hps >= 10e5:
-            return {
-                "rate": int(hps / 10e5),
-                "unit": "MH/s"
-            }
-        else:
-            return {
-                "rate": int(hps),
-                "unit": "H/s"
-            }
-
     def get_highest_in_chain(self, chain):
         return self.blocks.find_one({"chain": chain}, sort=[("height", -1)])
 
     def calculate_block_confirmations(self, block):
         highest_in_chain = self.get_highest_in_chain(block['chain'])
         return highest_in_chain['height'] - block['height']
+
+    def get_latest_hashrates(self, limit):
+        return list(self.hashrate.find().sort("timestamp", pymongo.DESCENDING).limit(limit))

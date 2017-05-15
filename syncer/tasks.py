@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from bitcoinrpc.authproxy import AuthServiceProxy
 from celery import Celery
 from celery.task import Task
+from celery.schedules import crontab
 import redis
 import ConfigParser
 import os
@@ -53,14 +54,31 @@ class SyncTask(Task):
         syncer.sync_auto()
 
 
+class HashrateTask(Task):
+    def run(self, **kwargs):
+        client = MongoClient()
+        database = MongoDatabaseGateway(client.exploder, config)
+        blockchain = Blockchain(database, config)
+
+        rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
+                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
+        syncer = BlockchainSyncer(database, blockchain, rpc_client, config)
+        syncer.calculate_network_hash_rate()
+
+
 app = Celery('tasks', broker='redis://localhost:6379/0')
 app.conf.result_backend = 'redis://localhost:6379/0'
 app.tasks.register(SyncTask)
+app.tasks.register(HashrateTask)
 
 app.conf.beat_schedule = {
     'sync-every-10-seconds': {
         'task': 'syncer.tasks.SyncTask',
         'schedule': 10.0,
+    },
+    'hashrate-once-a-day': {
+        'task': 'syncer.tasks.HashrateTask',
+        'schedule': crontab(minute=0, hour=12),  # It's high noon
     },
 }
 

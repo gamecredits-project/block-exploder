@@ -173,6 +173,15 @@ class BlockchainSyncer(object):
         else:
             self.sync_progress = 0
 
+    def calculate_network_hash_rate(self):
+        highest = self.db.get_highest_block()
+        end = highest.time
+        start = highest.time - 86400     # seconds in day
+        blocks_in_interval = self.db.get_blocks_between_time(start, end)
+        cum_work = sum([block['work'] for block in blocks_in_interval])
+        hps = float(cum_work) / 86400
+        self.db.put_hashrate(int(hps))
+
     ######################
     # SYNC METHODS       #
     ######################

@@ -8,7 +8,8 @@ setup(
         'gamecredits',
         'tornado',
         'connexion',
-        'pymongo'
+        'pymongo',
+        'mock'
     ],
     package_data={'exploder_api': ['*.yaml']},
     include_package_data=True,

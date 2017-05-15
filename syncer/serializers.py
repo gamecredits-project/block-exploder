@@ -1,16 +1,7 @@
-class VoutSerializer(object):
-    @staticmethod
-    def to_web(vout):
-        return {
-            "txid": vout.txid,
-            "index": vout.index,
-            "value": vout.value,
-            "asm": vout.asm,
-            "addresses": vout.addresses,
-            "type": vout.type,
-            "reqSigs": vout.reqSigs
-        }
+import time
 
+
+class VoutSerializer(object):
     @staticmethod
     def to_database(vout, txid, index):
         formatted = []
@@ -42,17 +33,6 @@ class VoutSerializer(object):
 
 class VinSerializer(object):
     @staticmethod
-    def to_web(vin):
-        return {
-            "vout_index": vin.vout_index,
-            "prev_txid": vin.prev_txid,
-            "sequence": vin.sequence,
-            "hex": vin.hex,
-            "txid": vin.txid,
-            "coinbase": vin.coinbase
-        }
-
-    @staticmethod
     def to_database(vin, txid):
         return {
             "txid": txid,
@@ -65,19 +45,6 @@ class VinSerializer(object):
 
 
 class TransactionSerializer(object):
-    @staticmethod
-    def to_web(tr):
-        return {
-            "txid": tr.txid,
-            "blocktime": tr.blocktime,
-            "version": tr.version,
-            "blockhash": tr.blockhash,
-            "locktime": tr.locktime,
-            "total": tr.total,
-            "vin": tr.vin,
-            "vout": tr.vout
-        }
-
     @staticmethod
     def to_database(tr):
         formatted = {
@@ -110,26 +77,6 @@ class TransactionSerializer(object):
 
 class BlockSerializer(object):
     @staticmethod
-    def to_web(block):
-        return {
-            "hash": block.hash,
-            "size": block.size,
-            "height": block.height,
-            "version": block.version,
-            "merkleroot": block.merkleroot,
-            "tx": [tr.txid for tr in block.tx],
-            "time": block.time,
-            "nonce": block.nonce,
-            "bits": block.bits,
-            "difficulty": block.difficulty,
-            "chainwork": block.chainwork,
-            "previousblockhash": block.previousblockhash,
-            "nextblockhash": block.nextblockhash,
-            "target": block.target,
-            "total": block.total,
-        }
-
-    @staticmethod
     def to_database(block):
         if not type(block.tx[0]) == unicode:
             tx = [tr.txid for tr in block.tx]
@@ -155,4 +102,13 @@ class BlockSerializer(object):
             "total": str(block.total),
             "work": block.work,
             "chain": block.chain
+        }
+
+
+class HashrateSerializer(object):
+    @staticmethod
+    def to_database(rate):
+        return {
+            "hashrate": rate,
+            "timestamp": time.time()
         }

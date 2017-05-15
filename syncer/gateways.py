@@ -1,7 +1,7 @@
 import pymongo
 
 from factories import MongoBlockFactory, MongoTransactionFactory, MongoVoutFactory, MongoVinFactory
-from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer
+from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer, HashrateSerializer
 from pymongo import MongoClient
 
 
@@ -19,6 +19,7 @@ class MongoDatabaseGateway(object):
         self.transactions = database.transactions
         self.vins = database.vin
         self.vouts = database.vout
+        self.hashrate = database.hashrate
 
         self.cache_size = config.getint('syncer', 'cache_size')
 
@@ -187,6 +188,9 @@ class MongoDatabaseGateway(object):
                 '$set': update_dict
             })
 
+    def get_blocks_between_time(self, start, end):
+        return self.blocks.find({"time": {"$gt": start, "$lt": end}})
+
     #########################
     #  TRANSACTION METHODS  #
     #########################
@@ -219,3 +223,9 @@ class MongoDatabaseGateway(object):
 
         self.tr_cache[tr.txid] = tr
 
+    #########################
+    #   HASHRATE METHODS    #
+    #########################
+    def put_hashrate(self, hash_rate):
+        if hash_rate:
+            self.hashrate.insert_one(HashrateSerializer.to_database(hash_rate))
