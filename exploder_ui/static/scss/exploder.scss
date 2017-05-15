@@ -1,0 +1,322 @@
+$color-primary-0: #80D742;
+$color-primary-1: #B9F092;
+$color-primary-2: #9BE665;
+$color-primary-3: #64C91D;
+$color-primary-4: #489C0D;
+
+$color-secondary-1-0: #33A579;
+$color-secondary-1-1: #82D6B6;
+$color-secondary-1-2: #52BA93;
+$color-secondary-1-3: #169968;
+$color-secondary-1-4: #0A774E;
+
+$color-secondary-dark: darken($color-secondary-1-4, 10);
+
+$color-secondary-2-0: #F47F4B;
+$color-secondary-2-1: #FFBA9B;
+$color-secondary-2-2: #FF9D70;
+$color-secondary-2-3: #E35D21;
+$color-secondary-2-4: #B0410E;
+
+$color-complement-0: #DD446D;
+$color-complement-1: #F394AD;
+$color-complement-2: #EB688B;
+$color-complement-3: #CE1D4D;
+$color-complement-4: #A00D34;
+
+$blue: #396E9E;
+
+body {
+    background-color: #fafafa;
+    font-family: 'Roboto', sans-serif;
+}
+
+.navbar-default {
+    background-color: $color-secondary-dark;
+    
+    .navbar-nav li a, .navbar-brand {
+        color: white;
+    }
+
+    .navbar-nav li a {
+        text-transform: uppercase;
+
+        &:hover {
+            background-color: $color-secondary-1-0;
+            color: white;
+        }
+    }
+
+    margin: 0;
+    border: none;
+}
+
+
+.navbar-brand .badge{
+    background-color: $color-secondary-2-0;
+}
+
+.page-banner {
+    min-height: 300px;
+    background-color: $color-secondary-1-0;
+    border-bottom: 2px solid $color-secondary-dark;
+
+    padding-top: 20px;
+    padding-bottom: 75px;
+}
+
+.network-info {
+    color: white;
+
+    ul li {
+        margin: 5px 0;
+    }
+
+    button {
+        background-color: transparent;
+        color: white;
+        border: 2px solid white;
+
+        &:hover {
+            background-color: white;
+            color: $color-secondary-1-0;
+            border: 2px solid white;
+        }
+    }
+}
+
+.search-div {
+    margin: auto;
+    font-size: 22px;
+    border: 3px solid $color-secondary-dark;
+    width: 550px;
+    border-radius: 50px;
+    padding: 5px 15px;
+    position: relative;
+    bottom: 25px;
+    background-color: white;
+
+    .search {
+        font-size: 20px;
+        width: 450px;
+        border: none;
+        background-color: transparent;
+
+        &:focus {
+            outline: none;
+        }
+    }
+}
+
+.show-more-blocks {
+    float: right;
+    font-size: 16px;
+    line-height: 39.6px;
+}
+
+.latest-blocks-table {
+    a {
+        color: $color-secondary-2-0;
+    }
+
+    margin-bottom: 100px;
+}
+
+footer {
+    min-height: 200px;
+    background-color: $color-secondary-dark;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    margin: auto;
+    border: 5px solid $color-secondary-dark;
+    border-radius: 60px;
+    background-color: #fafafa;
+    text-align: center;
+
+    img {
+        height: 60px;
+        position: relative;
+        top: 15px;
+    }
+}
+
+.game-text {
+    color: white;
+    font-weight: 300;
+
+    h2 {
+        font-weight: 300;
+    }
+}
+
+.footer-wrap {
+    position: relative;
+    bottom: 50px;
+}
+
+.latest-transactions {
+    color: white;
+    font-weight: 300;
+
+    h2 {
+        font-weight: 300;
+    }
+}
+
+.latest-transactions-table a {
+    color: white;
+}
+
+.line {
+    border: 1px solid white;
+    width: 100%;
+    height: 1px;
+    position: relative;
+    top: 65px;
+}
+
+.boxes {
+    text-align: center;
+    color: $color-secondary-dark;
+}
+
+.block-transactions {
+    min-height: 600px;
+}
+
+.block-link {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: $blue;
+
+    a {
+        color: $color-secondary-dark;
+        text-decoration: underline;
+    }
+}
+
+.block-title {
+    color: white;
+
+    small {
+        color: white;
+        font-size: 16px;
+    }
+    padding-bottom: 15px;
+}
+
+.block-header {
+    .table {
+        border-color: white;
+        color: white;
+        overflow: hidden;
+    }
+
+    padding-bottom: 25px;
+    border-bottom: 1px solid $color-secondary-dark;
+}
+
+.boxes-banner {
+    background-color: #f5f5f5;
+    padding-bottom: 60px;
+    border-bottom: 1px solid #ddd;
+}
+
+.box-label {
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.chain-links-label {
+    margin: 25px 0;
+    text-transform: uppercase;
+    font-size: 16px;
+}
+
+.block-transactions-title {
+    margin-top: 60px;
+}
+
+.block-transactions {
+    a {
+        color: $color-secondary-dark;
+        text-decoration: underline;
+    }
+
+    margin-bottom: 50px;
+}
+
+.block-details {
+    background-color: white;
+}
+
+.transaction-header {
+    background-color: $color-secondary-1-0;
+    padding-bottom: 60px;
+    padding-top: 20px;
+
+    h1 {
+        color: white;
+
+        small {
+            color: white;
+        }
+    }
+}
+
+.transaction-card {
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    position: relative;
+    bottom: 50px;
+
+    &__body {
+        padding: 20px 0;
+    }
+
+    &__footer {
+        padding-top: 20px;
+        clear: both;
+    }
+}
+
+.transaction-summary {
+    min-height: 300px;
+}
+
+.address-transactions {
+    .btn-primary {
+        background-color: $color-secondary-1-0; 
+    }
+
+    .btn-warning {
+        background-color: $color-secondary-2-0;
+        margin-right: 5px;
+    }
+}
+
+.address-transactions-title{
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+.halving-alert {
+    margin: 0;
+    background-color: lighten($color-secondary-2-0, 2);
+    color: white;
+    border: none;
+
+    .close {
+        color: white;
+    }
+
+    margin-bottom: 10px;
+}
+
+.monospace {
+    font-family: 'Share Tech Mono', monospace;
+}

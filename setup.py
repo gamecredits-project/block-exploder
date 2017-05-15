@@ -9,7 +9,8 @@ setup(
         'tornado',
         'connexion',
         'pymongo',
-        'mock'
+        'mock',
+        'raven'
     ],
     package_data={'exploder_api': ['*.yaml']},
     include_package_data=True,

@@ -1,5 +1,5 @@
-from syncer.interactors import Blockchain, BlockchainSyncer
-from syncer.gateways import MongoDatabaseGateway
+from interactors import Blockchain, BlockchainSyncer
+from gateways import MongoDatabaseGateway
 from pymongo import MongoClient
 from bitcoinrpc.authproxy import AuthServiceProxy
 from celery import Celery
@@ -8,11 +8,31 @@ from celery.schedules import crontab
 import redis
 import ConfigParser
 import os
+import raven
+import logging
+from raven.contrib.celery import register_signal, register_logger_signal
+
 
 REDIS_CLIENT = redis.Redis()
 CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
 config.read(CONFIG_FILE)
+
+
+class MyCelery(Celery):
+    def on_configure(self):
+        if config.getboolean('syncer', 'sentry'):
+            token1 = config.get('syncer', 'sentry_token1')
+            token2 = config.get('syncer', 'sentry_token2')
+            path = config.get('syncer', 'sentry_path')
+            sentry_url = "https://%s:%s@%s" % (token1, token2, path)
+            client = raven.Client(sentry_url)
+
+            # register a custom filter to filter out duplicate logs
+            register_logger_signal(client, loglevel=logging.WARNING)
+
+            # hook into the Celery error handler
+            register_signal(client)
 
 
 def only_one(function=None, key="", timeout=None):
@@ -66,7 +86,7 @@ class HashrateTask(Task):
         syncer.calculate_network_hash_rate()
 
 
-app = Celery('tasks', broker='redis://localhost:6379/0')
+app = MyCelery('tasks', broker='redis://localhost:6379/0')
 app.conf.result_backend = 'redis://localhost:6379/0'
 app.tasks.register(SyncTask)
 app.tasks.register(HashrateTask)

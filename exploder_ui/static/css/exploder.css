@@ -1,0 +1,213 @@
+body {
+  background-color: #fafafa;
+  font-family: 'Roboto', sans-serif; }
+
+.navbar-default {
+  background-color: #06482f;
+  margin: 0;
+  border: none; }
+  .navbar-default .navbar-nav li a, .navbar-default .navbar-brand {
+    color: white; }
+  .navbar-default .navbar-nav li a {
+    text-transform: uppercase; }
+    .navbar-default .navbar-nav li a:hover {
+      background-color: #33A579;
+      color: white; }
+
+.navbar-brand .badge {
+  background-color: #F47F4B; }
+
+.page-banner {
+  min-height: 300px;
+  background-color: #33A579;
+  border-bottom: 2px solid #06482f;
+  padding-top: 20px;
+  padding-bottom: 75px; }
+
+.network-info {
+  color: white; }
+  .network-info ul li {
+    margin: 5px 0; }
+  .network-info button {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white; }
+    .network-info button:hover {
+      background-color: white;
+      color: #33A579;
+      border: 2px solid white; }
+
+.search-div {
+  margin: auto;
+  font-size: 22px;
+  border: 3px solid #06482f;
+  width: 550px;
+  border-radius: 50px;
+  padding: 5px 15px;
+  position: relative;
+  bottom: 25px;
+  background-color: white; }
+  .search-div .search {
+    font-size: 20px;
+    width: 450px;
+    border: none;
+    background-color: transparent; }
+    .search-div .search:focus {
+      outline: none; }
+
+.show-more-blocks {
+  float: right;
+  font-size: 16px;
+  line-height: 39.6px; }
+
+.latest-blocks-table {
+  margin-bottom: 100px; }
+  .latest-blocks-table a {
+    color: #F47F4B; }
+
+footer {
+  min-height: 200px;
+  background-color: #06482f; }
+
+.logo {
+  width: 100px;
+  height: 100px;
+  margin: auto;
+  border: 5px solid #06482f;
+  border-radius: 60px;
+  background-color: #fafafa;
+  text-align: center; }
+  .logo img {
+    height: 60px;
+    position: relative;
+    top: 15px; }
+
+.game-text {
+  color: white;
+  font-weight: 300; }
+  .game-text h2 {
+    font-weight: 300; }
+
+.footer-wrap {
+  position: relative;
+  bottom: 50px; }
+
+.latest-transactions {
+  color: white;
+  font-weight: 300; }
+  .latest-transactions h2 {
+    font-weight: 300; }
+
+.latest-transactions-table a {
+  color: white; }
+
+.line {
+  border: 1px solid white;
+  width: 100%;
+  height: 1px;
+  position: relative;
+  top: 65px; }
+
+.boxes {
+  text-align: center;
+  color: #06482f; }
+
+.block-transactions {
+  min-height: 600px; }
+
+.block-link {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #396E9E; }
+  .block-link a {
+    color: #06482f;
+    text-decoration: underline; }
+
+.block-title {
+  color: white;
+  padding-bottom: 15px; }
+  .block-title small {
+    color: white;
+    font-size: 16px; }
+
+.block-header {
+  padding-bottom: 25px;
+  border-bottom: 1px solid #06482f; }
+  .block-header .table {
+    border-color: white;
+    color: white;
+    overflow: hidden; }
+
+.boxes-banner {
+  background-color: #f5f5f5;
+  padding-bottom: 60px;
+  border-bottom: 1px solid #ddd; }
+
+.box-label {
+  text-transform: uppercase;
+  font-weight: bold; }
+
+.chain-links-label {
+  margin: 25px 0;
+  text-transform: uppercase;
+  font-size: 16px; }
+
+.block-transactions-title {
+  margin-top: 60px; }
+
+.block-transactions {
+  margin-bottom: 50px; }
+  .block-transactions a {
+    color: #06482f;
+    text-decoration: underline; }
+
+.block-details {
+  background-color: white; }
+
+.transaction-header {
+  background-color: #33A579;
+  padding-bottom: 60px;
+  padding-top: 20px; }
+  .transaction-header h1 {
+    color: white; }
+    .transaction-header h1 small {
+      color: white; }
+
+.transaction-card {
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  position: relative;
+  bottom: 50px; }
+  .transaction-card__body {
+    padding: 20px 0; }
+  .transaction-card__footer {
+    padding-top: 20px;
+    clear: both; }
+
+.transaction-summary {
+  min-height: 300px; }
+
+.address-transactions .btn-primary {
+  background-color: #33A579; }
+.address-transactions .btn-warning {
+  background-color: #F47F4B;
+  margin-right: 5px; }
+
+.address-transactions-title {
+  margin-top: 30px;
+  margin-bottom: 15px; }
+
+.halving-alert {
+  margin: 0;
+  background-color: #f58655;
+  color: white;
+  border: none;
+  margin-bottom: 10px; }
+  .halving-alert .close {
+    color: white; }
+
+.monospace {
+  font-family: 'Share Tech Mono', monospace; }
+
+/*# sourceMappingURL=exploder.css.map */

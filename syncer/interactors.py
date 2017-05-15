@@ -253,6 +253,10 @@ class BlockchainSyncer(object):
             except JSONRPCException:
                 our_highest_block = self.db.get_block_by_hash(our_highest_block.previousblockhash)
 
+        # When a block is a part of a sidechain (fork) it has -1 confirmations
+        while rpc_block['confirmations'] == -1:
+            rpc_block = self.rpc.getblock(rpc_block['previousblockhash'])
+
         rpc_block_transactions = [
             self.rpc.getrawtransaction(tr, 1) for tr in rpc_block['tx']
         ]
