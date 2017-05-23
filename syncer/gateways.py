@@ -87,6 +87,14 @@ class MongoDatabaseGateway(object):
         self.set_highest_block(highest_block)
         return self._highest_block
 
+    def get_blockchain_height(self):
+        highest_block = self.get_highest_block()
+
+        if not highest_block:
+            return 0
+
+        return highest_block.height
+
     def set_highest_block(self, block):
         self._highest_block = block
 

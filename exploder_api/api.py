@@ -2,6 +2,7 @@ import connexion
 import sys
 import os
 import ConfigParser
+from flask_cors import CORS
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer
@@ -162,6 +163,7 @@ def _calculate_supply(height):
 def create_and_run_app(port=5000):
     api = connexion.App(__name__)
     api.add_api('explorer_api.yaml')
+    CORS(api.app)
     api.run(server='tornado', port=port)
 
 

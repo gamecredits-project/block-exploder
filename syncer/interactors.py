@@ -4,6 +4,7 @@ import datetime
 import itertools
 import logging
 from gamecredits.factories import BlockFactory
+from gamecredits.constants import SUBSIDY_HALVING_INTERVAL
 from bitcoinrpc.authproxy import JSONRPCException
 
 
@@ -274,6 +275,38 @@ class BlockchainSyncer(object):
         end_time = datetime.datetime.now()
         diff_time = end_time - start_time
         logging.info("[SYNC_RPC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
+
+    def calculate_network_stats(self):
+        print "ALOHA"
+        supply = self._calculate_supply(self.db.get_blockchain_height())
+        blockchain_size = self._calculate_blockchain_size_in_gb(self.config.get('syncer', 'datadir_path'))
+        self.db.update_network_stats(supply=supply, blockchain_size=blockchain_size)
+
+    def _calculate_supply(self, height):
+        reward = 50
+        supply = 0
+        while height > SUBSIDY_HALVING_INTERVAL:
+            supply += SUBSIDY_HALVING_INTERVAL * reward
+            height -= SUBSIDY_HALVING_INTERVAL
+            reward /= 2
+
+        supply += height * reward
+        return supply
+
+    def _calculate_blockchain_size_in_gb(self, datadir_path):
+        """
+        Walks (recursively) through the provided data directory
+        and calculates the size of the whole directory
+        """
+        size = 0
+        for root, dirs, files in os.walk(datadir_path):
+            for file in files:
+                size += os.stat(os.path.join(root, file)).st_size
+
+        # Calculate size in GB
+        B_IN_GB = pow(2, 30)
+        size = float(size) / B_IN_GB
+        return round(size, 2)
 
     ######################
     #  HELPER FUNCTIONS  #

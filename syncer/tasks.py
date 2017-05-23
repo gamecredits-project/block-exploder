@@ -73,6 +73,8 @@ class SyncTask(Task):
         syncer = BlockchainSyncer(database, blockchain, rpc_client, config)
         syncer.sync_auto()
 
+        # syncer.calculate_network_stats()
+
 
 class HashrateTask(Task):
     def run(self, **kwargs):

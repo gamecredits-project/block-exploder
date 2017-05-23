@@ -9,6 +9,7 @@
     - redis
     - nginx
     - application
+    - configure-gamecreditsd
     - celery
   vars:
     - rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
@@ -16,8 +17,13 @@
     - rpc_port: 8332
     - code_dir: "/code"
     - log_dir: "{{ ansible_env.HOME }}/logs"
+    - datadir_path: "{{ ansible_env.HOME }}/.gamecredits"
     - blocks_dir: "{{ ansible_env.HOME }}/.gamecredits/blocks"
     - exploder_conf_dir: "{{ ansible_env.HOME }}/.exploder"
     - syncer_cache_size: 1000
     - syncer_stream_sync_limit: 99
     - syncer_task_lock_timeout: 3600
+    - sentry_logging: False
+    - sentry_token1: ""
+    - sentry_token2: ""
+    - sentry_path: ""

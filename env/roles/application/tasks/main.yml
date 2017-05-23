@@ -6,6 +6,7 @@
 
 - name: Install the application
   pip: chdir={{ code_dir }} state=present name=.
+  become: True
 
 - name: Copy the app supervisor conf file
   template: src=templates/exploder-supervisor.conf dest=/etc/supervisor/conf.d/exploder-supervisor.conf
