@@ -20,6 +20,7 @@ class MongoDatabaseGateway(object):
         self.vins = database.vin
         self.vouts = database.vout
         self.hashrate = database.hashrate
+        self.network_stats = database.network_stats
 
         self.cache_size = config.getint('syncer', 'cache_size')
 
@@ -237,3 +238,17 @@ class MongoDatabaseGateway(object):
     def put_hashrate(self, hash_rate):
         if hash_rate:
             self.hashrate.insert_one(HashrateSerializer.to_database(hash_rate))
+
+    def update_network_stats(self, supply, blockchain_size):
+        stats = self.network_stats.find_one()
+
+        if stats is None:
+            self.network_stats.insert_one({
+                "supply": supply,
+                "blockchain_size": blockchain_size
+            })
+        else:
+            self.network_stats.update_one({'_id': stats['_id']}, {"$set": {
+                "supply": supply,
+                "blockchain_size": blockchain_size
+            }})

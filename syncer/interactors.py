@@ -174,15 +174,6 @@ class BlockchainSyncer(object):
         else:
             self.sync_progress = 0
 
-    def calculate_network_hash_rate(self):
-        highest = self.db.get_highest_block()
-        end = highest.time
-        start = highest.time - 86400     # seconds in day
-        blocks_in_interval = self.db.get_blocks_between_time(start, end)
-        cum_work = sum([block['work'] for block in blocks_in_interval])
-        hps = float(cum_work) / 86400
-        self.db.put_hashrate(int(hps))
-
     ######################
     # SYNC METHODS       #
     ######################
@@ -276,13 +267,35 @@ class BlockchainSyncer(object):
         diff_time = end_time - start_time
         logging.info("[SYNC_RPC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
 
-    def calculate_network_stats(self):
-        print "ALOHA"
+    def sync_network_stats(self):
         supply = self._calculate_supply(self.db.get_blockchain_height())
         blockchain_size = self._calculate_blockchain_size_in_gb(self.config.get('syncer', 'datadir_path'))
         self.db.update_network_stats(supply=supply, blockchain_size=blockchain_size)
 
-    def _calculate_supply(self, height):
+    ######################
+    #  HELPER FUNCTIONS  #
+    ######################
+    def _print_progress(self):
+        self._update_sync_progress()
+        logging.info("Progress: %s%%" % self.sync_progress)
+
+
+class BlockchainAnalyzer(object):
+    def __init__(self, database, config):
+        self.db = database
+        self.config = config
+
+    def get_network_hash_rate(self):
+        highest = self.db.get_highest_block()
+        end = highest.time
+        start = highest.time - 86400     # seconds in day
+        blocks_in_interval = self.db.get_blocks_between_time(start, end)
+        cum_work = sum([block['work'] for block in blocks_in_interval])
+        hps = float(cum_work) / 86400
+        return int(hps)
+
+    def get_supply(self):
+        height = self.db.get_blockchain_height()
         reward = 50
         supply = 0
         while height > SUBSIDY_HALVING_INTERVAL:
@@ -293,11 +306,12 @@ class BlockchainSyncer(object):
         supply += height * reward
         return supply
 
-    def _calculate_blockchain_size_in_gb(self, datadir_path):
+    def get_blockchain_size(self):
         """
         Walks (recursively) through the provided data directory
         and calculates the size of the whole directory
         """
+        datadir_path = self.config.get('syncer', 'datadir_path')
         size = 0
         for root, dirs, files in os.walk(datadir_path):
             for file in files:
@@ -307,10 +321,3 @@ class BlockchainSyncer(object):
         B_IN_GB = pow(2, 30)
         size = float(size) / B_IN_GB
         return round(size, 2)
-
-    ######################
-    #  HELPER FUNCTIONS  #
-    ######################
-    def _print_progress(self):
-        self._update_sync_progress()
-        logging.info("Progress: %s%%" % self.sync_progress)
