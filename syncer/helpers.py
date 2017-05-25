@@ -1,5 +1,7 @@
 import redis
 import os
+from zipfile import ZipFile
+
 
 REDIS_CLIENT = redis.Redis()
 
@@ -30,7 +32,7 @@ def only_one(function=None, key="", timeout=None):
     return _dec(function) if function is not None else _dec
 
 
-def generate_bootstrap(datadir_path, output_path):
+def generate_bootstrap(datadir_path, output_directory):
     """
     Generates bootstrap file from blockfiles in the datadir
     """
@@ -47,8 +49,12 @@ def generate_bootstrap(datadir_path, output_path):
         f.close()
 
     # Write them to the output file
-    with open(output_path, 'w') as out:
+    with open(os.path.join(output_directory, 'bootstrap.dat'), 'w') as out:
         out.write(data)
+
+    # Compress (zip) the bootstrap file
+    with ZipFile(os.path.join(output_directory, 'bootstrap.zip'), 'w') as myzip:
+        myzip.write(os.path.join(output_directory, 'bootstrap.dat'))
 
 
 def _is_block_file(filename):

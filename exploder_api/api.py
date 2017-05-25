@@ -3,6 +3,7 @@ import sys
 import os
 import ConfigParser
 from flask_cors import CORS
+from flask import request
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer
@@ -145,6 +146,25 @@ def get_network_info():
         "networkMagicNumber": hex(MAGIC_NUMBER),
         "pubkeyAddressVersionPrefix": PAY_TO_PUBKEY_VERSION_PREFIX,
         "coinSupply": supply
+    }
+
+
+def get_bootstrap_link():
+    bootstrap_dir = config.get('syncer', 'bootstrap_dir')
+
+    bootstrap_path = os.path.join(bootstrap_dir, 'bootstrap.dat')
+    if not os.path.isfile(bootstrap_path):
+        return "Bootstrap.dat doesn't exist on the server", 404
+
+    generated = os.stat(bootstrap_path).st_ctime
+    bootstrap_server_path = os.path.join(
+        config.get('syncer', 'bootstrap_dir_server_path'),
+        'bootstrap.zip'
+    )
+
+    return {
+        "url": bootstrap_server_path,
+        "generated": generated
     }
 
 
