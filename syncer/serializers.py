@@ -112,3 +112,14 @@ class HashrateSerializer(object):
             "hashrate": rate,
             "timestamp": time.time()
         }
+
+
+class SyncHistorySerializer(object):
+    @staticmethod
+    def to_database(start_time, end_time, start_block_height, end_block_height):
+        return {
+            "start_time": start_time,
+            "end_time": end_time,
+            "start_block_height": start_block_height,
+            "end_block_height": end_block_height
+        }

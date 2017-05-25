@@ -1,7 +1,8 @@
 import pymongo
 
 from factories import MongoBlockFactory, MongoTransactionFactory, MongoVoutFactory, MongoVinFactory
-from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer, HashrateSerializer
+from serializers import BlockSerializer, TransactionSerializer, VinSerializer, \
+    VoutSerializer, HashrateSerializer, SyncHistorySerializer
 from pymongo import MongoClient
 
 
@@ -21,6 +22,7 @@ class MongoDatabaseGateway(object):
         self.vouts = database.vout
         self.hashrate = database.hashrate
         self.network_stats = database.network_stats
+        self.sync_history = database.sync_history
 
         self.cache_size = config.getint('syncer', 'cache_size')
 
@@ -252,3 +254,8 @@ class MongoDatabaseGateway(object):
                 "supply": supply,
                 "blockchain_size": blockchain_size
             }})
+
+    def put_sync_history(self, start_time, end_time, start_block_height, end_block_height):
+        self.sync_history.insert_one(
+            SyncHistorySerializer.to_database(start_time, end_time, start_block_height, end_block_height)
+        )
