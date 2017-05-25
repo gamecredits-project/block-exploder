@@ -10,7 +10,8 @@ setup(
         'connexion',
         'pymongo',
         'mock',
-        'raven'
+        'raven',
+        'flask_cors'
     ],
     package_data={'exploder_api': ['*.yaml']},
     include_package_data=True,

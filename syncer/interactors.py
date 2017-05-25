@@ -1,6 +1,7 @@
 import os
 from gamecredits.helpers import has_length, is_block_file
 import datetime
+import time
 import itertools
 import logging
 from gamecredits.factories import BlockFactory
@@ -187,6 +188,9 @@ class BlockchainSyncer(object):
     # SYNC METHODS       #
     ######################
     def sync_auto(self, limit=None):
+        start_time = time.time()
+        start_block = self.db.get_highest_block()
+
         self._update_sync_progress()
 
         if self.sync_progress < self.stream_sync_limit:
@@ -196,6 +200,12 @@ class BlockchainSyncer(object):
 
         if self.sync_progress >= self.stream_sync_limit and self.sync_progress < 100:
             self.sync_rpc()
+
+        end_block = self.db.get_highest_block()
+        end_time = time.time()
+        # Check if there were any new blocks
+        if end_block.height > start_block.height:
+            self.db.put_sync_history(start_time, end_time, start_block.height, end_block.height)
 
     def sync_stream(self, sync_limit):
         start_time = datetime.datetime.now()
