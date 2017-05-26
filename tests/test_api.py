@@ -173,5 +173,28 @@ class AddressesTestCase(unittest.TestCase):
         self.assertTrue(res.text)
 
 
+class NetworkTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = "http://127.0.0.1/api/"
+
+    def test_get_hashrates(self):
+        params = {
+            "limit": 5
+        }
+        result = requests.get(self.url + "network/hashrates", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(len(data), 5)
+
+    def test_get_network_info(self):
+        result = requests.get(self.url + "network/info")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertTrue(data)
+
+
 if __name__ == "__main__":
     unittest.main()
