@@ -8,6 +8,7 @@ class DatabaseGateway(object):
         self.vin = database.vin
         self.vout = database.vout
         self.hashrate = database.hashrate
+        self.network_stats = database.network_stats
         self.config = config
 
     def get_latest_blocks(self, limit=25, offset=0):
@@ -80,3 +81,12 @@ class DatabaseGateway(object):
 
     def get_latest_hashrates(self, limit):
         return list(self.hashrate.find().sort("timestamp", pymongo.DESCENDING).limit(limit))
+
+    def get_block_count(self):
+        return self.blocks.count()
+
+    def get_transaction_count(self):
+        return self.transactions.count()
+
+    def get_network_stats(self):
+        return self.network_stats.find_one()

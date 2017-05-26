@@ -123,3 +123,12 @@ class SyncHistorySerializer(object):
             "start_block_height": start_block_height,
             "end_block_height": end_block_height
         }
+
+
+class NetworkStatsSerializer(object):
+    @staticmethod
+    def to_database(supply, blockchain_size):
+        return {
+            "supply": supply,
+            "blockchain_size": blockchain_size
+        }

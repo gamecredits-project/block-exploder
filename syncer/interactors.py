@@ -277,11 +277,6 @@ class BlockchainSyncer(object):
         diff_time = end_time - start_time
         logging.info("[SYNC_RPC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
 
-    def sync_network_stats(self):
-        supply = self._calculate_supply(self.db.get_blockchain_height())
-        blockchain_size = self._calculate_blockchain_size_in_gb(self.config.get('syncer', 'datadir_path'))
-        self.db.update_network_stats(supply=supply, blockchain_size=blockchain_size)
-
     ######################
     #  HELPER FUNCTIONS  #
     ######################
@@ -303,6 +298,10 @@ class BlockchainAnalyzer(object):
         cum_work = sum([block['work'] for block in blocks_in_interval])
         hps = float(cum_work) / 86400
         return int(hps)
+
+    def save_network_hash_rate(self, hash_rate):
+        if hash_rate:
+            self.db.put_hashrate(int(hash_rate))
 
     def get_supply(self):
         height = self.db.get_blockchain_height()
@@ -331,3 +330,7 @@ class BlockchainAnalyzer(object):
         B_IN_GB = pow(2, 30)
         size = float(size) / B_IN_GB
         return round(size, 2)
+
+    def save_network_stats(self, supply, blockchain_size):
+        if supply and blockchain_size:
+            self.db.update_network_stats(supply=supply, blockchain_size=blockchain_size)

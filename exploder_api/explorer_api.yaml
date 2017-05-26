@@ -255,7 +255,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  /transactions/send:
+  /network/pushtx:
     post:
       operationId: exploder_api.api.send_raw_transaction
       summary: Submit a raw transaction to the GameCredits network
@@ -279,7 +279,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
-  /hashrates/latest:
+  /network/hashrates:
     get:
       summary: Latest hashrates
       operationId: exploder_api.api.get_latest_hashrates
@@ -312,7 +312,7 @@ paths:
     get:
       tags:
         - Network
-      operationId: exploder_api.api.get_network_info
+      operationId: exploder_api.api.get_network_stats
       summary: Get basic network information
       responses:
         200:
@@ -354,21 +354,6 @@ definitions:
         type: string
       fields:
         type: string
-
-  NetworkInfo:
-    type: object
-    properties:
-      rewardHalvingInterval: 
-        type: integer
-        format: int32
-      networkMagicNumber:
-        type: string
-      pubkeyAddressVersionPrefix:
-        type: integer
-        format: int32
-      coinSupply:
-        type: integer
-        format: int32
 
   Address:
     type: object
@@ -563,9 +548,29 @@ definitions:
     properties:
       hashrate:
         type: integer
-        description: The estimated number of hashes per second the GameCredits network is performing.
+        description: The estimated number of hashes per second the GameCredits network is performing
       timestamp:
         type: number
         format: float
         description: |
           Unix timestamp representing the time the hashrate was calculated
+
+  NetworkInfo:
+    type: object
+    properties:
+      coinSupply: 
+        type: integer
+        description: Current GameCredits supply
+      hashrate:
+        type: integer
+        description: The estimated number of hashes per second that GameCredits network is performing
+      blockchainSize:
+        type: number
+        format: float
+        description: Size of the blockchain (in GB)
+      numBlocks:
+        type: integer
+        description: Total number of blocks
+      numTransactions:
+        type: integer
+        description: Total number of transactions

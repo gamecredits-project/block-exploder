@@ -1,4 +1,4 @@
-from interactors import Blockchain, BlockchainSyncer
+from interactors import Blockchain, BlockchainSyncer, BlockchainAnalyzer
 from gateways import MongoDatabaseGateway
 from pymongo import MongoClient
 from bitcoinrpc.authproxy import AuthServiceProxy
@@ -51,20 +51,20 @@ class SyncTask(Task):
         # This is where the real work is done
         syncer.sync_auto()
 
-        # Calculate network statistics
-        syncer.calculate_network_stats()
-
 
 class DailyTask(Task):
     def run(self, **kwargs):
         client = MongoClient()
         database = MongoDatabaseGateway(client.exploder, config)
-        blockchain = Blockchain(database, config)
 
-        rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
-                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
-        syncer = BlockchainSyncer(database, blockchain, rpc_client, config)
-        # syncer.calculate_network_hash_rate()
+        analizer = BlockchainAnalyzer(database, config)
+        # Save hash_rate
+        hash_rate = analizer.get_network_hash_rate()
+        analizer.save_network_hash_rate(hash_rate)
+        # Save network stats
+        supply = analizer.get_supply()
+        size = analizer.get_blockchain_size()
+        analizer.save_network_stats(supply, size)
 
         bootstrap_dir = config.get('syncer', 'bootstrap_dir')
         generate_bootstrap(

@@ -5,7 +5,7 @@ import ConfigParser
 from flask_cors import CORS
 from gateways import DatabaseGateway
 from pymongo import MongoClient
-from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer
+from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, NetworkStatsSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from gamecredits.constants import SUBSIDY_HALVING_INTERVAL, PAY_TO_PUBKEY_VERSION_PREFIX, MAGIC_NUMBER
 
@@ -132,32 +132,40 @@ def get_latest_hashrates(limit):
     return [HashrateSerializer.to_web(hash_rate) for hash_rate in hash_rates]
 
 
-def get_network_info():
-    highest = db.get_latest_blocks(1)
-
-    supply = None
-    if highest:
-        height = highest[0]['height']
-        supply = _calculate_supply(height)
-
-    return {
-        "rewardHalvingInterval": SUBSIDY_HALVING_INTERVAL,
-        "networkMagicNumber": hex(MAGIC_NUMBER),
-        "pubkeyAddressVersionPrefix": PAY_TO_PUBKEY_VERSION_PREFIX,
-        "coinSupply": supply
-    }
+def get_network_stats():
+    hash_rate = db.get_latest_hashrates(limit=1)
+    stats = db.get_network_stats()
+    block_count = db.get_block_count()
+    tr_count = db.get_transaction_count()
+    return NetworkStatsSerializer.to_web(stats, hash_rate[0], block_count, tr_count)
 
 
-def _calculate_supply(height):
-    reward = 50
-    supply = 0
-    while height > SUBSIDY_HALVING_INTERVAL:
-        supply += SUBSIDY_HALVING_INTERVAL * reward
-        height -= SUBSIDY_HALVING_INTERVAL
-        reward /= 2
+# def get_network_info():
+#     highest = db.get_latest_blocks(1)
 
-    supply += height * reward
-    return supply
+#     supply = None
+#     if highest:
+#         height = highest[0]['height']
+#         supply = _calculate_supply(height)
+
+#     return {
+#         "rewardHalvingInterval": SUBSIDY_HALVING_INTERVAL,
+#         "networkMagicNumber": hex(MAGIC_NUMBER),
+#         "pubkeyAddressVersionPrefix": PAY_TO_PUBKEY_VERSION_PREFIX,
+#         "coinSupply": supply
+#     }
+
+
+# def _calculate_supply(height):
+#     reward = 50
+#     supply = 0
+#     while height > SUBSIDY_HALVING_INTERVAL:
+#         supply += SUBSIDY_HALVING_INTERVAL * reward
+#         height -= SUBSIDY_HALVING_INTERVAL
+#         reward /= 2
+
+#     supply += height * reward
+#     return supply
 
 
 def create_and_run_app(port=5000):

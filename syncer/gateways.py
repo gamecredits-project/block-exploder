@@ -2,7 +2,7 @@ import pymongo
 
 from factories import MongoBlockFactory, MongoTransactionFactory, MongoVoutFactory, MongoVinFactory
 from serializers import BlockSerializer, TransactionSerializer, VinSerializer, \
-    VoutSerializer, HashrateSerializer, SyncHistorySerializer
+    VoutSerializer, HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer
 from pymongo import MongoClient
 
 
@@ -235,7 +235,7 @@ class MongoDatabaseGateway(object):
         self.tr_cache[tr.txid] = tr
 
     #########################
-    #   HASHRATE METHODS    #
+    #   NETWORK METHODS    #
     #########################
     def put_hashrate(self, hash_rate):
         if hash_rate:
@@ -245,15 +245,11 @@ class MongoDatabaseGateway(object):
         stats = self.network_stats.find_one()
 
         if stats is None:
-            self.network_stats.insert_one({
-                "supply": supply,
-                "blockchain_size": blockchain_size
-            })
+            self.network_stats.insert_one(NetworkStatsSerializer.to_database(supply, blockchain_size))
         else:
-            self.network_stats.update_one({'_id': stats['_id']}, {"$set": {
-                "supply": supply,
-                "blockchain_size": blockchain_size
-            }})
+            self.network_stats.update_one(
+                {'_id': stats['_id']}, {"$set": NetworkStatsSerializer.to_database(supply, blockchain_size)}
+            )
 
     def put_sync_history(self, start_time, end_time, start_block_height, end_block_height):
         self.sync_history.insert_one(

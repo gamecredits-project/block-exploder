@@ -57,3 +57,15 @@ class HashrateSerializer(object):
             "hashrate": hash_rate["hashrate"],
             "timestamp": hash_rate["timestamp"]
         }
+
+
+class NetworkStatsSerializer(object):
+    @staticmethod
+    def to_web(stats, hash_rate, num_blocks, num_transactions):
+        return {
+            "coinSupply": stats["supply"],
+            "hashrate": hash_rate["hashrate"],
+            "blockchainSize": stats["blockchain_size"],
+            "numBlocks": num_blocks,
+            "numTransactions": num_transactions
+        }
