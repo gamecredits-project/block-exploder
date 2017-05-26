@@ -3,6 +3,7 @@ import sys
 import os
 import ConfigParser
 from flask_cors import CORS
+from flask import request
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, NetworkStatsSerializer
@@ -140,32 +141,23 @@ def get_network_stats():
     return NetworkStatsSerializer.to_web(stats, hash_rate[0], block_count, tr_count)
 
 
-# def get_network_info():
-#     highest = db.get_latest_blocks(1)
+def get_bootstrap_link():
+    bootstrap_dir = config.get('syncer', 'bootstrap_dir')
 
-#     supply = None
-#     if highest:
-#         height = highest[0]['height']
-#         supply = _calculate_supply(height)
+    bootstrap_path = os.path.join(bootstrap_dir, 'bootstrap.dat')
+    if not os.path.isfile(bootstrap_path):
+        return "Bootstrap.dat doesn't exist on the server", 404
 
-#     return {
-#         "rewardHalvingInterval": SUBSIDY_HALVING_INTERVAL,
-#         "networkMagicNumber": hex(MAGIC_NUMBER),
-#         "pubkeyAddressVersionPrefix": PAY_TO_PUBKEY_VERSION_PREFIX,
-#         "coinSupply": supply
-#     }
+    generated = os.stat(bootstrap_path).st_ctime
+    bootstrap_server_path = os.path.join(
+        config.get('syncer', 'bootstrap_dir_server_path'),
+        'bootstrap.zip'
+    )
 
-
-# def _calculate_supply(height):
-#     reward = 50
-#     supply = 0
-#     while height > SUBSIDY_HALVING_INTERVAL:
-#         supply += SUBSIDY_HALVING_INTERVAL * reward
-#         height -= SUBSIDY_HALVING_INTERVAL
-#         reward /= 2
-
-#     supply += height * reward
-#     return supply
+    return {
+        "url": bootstrap_server_path,
+        "generated": generated
+    }
 
 
 def create_and_run_app(port=5000):

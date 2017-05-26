@@ -53,6 +53,7 @@ class SyncTask(Task):
 
 
 class DailyTask(Task):
+    @only_one(key="SingleDailyTask", timeout=config.getint('syncer', 'task_lock_timeout'))
     def run(self, **kwargs):
         client = MongoClient()
         database = MongoDatabaseGateway(client.exploder, config)
@@ -69,7 +70,7 @@ class DailyTask(Task):
         bootstrap_dir = config.get('syncer', 'bootstrap_dir')
         generate_bootstrap(
             config.get('syncer', 'datadir_path'),
-            os.path.join(bootstrap_dir, 'bootstrap.dat')
+            bootstrap_dir
         )
 
 
@@ -85,8 +86,8 @@ app.conf.beat_schedule = {
     },
     'hashrate-once-a-day': {
         'task': 'syncer.tasks.DailyTask',
-        #'schedule': crontab(minute=0, hour=12),  # It's high noon
-        'schedule': 10.0
+        # 'schedule': crontab(minute=0, hour=12),  # It's high noon
+        'schedule': 60.0
     },
 }
 
