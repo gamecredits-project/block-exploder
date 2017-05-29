@@ -19,7 +19,7 @@ class InsertBlockTestCaseWithMocking(unittest.TestCase):
     def setUp(self):
         self.db = MagicMock()
         self.chain = Blockchain(self.db, self.config)
-        self.example_block = generate_test_data(1)[0]
+        self.example_block = generate_test_data(1, self.config)[0]
 
     def test_chain_peak_is_none_should_create_coinbase(self):
         self.db.get_highest_block.return_value = None
@@ -56,7 +56,7 @@ class InsertBlockTestCaseWithTestData(unittest.TestCase):
 
         cls.client = get_mongo_connection()
         cls.db = cls.client.test_database
-        blocks = generate_test_data(50)
+        blocks = generate_test_data(50, cls.config)
         transactions = []
         for block in blocks:
             transactions += block.tx

@@ -8,11 +8,11 @@ from gateways import get_mongo_connection, MongoDatabaseGateway
 from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer
 
 
-def generate_test_data(num_blocks):
+def generate_test_data(num_blocks, config):
     rpc = get_rpc_connection(
-        rpc_user="62ca2d89-6d4a-44bd-8334-fa63ce26a1a3",
-        rpc_password="CsNa2vGB7b6BWUzN7ibfGuHbNBC1UJYZvXoebtTt1eup",
-        rpc_port=8332
+        rpc_user=config.get('syncer', 'rpc_user'),
+        rpc_password=config.get('syncer', 'rpc_password'),
+        rpc_port=config.get('syncer', 'rpc_port')
     )
 
     block_heights = range(123321, 123321 + num_blocks)
@@ -37,7 +37,7 @@ class MongoDbGatewayTestCase(unittest.TestCase):
 
         cls.client = get_mongo_connection()
         cls.db = cls.client.test_database
-        blocks = generate_test_data(50)
+        blocks = generate_test_data(50, cls.config)
 
         for block in blocks:
             block.chain = cls.config.get('syncer', 'main_chain')

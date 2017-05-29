@@ -28,3 +28,4 @@
     - sentry_token2: ""
     - sentry_path: ""
     - bootstrap_dir: "{{ ansible_env.HOME }}/bootstrap"
+    - production: False

@@ -4,6 +4,10 @@
 - name: Copy the default gamecredits.conf file
   template: src=templates/gamecredits.conf dest=~/.gamecredits/gamecredits.conf force=yes
 
+- name: Restart the gamecreditsd celery process
+  supervisorctl: name=gamecreditsd state=restarted
+  become: True
+
 - name: Create the logs directory
   file: path=/var/log/gamecreditsd state=directory
   become: True
