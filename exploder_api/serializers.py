@@ -59,6 +59,17 @@ class HashrateSerializer(object):
         }
 
 
+class SyncHistorySerializer(object):
+    @staticmethod
+    def to_web(sync_history):
+        return {
+            "startTime": sync_history["start_time"],
+            "endTime": sync_history["end_time"],
+            "startBlockHeight": sync_history["start_block_height"],
+            "endBlockHeight": sync_history["end_block_height"]
+        }
+
+
 class NetworkStatsSerializer(object):
     @staticmethod
     def to_web(stats, hash_rate, num_blocks, num_transactions):

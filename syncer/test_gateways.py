@@ -50,7 +50,6 @@ class MongoDbGatewayTestCase(unittest.TestCase):
         cls.transactions = transactions[:45]
         cls.transactions_to_insert = transactions[45:]
 
-
     @classmethod
     def tearDownClass(cls):
         cls.client.drop_database('test_database')
