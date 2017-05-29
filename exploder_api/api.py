@@ -6,7 +6,8 @@ from flask_cors import CORS
 from flask import request
 from gateways import DatabaseGateway
 from pymongo import MongoClient
-from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, NetworkStatsSerializer
+from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, \
+    NetworkStatsSerializer, SyncHistorySerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from gamecredits.constants import SUBSIDY_HALVING_INTERVAL, PAY_TO_PUBKEY_VERSION_PREFIX, MAGIC_NUMBER
 
@@ -158,6 +159,14 @@ def get_bootstrap_link():
         "url": bootstrap_server_path,
         "generated": generated
     }
+
+
+##############
+#   CLIENT   #
+##############
+def get_latest_sync_history(limit, offset):
+    sync_history = db.get_latest_sync_history(limit, offset)
+    return [SyncHistorySerializer.to_web(history) for history in sync_history]
 
 
 def create_and_run_app(port=5000):

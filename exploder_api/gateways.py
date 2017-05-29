@@ -9,6 +9,7 @@ class DatabaseGateway(object):
         self.vout = database.vout
         self.hashrate = database.hashrate
         self.network_stats = database.network_stats
+        self.sync_history = database.sync_history
         self.config = config
 
     def get_latest_blocks(self, limit=25, offset=0):
@@ -90,3 +91,7 @@ class DatabaseGateway(object):
 
     def get_network_stats(self):
         return self.network_stats.find_one()
+
+    def get_latest_sync_history(self, limit, offset):
+        return list(self.sync_history.find()
+                    .sort("end_time", pymongo.DESCENDING).skip(offset).limit(limit))

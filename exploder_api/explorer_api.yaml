@@ -342,6 +342,42 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /client/sync_history:
+    get:
+      summary: Latest sync history information
+      operationId: exploder_api.api.get_latest_sync_history
+      description: |
+        List latest  <limit> sync history info of the GameCredits blockchain and skip <offset> history
+      parameters:
+        - name: limit
+          in: query
+          description: Number of sync history info to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 25
+        - name: offset
+          in: query
+          description: Number of sync history info to skip.
+          required: false
+          type: integer
+          minimum: 0
+          default: 0
+      tags:
+        - Client
+      responses:
+        200:
+          description: An array of sync history information
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/SyncHistory'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
 parameters:
   block_hash:
     name: block_hash
@@ -495,7 +531,7 @@ definitions:
         type: number
         description: Size of the block in bytes
       height:
-        type: number
+        type: integer
         description: Position of the block in the blockchain
       version:
         type: number
@@ -600,3 +636,23 @@ definitions:
         type: string
       generated:
         type: integer
+
+  SyncHistory:
+    type: object
+    properties:
+      startTime: 
+        type: number
+        format: float
+        description: |
+          Unix timestamp representing the time sync started
+      endTime:
+        type: number
+        format: float
+        description: |
+          Unix timestamp representing the time sync ended
+      startBlockHeight:
+        type: integer
+        description: Position of the block in the blockchain when the sync started
+      endBlockHeight:
+        type: integer
+        description: Position of the block in the blockchain when the sync ended

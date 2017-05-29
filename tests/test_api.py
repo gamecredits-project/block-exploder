@@ -196,5 +196,21 @@ class NetworkTestCase(unittest.TestCase):
         self.assertTrue(data)
 
 
+class ClientTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = "http://127.0.0.1/api/"
+
+    def test_get_latest_sync_history(self):
+        params = {
+            "limit": 5
+        }
+        result = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(len(data), 5)
+
+
 if __name__ == "__main__":
     unittest.main()
