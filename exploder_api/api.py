@@ -3,15 +3,15 @@ import sys
 import os
 import ConfigParser
 from flask_cors import CORS
-from flask import request
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, \
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from gamecredits.constants import SUBSIDY_HALVING_INTERVAL, PAY_TO_PUBKEY_VERSION_PREFIX, MAGIC_NUMBER
 
-
+######################
+#  INITIALIZE STUFF  #
+######################
 CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
 config.read(CONFIG_FILE)
@@ -175,6 +175,9 @@ def get_client_info():
 
 
 def create_and_run_app(port=5000):
+    """
+    Runs a new instance of a tornado server listening on the given port
+    """
     api = connexion.App(__name__)
     api.add_api('explorer_api.yaml')
     CORS(api.app)

@@ -4,8 +4,16 @@
 - name: Copy the configuration file
   template: src=templates/exploder.conf dest={{ exploder_conf_dir }}/exploder.conf
 
-- name: Install the application
+- name: Install the application (production version)
   pip: chdir={{ code_dir }} state=present name=.
+  when:
+    - production == True
+  become: True
+
+- name: Install the application (development version)
+  command: chdir={{ code_dir }} /usr/bin/python setup.py develop
+  when:
+    - production == False
   become: True
 
 - name: Copy the app supervisor conf file
