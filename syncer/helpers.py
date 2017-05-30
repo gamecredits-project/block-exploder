@@ -1,5 +1,6 @@
 import redis
 import os
+import requests
 from zipfile import ZipFile
 
 
@@ -62,3 +63,23 @@ def _is_block_file(filename):
     Checks if the provided filename is a block file
     """
     return filename[:3] == 'blk' and filename[-3:] == 'dat'
+
+
+def get_client_ip(url):
+    """
+    Returns server's ip
+
+    @param url: Link for api that returns your ip
+    @type url: string
+    @return: This server's ip if successful, otherwise None
+    @rtype: string
+    """
+    try:
+        param = {
+            "format": "json"
+        }
+        res = requests.get(url, params=param)
+        json_data = res.json()
+        return json_data['ip']
+    except requests.exceptions.RequestException:
+        return None

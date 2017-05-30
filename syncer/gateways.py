@@ -1,8 +1,10 @@
 import pymongo
+from decimal import Decimal
 
 from factories import MongoBlockFactory, MongoTransactionFactory, MongoVoutFactory, MongoVinFactory
 from serializers import BlockSerializer, TransactionSerializer, VinSerializer, \
-    VoutSerializer, HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer
+    VoutSerializer, HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer, \
+    ClientInfoSerializer, ClientSyncProgressSerializer
 from pymongo import MongoClient
 
 
@@ -23,6 +25,7 @@ class MongoDatabaseGateway(object):
         self.hashrate = database.hashrate
         self.network_stats = database.network_stats
         self.sync_history = database.sync_history
+        self.client_info = database.client_info
 
         self.cache_size = config.getint('syncer', 'cache_size')
 
@@ -255,3 +258,31 @@ class MongoDatabaseGateway(object):
         self.sync_history.insert_one(
             SyncHistorySerializer.to_database(start_time, end_time, start_block_height, end_block_height)
         )
+
+    #########################
+    #    CLIENT METHODS     #
+    #########################
+    def put_client_info(self, version, ip, peer_info):
+        client_info = self.client_info.find_one()
+
+        for peer in peer_info:
+            for key, value in peer.iteritems():
+                if isinstance(value, Decimal):
+                    peer[key] = str(value)
+
+        if client_info is None:
+            self.client_info.insert_one(ClientInfoSerializer.to_database(version, ip, peer_info))
+        else:
+            self.client_info.update_one(
+                {'_id': client_info['_id']}, {"$set": ClientInfoSerializer.to_database(version, ip, peer_info)}
+            )
+
+    def update_sync_progress(self, progress):
+        client_info = self.client_info.find_one()
+
+        if client_info is None:
+            self.client_info.insert_one(ClientSyncProgressSerializer.to_database(progress))
+        else:
+            self.client_info.update_one(
+                {'_id': client_info['_id']}, {"$set": ClientSyncProgressSerializer.to_database(progress)}
+            )

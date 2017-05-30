@@ -286,9 +286,11 @@ class BlockchainSyncer(object):
 
 
 class BlockchainAnalyzer(object):
-    def __init__(self, database, config):
+    def __init__(self, database, rpc_client, config):
         self.db = database
         self.config = config
+        # Client RPC connection
+        self.rpc = rpc_client
 
     def get_network_hash_rate(self):
         highest = self.db.get_highest_block()
@@ -334,3 +336,29 @@ class BlockchainAnalyzer(object):
     def save_network_stats(self, supply, blockchain_size):
         if supply and blockchain_size:
             self.db.update_network_stats(supply=supply, blockchain_size=blockchain_size)
+
+    def get_client_version(self):
+        wallet_info = self.rpc.getinfo()
+        return wallet_info['version']
+
+    def get_peer_info(self):
+        return self.rpc.getpeerinfo()
+
+    def save_client_info(self, version, ip, peer_info):
+        if version and peer_info:
+            self.db.put_client_info(version=version, ip=ip, peer_info=peer_info)
+
+    def calculate_sync_progress(self):
+        client_height = self.rpc.getblockcount()
+        highest_known = self.db.get_highest_block()
+
+        if highest_known:
+            progress = float(highest_known.height * 100) / client_height
+        else:
+            progress = 0
+
+        return round(progress, 2)
+
+    def update_sync_progress(self, progress):
+        if progress:
+            self.db.update_sync_progress(progress=progress)
