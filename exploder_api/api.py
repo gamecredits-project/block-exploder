@@ -7,7 +7,7 @@ from flask import request
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, \
-    NetworkStatsSerializer, SyncHistorySerializer
+    NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from gamecredits.constants import SUBSIDY_HALVING_INTERVAL, PAY_TO_PUBKEY_VERSION_PREFIX, MAGIC_NUMBER
 
@@ -167,6 +167,11 @@ def get_bootstrap_link():
 def get_latest_sync_history(limit, offset):
     sync_history = db.get_latest_sync_history(limit, offset)
     return [SyncHistorySerializer.to_web(history) for history in sync_history]
+
+
+def get_client_info():
+    client_info = db.get_client_info()
+    return ClientInfoSerializer.to_web(client_info)
 
 
 def create_and_run_app(port=5000):

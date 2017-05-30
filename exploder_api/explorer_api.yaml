@@ -378,6 +378,22 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /client/info:
+    get:
+      summary: Get basic client information
+      operationId: exploder_api.api.get_client_info
+      tags:
+        - Client
+      responses:
+        200:
+          description: An array of sync history information
+          schema: 
+            $ref: '#/definitions/ClientInfo'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
 parameters:
   block_hash:
     name: block_hash
@@ -656,3 +672,74 @@ definitions:
       endBlockHeight:
         type: integer
         description: Position of the block in the blockchain when the sync ended
+
+  ClientInfo:
+    type: object
+    properties:
+      ip:
+        type: string
+        description: IP of our client
+      version:
+        type: string
+        description: Version of GameCredits wallet that blockexplorer uses
+      peerInfo:
+        type: array
+        items:
+          $ref: '#/definitions/PeerInfo'
+        description: Information about each connected network node
+      syncProgress:
+        type: number
+        format: float
+        description: Sync progress (in percentage)
+
+  PeerInfo:
+    type: object
+    properties:
+      addr:
+        type: string
+        description: The ip address and port of the peer
+      addrlocal:
+        type: string
+        description: Local address
+      services:
+        type: string
+        description: The services
+      lastsend:
+        type: integer
+        description: The time in seconds since epoch (Jan 1 1970 GMT) of the last send
+      lastrecv:
+        type: integer
+        description: The time in seconds since epoch (Jan 1 1970 GMT) of the last receive
+      bytessent:
+        type: integer
+        description: The total bytes sent
+      bytesrecv:
+        type: integer
+        description: The total bytes received
+      conntime:
+        type: integer
+        description: The connection time in seconds since epoch (Jan 1 1970 GMT)
+      pingtime:
+        type: integer
+        description: Ping time
+      pingwait:
+        type: integer
+        description: Ping wait
+      version:
+        type: integer
+        description: The peer version, such as 7001
+      subver:
+        type: string
+        description: The string version
+      inbound:
+        type: boolean
+        description: Inbound (true) or Outbound (false)
+      startingheight:
+        type: integer
+        description: The starting height (block) of the peer
+      banscore:
+        type: integer
+        description: The ban score
+      syncnode:
+        type: boolean
+        description: If sync node

@@ -80,3 +80,14 @@ class NetworkStatsSerializer(object):
             "numBlocks": num_blocks,
             "numTransactions": num_transactions
         }
+
+
+class ClientInfoSerializer(object):
+    @staticmethod
+    def to_web(client_info):
+        return {
+            "ip": client_info["ip"],
+            "version": client_info["version"],
+            "peerInfo": client_info["peer_info"],
+            "syncProgress": client_info["sync_progress"]
+        }
