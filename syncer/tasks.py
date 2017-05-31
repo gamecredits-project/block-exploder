@@ -5,7 +5,7 @@ from bitcoinrpc.authproxy import AuthServiceProxy
 from celery import Celery
 from celery.task import Task
 from celery.schedules import crontab
-from helpers import only_one, generate_bootstrap
+from helpers import only_one, generate_bootstrap, get_client_ip
 import ConfigParser
 import os
 import raven
@@ -57,8 +57,10 @@ class DailyTask(Task):
     def run(self, **kwargs):
         client = MongoClient()
         database = MongoDatabaseGateway(client.exploder, config)
+        rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
+                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
 
-        analizer = BlockchainAnalyzer(database, config)
+        analizer = BlockchainAnalyzer(database, rpc_client, config)
         # Save hash_rate
         hash_rate = analizer.get_network_hash_rate()
         analizer.save_network_hash_rate(hash_rate)
@@ -67,6 +69,13 @@ class DailyTask(Task):
         size = analizer.get_blockchain_size()
         analizer.save_network_stats(supply, size)
 
+        # Update client info
+        url = config.get('syncer', 'ipify_url')
+        client_ip = get_client_ip(url)
+        version = analizer.get_client_version()
+        peer_info = analizer.get_peer_info()
+        analizer.save_client_info(version, client_ip, peer_info)
+
         bootstrap_dir = config.get('syncer', 'bootstrap_dir')
         generate_bootstrap(
             config.get('syncer', 'datadir_path'),
@@ -74,10 +83,25 @@ class DailyTask(Task):
         )
 
 
+class HalfMinuteTask(Task):
+    @only_one(key="SingleHalfMinuteTask", timeout=config.getint('syncer', 'task_lock_timeout'))
+    def run(self, **kwargs):
+        client = MongoClient()
+        database = MongoDatabaseGateway(client.exploder, config)
+        rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
+                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
+
+        analizer = BlockchainAnalyzer(database, rpc_client, config)
+        # Calculate and save sync progress
+        progress = analizer.calculate_sync_progress()
+        analizer.update_sync_progress(progress)
+
+
 app = SyncerCelery('tasks', broker='redis://localhost:6379/0')
 app.conf.result_backend = 'redis://localhost:6379/0'
 app.tasks.register(SyncTask)
 app.tasks.register(DailyTask)
+app.tasks.register(HalfMinuteTask)
 
 app.conf.beat_schedule = {
     'sync-every-10-seconds': {
@@ -88,6 +112,10 @@ app.conf.beat_schedule = {
         'task': 'syncer.tasks.DailyTask',
         # 'schedule': crontab(minute=0, hour=12),  # It's high noon
         'schedule': 60.0
+    },
+    'every-30-seconds': {
+        'task': 'syncer.tasks.HalfMinuteTask',
+        'schedule': 30.0,
     },
 }
 

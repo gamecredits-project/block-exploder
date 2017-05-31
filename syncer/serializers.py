@@ -105,3 +105,28 @@ class NetworkStatsSerializer(object):
             "supply": supply,
             "blockchain_size": blockchain_size
         }
+
+
+class ClientInfoSerializer(object):
+    @staticmethod
+    def to_database(version, ip, peer_info):
+        # If ipify api stops working don't update ip field
+        if ip:
+            return {
+                "version": version,
+                "ip": ip,
+                "peer_info": peer_info
+            }
+        else:
+            return {
+                "version": version,
+                "peer_info": peer_info
+            }
+
+
+class ClientSyncProgressSerializer(object):
+    @staticmethod
+    def to_database(progress):
+        return {
+            "sync_progress": progress
+        }

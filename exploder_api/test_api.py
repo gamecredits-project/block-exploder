@@ -211,6 +211,11 @@ class ClientTestCase(unittest.TestCase):
         data = json.loads(result.text)
         self.assertEquals(len(data), 5)
 
+    def test_get_client_info(self):
+        result = requests.get(self.url + "client/info")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+
 
 if __name__ == "__main__":
     unittest.main()
