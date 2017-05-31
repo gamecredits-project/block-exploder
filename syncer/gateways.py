@@ -18,8 +18,8 @@ class MongoDatabaseGateway(object):
         # Mongo collections to persist the blockchain
         self.blocks = database.blocks
         self.transactions = database.transactions
-        self.vins = database.vin
-        self.vouts = database.vout
+        # self.vins = database.vin
+        # self.vouts = database.vout
         self.hashrate = database.hashrate
         self.network_stats = database.network_stats
         self.sync_history = database.sync_history
@@ -42,6 +42,12 @@ class MongoDatabaseGateway(object):
     def create_indexes(self):
         self.blocks.create_index([("height", pymongo.DESCENDING)])
         self.blocks.create_index([("hash", pymongo.HASHED)])
+        self.blocks.create_index([("chain", pymongo.ASCENDING)])
+        self.transactions.create_index([("txid", pymongo.HASHED)])
+        self.transactions.create_index([("blockhash", pymongo.ASCENDING)])
+        self.transactions.create_index([("blocktime", pymongo.DESCENDING)])
+        self.transactions.create_index([("vout.addresses", pymongo.DESCENDING)])
+        self.transactions.create_index([("vin.prev_txid", pymongo.DESCENDING)])
 
     def flush_cache(self):
         if self.block_cache:
@@ -50,15 +56,15 @@ class MongoDatabaseGateway(object):
         if self.tr_cache:
             self.transactions.insert_many([TransactionSerializer.to_database(tr) for tr in self.tr_cache.values()])
 
-        vins_to_insert = []
-        vouts_to_insert = []
-        for tr in self.tr_cache.values():
-            vins_to_insert += [VinSerializer.to_database(vin, tr.txid) for vin in tr.vin]
-            for (index, vout) in enumerate(tr.vout):
-                vouts_to_insert += VoutSerializer.to_database(vout, tr.txid, index)
+        # vins_to_insert = []
+        # vouts_to_insert = []
+        # for tr in self.tr_cache.values():
+        #     vins_to_insert += [VinSerializer.to_database(vin, tr.txid) for vin in tr.vin]
+        #     for (index, vout) in enumerate(tr.vout):
+        #         vouts_to_insert += VoutSerializer.to_database(vout, tr.txid, index)
 
-        self.vins.insert_many(vins_to_insert)
-        self.vouts.insert_many(vouts_to_insert)
+        # self.vins.insert_many(vins_to_insert)
+        # self.vouts.insert_many(vouts_to_insert)
         self.block_cache = {}
         self.tr_cache = {}
 
@@ -221,12 +227,9 @@ class MongoDatabaseGateway(object):
         return [MongoTransactionFactory.from_mongo(tr) for tr in transactions]
 
     def get_transactions_by_address(self, address):
-        vouts = self.vouts.find({"address": address})
-        transactions = []
-        for v in vouts:
-            transactions.append(self.get_transaction_by_txid(v['txid']))
+        transactions = self.transactions.find({"vout.addresses": address})
 
-        return transactions
+        return [MongoTransactionFactory.from_mongo(tr) for tr in transactions]
 
     def put_transaction(self, tr):
         if tr.txid in self.tr_cache:

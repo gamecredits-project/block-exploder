@@ -98,25 +98,18 @@ def get_transactions_by_blockhash(blockhash):
 ###############
 #  ADDRESSES  #
 ###############
-def get_address(address_hash):
-    trs, volume = db.get_address_statistics(address_hash)
-    transactions = [TransactionSerializer.to_web(tr) for tr in trs]
-    return {
-        "address": address_hash,
-        "volume": volume,
-        "transactions": transactions,
-    }
+def get_address_transactions(address_hash, limit, offset):
+    trs = db.get_address_transactions(address_hash, limit, offset)
+    return [TransactionSerializer.to_web(tr) for tr in trs]
+
+
+def get_address_volume(address_hash):
+    return db.get_address_volume(address_hash)
 
 
 def get_address_unspent(address_hash):
-    vouts = db.get_address_unspent(address_hash)
-    unspent = [VoutSerializer.to_web(vout) for vout in vouts]
-    balance = sum([vout["value"] for vout in unspent])
-    return {
-        "address": address_hash,
-        "balance": balance,
-        "unspent": unspent
-    }
+    unspent = db.get_address_unspent(address_hash)
+    return unspent
 
 
 #############
