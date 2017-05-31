@@ -107,10 +107,10 @@ class BlockSerializer(object):
 
 class HashrateSerializer(object):
     @staticmethod
-    def to_database(rate):
+    def to_database(rate, timestamp=time.time()):
         return {
             "hashrate": rate,
-            "timestamp": time.time()
+            "timestamp": timestamp
         }
 
 

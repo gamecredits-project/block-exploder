@@ -292,18 +292,19 @@ class BlockchainAnalyzer(object):
         # Client RPC connection
         self.rpc = rpc_client
 
-    def get_network_hash_rate(self):
+    def get_network_hash_rate(self, end_time=None):
         highest = self.db.get_highest_block()
-        end = highest.time
-        start = highest.time - 86400     # seconds in day
-        blocks_in_interval = self.db.get_blocks_between_time(start, end)
+        if not end_time:
+            end_time = highest.time
+        start_time = end_time - 86400     # seconds in day
+        blocks_in_interval = self.db.get_blocks_between_time(start_time, end_time)
         cum_work = sum([block['work'] for block in blocks_in_interval])
         hps = float(cum_work) / 86400
         return int(hps)
 
-    def save_network_hash_rate(self, hash_rate):
+    def save_network_hash_rate(self, hash_rate, time=None):
         if hash_rate:
-            self.db.put_hashrate(int(hash_rate))
+            self.db.put_hashrate(int(hash_rate), time)
 
     def get_supply(self):
         height = self.db.get_blockchain_height()
