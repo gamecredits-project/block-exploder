@@ -39,30 +39,14 @@ class MongoTransactionFactory(object):
         if tr is None:
             return None
 
-        vout = []
-        for v in tr['vout']:
-            vout.append({
-                "type": v["type"],
-                "addresses": v.get("addresses"),
-                "value": v.get("value")
-            })
-
-        vin = []
-        for v in tr['vin']:
-            vin.append({
-                "coinbase": v.get("coinbase"),
-                "vout_index": v.get("vout_index"),
-                "prev_txid": v.get("prev_txid")
-            })
-
         return Transaction(
             blocktime=tr['blocktime'],
             version=tr['version'],
             blockhash=tr['blockhash'],
-            vout=vout,
+            vin=[MongoVinFactory.from_mongo(v) for v in tr['vin']],
+            vout=[MongoVoutFactory.from_mongo(v) for v in tr['vout']],
             locktime=tr['locktime'],
             total=tr['total'],
-            vin=vin,
             txid=tr['txid']
         )
 
@@ -75,7 +59,7 @@ class MongoVoutFactory(object):
             reqSigs=mongo_vout.get('reqSigs'),
             value=mongo_vout.get('value'),
             txid=mongo_vout.get('txid'),
-            addresses=[mongo_vout.get('address')],
+            addresses=mongo_vout.get('addresses'),
             type=mongo_vout['type'],
             asm=mongo_vout['asm']
         )

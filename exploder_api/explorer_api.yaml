@@ -223,15 +223,55 @@ paths:
     get:
       tags:
         - Addresses
-      operationId: exploder_api.api.get_address
-      summary: Return an array of transactions containing this address and it's total volume
+      operationId: exploder_api.api.get_address_transactions
+      summary: Return an array of transactions to given address
+      description: |
+        List latest  <limit> transactions in the GameCredits blockchain and skip <offset> transactions
       parameters:
         - $ref: '#/parameters/address_hash'
+        - name: limit
+          in: query
+          description: Number of transactions to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 25
+        - name: offset
+          in: query
+          description: Number of transactions to skip.
+          required: false
+          type: integer
+          minimum: 0
+          default: 0
       responses:
         200:
           description: Return address
           schema:
-            $ref: '#/definitions/Address'
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/{address_hash}/volume:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_volume
+      summary: Return the volume of an address
+      description: |
+        Volume is the total amount of GameCredits transfered to a given address
+      parameters:
+        - $ref: '#/parameters/address_hash'
+      responses:
+        200:
+          description: Return volume
+          schema:
+            type: number
+            format: float
         default:
           description: Unexpected error
           schema:
@@ -249,7 +289,9 @@ paths:
         200:
           description: Return address unspent
           schema:
-            $ref: '#/definitions/AddressUnspent'
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
         default:
           description: Unexpected error
           schema:

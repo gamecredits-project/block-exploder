@@ -3,39 +3,20 @@ import time
 
 class VoutSerializer(object):
     @staticmethod
-    def to_database(vout, txid, index):
-        formatted = []
-
-        if vout.addresses:
-            for adr in vout.addresses:
-                formatted.append({
-                    "txid": txid,
-                    "index": index,
-                    "value": vout.value,
-                    "asm": vout.asm,
-                    "address": adr,
-                    "type": vout.type,
-                    "reqSigs": vout.reqSigs
-                })
-        else:
-            formatted = [{
-                "txid": vout.txid,
-                "index": vout.index,
-                "value": vout.value,
-                "asm": vout.asm,
-                "address": None,
-                "type": vout.type,
-                "reqSigs": vout.reqSigs
-            }]
-
-        return formatted
+    def to_database(vout):
+        return {
+            "value": vout.value,
+            "asm": vout.asm,
+            "addresses": vout.addresses,
+            "type": vout.type,
+            "reqSigs": vout.reqSigs
+        }
 
 
 class VinSerializer(object):
     @staticmethod
-    def to_database(vin, txid):
+    def to_database(vin):
         return {
-            "txid": txid,
             "prev_txid": vin.prev_txid,
             "vout_index": vin.vout_index,
             "hex": vin.hex,
@@ -59,18 +40,10 @@ class TransactionSerializer(object):
         }
 
         for v in tr.vin:
-            formatted['vin'].append({
-                "prev_txid": v.prev_txid,
-                "vout_index": v.vout_index,
-                "coinbase": v.coinbase
-            })
+            formatted['vin'].append(VinSerializer.to_database(v))
 
         for v in tr.vout:
-            formatted['vout'].append({
-                "addresses": v.addresses,
-                "type": v.type,
-                "value": v.value
-            })
+            formatted['vout'].append(VoutSerializer.to_database(v))
 
         return formatted
 

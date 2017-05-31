@@ -6,7 +6,7 @@ from mock import MagicMock
 from interactors import Blockchain
 from test_gateways import generate_test_data
 from gateways import get_mongo_connection, MongoDatabaseGateway
-from serializers import BlockSerializer, TransactionSerializer, VinSerializer, VoutSerializer
+from serializers import BlockSerializer, TransactionSerializer
 
 
 class InsertBlockTestCaseWithMocking(unittest.TestCase):
@@ -76,11 +76,6 @@ class InsertBlockTestCaseWithTestData(unittest.TestCase):
     def setUp(self):
         self.db.blocks.insert_many([BlockSerializer.to_database(block) for block in self.blocks])
         self.db.transactions.insert_many([TransactionSerializer.to_database(tr) for tr in self.transactions])
-
-        for tr in self.transactions:
-            self.db.vin.insert_many([VinSerializer.to_database(vin, tr.txid) for vin in tr.vin])
-            list_of_lists = [VoutSerializer.to_database(vout, tr.txid, index) for (index, vout) in enumerate(tr.vout)]
-            self.db.vout.insert_many([item for sublist in list_of_lists for item in sublist])
 
         self.db_gateway = MongoDatabaseGateway(
             database=self.db,

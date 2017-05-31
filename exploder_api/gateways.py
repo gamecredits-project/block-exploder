@@ -30,26 +30,43 @@ class DatabaseGateway(object):
         raise KeyError("Block not found")
 
     def get_address_unspent(self, address):
-        vouts = self.vout.find({"address": address})
+        trs = self.transactions.aggregate([
+            {"$match": {"vout.addresses": address}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
+            {"$match": {"vout.addresses": address}}
+        ])
 
-        if not vouts:
-            return []
+        unspent = []
+        for tr in trs:
+            spend = self.transactions.find_one({"vin.prev_txid": tr['txid'], "vin.vout_index": tr['vout_index']})
 
-        unspent_vouts = []
+            if not spend:
+                unspent.append(tr)
 
-        for vout in vouts:
-            spent = self.vin.find_one({"prev_txid": vout["txid"], "vout_index": vout["index"]})
+        for tr in unspent:
+            del tr['_id']
 
-            if not spent:
-                unspent_vouts.append(vout)
+        return unspent
 
-        return unspent_vouts
+    def get_address_transactions(self, address, limit=25, offset=0):
+        return self.transactions.find({"vout.addresses": address})\
+            .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit)
 
-    def get_address_statistics(self, address):
-        vouts = list(self.vout.find({"address": address}))
-        volume = sum([vout["value"] for vout in vouts])
-        txids = [v['txid'] for v in vouts]
-        return list(self.transactions.find({"txid": {"$in": txids}})), volume
+    def get_address_volume(self, address):
+        pipeline = [
+            {"$match": {"vout.addresses": address}},
+            {"$unwind": "$vout"},
+            {"$match": {"vout.addresses": address}},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
+            {"$group": {"_id": "$vout.addresses", "volume": {"$sum": "$vout.value"}}}
+        ]
+
+        result = self.transactions.aggregate(pipeline)
+
+        if not result:
+            return 0
+
+        return result.next()['volume']
 
     def get_transaction_by_txid(self, txid):
         tr = self.transactions.find_one({"txid": txid})
