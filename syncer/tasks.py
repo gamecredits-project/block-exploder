@@ -95,6 +95,9 @@ class HalfMinuteTask(Task):
         # Calculate and save sync progress
         progress = analizer.calculate_sync_progress()
         analizer.update_sync_progress(progress)
+        # Save GameCredits usd price
+        price = analizer.get_game_price()
+        analizer.save_game_price(price)
 
 
 app = SyncerCelery('tasks', broker='redis://localhost:6379/0')

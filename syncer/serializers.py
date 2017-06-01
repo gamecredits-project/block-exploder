@@ -107,6 +107,14 @@ class NetworkStatsSerializer(object):
         }
 
 
+class PriceSerializer(object):
+    @staticmethod
+    def to_database(price):
+        return {
+            "usd_price": price
+        }
+
+
 class ClientInfoSerializer(object):
     @staticmethod
     def to_database(version, ip, peer_info):

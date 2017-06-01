@@ -4,7 +4,7 @@ from decimal import Decimal
 from factories import MongoBlockFactory, MongoTransactionFactory, MongoVoutFactory, MongoVinFactory
 from serializers import BlockSerializer, TransactionSerializer, VinSerializer, \
     VoutSerializer, HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer, \
-    ClientInfoSerializer, ClientSyncProgressSerializer
+    ClientInfoSerializer, ClientSyncProgressSerializer, PriceSerializer
 from pymongo import MongoClient
 
 
@@ -258,6 +258,16 @@ class MongoDatabaseGateway(object):
         else:
             self.network_stats.update_one(
                 {'_id': stats['_id']}, {"$set": NetworkStatsSerializer.to_database(supply, blockchain_size)}
+            )
+
+    def update_game_price(self, price):
+        stats = self.network_stats.find_one()
+
+        if stats is None:
+            self.network_stats.insert_one(PriceSerializer.to_database(price))
+        else:
+            self.network_stats.update_one(
+                {'_id': stats['_id']}, {"$set": PriceSerializer.to_database(price)}
             )
 
     def put_sync_history(self, start_time, end_time, start_block_height, end_block_height):

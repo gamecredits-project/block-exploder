@@ -4,6 +4,8 @@ import datetime
 import time
 import itertools
 import logging
+import requests
+import json
 from gamecredits.factories import BlockFactory
 from gamecredits.constants import SUBSIDY_HALVING_INTERVAL
 from bitcoinrpc.authproxy import JSONRPCException
@@ -363,3 +365,17 @@ class BlockchainAnalyzer(object):
     def update_sync_progress(self, progress):
         if progress:
             self.db.update_sync_progress(progress=progress)
+
+    def get_game_price(self):
+        """
+        Return GameCredits USD price from coinmarketcap
+        """
+        response = requests.get(self.config.get('syncer', 'game_price_url'))
+        json_data = json.loads(response.text)[0]
+        if json_data and json_data['price_usd']:
+            return json_data['price_usd']
+        return None
+
+    def save_game_price(self, price):
+        if price:
+            self.db.update_game_price(price)

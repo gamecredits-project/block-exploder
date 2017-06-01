@@ -31,3 +31,4 @@
     - ipify_url: "https://api.ipify.org/"
     - production: False
     - bootstrap_dir_server_path: "/bootstrap/"
+    - game_price_url: "https://api.coinmarketcap.com/v1/ticker/gamecredits"
