@@ -13,6 +13,9 @@ class DatabaseGateway(object):
         self.client_info = database.client_info
         self.config = config
 
+    ############
+    #  BLOCKS  #
+    ############
     def get_latest_blocks(self, limit=25, offset=0):
         return list(self.blocks.find({"chain": self.config.get('syncer', 'main_chain')})
                     .sort("height", pymongo.DESCENDING).skip(offset).limit(limit))
@@ -29,24 +32,45 @@ class DatabaseGateway(object):
             return block
         raise KeyError("Block not found")
 
+    def get_highest_in_chain(self, chain):
+        return self.blocks.find_one({"chain": chain}, sort=[("height", -1)])
+
+    def calculate_block_confirmations(self, block):
+        highest_in_chain = self.get_highest_in_chain(block['chain'])
+        return highest_in_chain['height'] - block['height']
+
+    def get_block_count(self):
+        return self.blocks.count()
+
+    ###############
+    #  ADDRESSES  #
+    ###############
     def get_address_unspent(self, address):
-        trs = self.transactions.aggregate([
+        unspent = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.addresses": address}}
+            {"$match": {"vout.spent": False, "vout.addresses": address}}
         ])
 
-        unspent = []
-        for tr in trs:
-            spend = self.transactions.find_one({"vin.prev_txid": tr['txid'], "vin.vout_index": tr['vout_index']})
-
-            if not spend:
-                unspent.append(tr)
+        unspent = list(unspent)
 
         for tr in unspent:
             del tr['_id']
 
         return unspent
+
+    def get_address_balance(self, address):
+        result = self.transactions.aggregate([
+            {"$match": {"vout.addresses": address}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
+            {"$match": {"vout.spent": False, "vout.addresses": address}},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
+            {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
+        ])
+        if not result:
+            return 0
+
+        return result.next()['balance']
 
     def get_address_transactions(self, address, limit=25, offset=0):
         return self.transactions.find({"vout.addresses": address})\
@@ -68,6 +92,9 @@ class DatabaseGateway(object):
 
         return result.next()['volume']
 
+    ##################
+    #  TRANSACTIONS  #
+    ##################
     def get_transaction_by_txid(self, txid):
         tr = self.transactions.find_one({"txid": txid})
 
@@ -91,25 +118,21 @@ class DatabaseGateway(object):
         return list(self.transactions.find()
                     .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit))
 
-    def get_highest_in_chain(self, chain):
-        return self.blocks.find_one({"chain": chain}, sort=[("height", -1)])
-
-    def calculate_block_confirmations(self, block):
-        highest_in_chain = self.get_highest_in_chain(block['chain'])
-        return highest_in_chain['height'] - block['height']
-
-    def get_latest_hashrates(self, limit):
-        return list(self.hashrate.find().sort("timestamp", pymongo.DESCENDING).limit(limit))
-
-    def get_block_count(self, chain):
-        return self.blocks.find({"chain": chain}).count()
-
     def get_transaction_count(self):
         return self.transactions.count()
+
+    #############
+    #  NETWORK  #
+    #############
+    def get_latest_hashrates(self, limit):
+        return list(self.hashrate.find().sort("timestamp", pymongo.DESCENDING).limit(limit))
 
     def get_network_stats(self):
         return self.network_stats.find_one()
 
+    ############
+    #  CLIENT  #
+    ############
     def get_latest_sync_history(self, limit, offset):
         return list(self.sync_history.find()
                     .sort("end_time", pymongo.DESCENDING).skip(offset).limit(limit))
