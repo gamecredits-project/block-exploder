@@ -276,6 +276,27 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+
+  /addresses/{address_hash}/balance:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_balance
+      summary: Return the balance of an address
+      description: |
+        Balance is the total amount of GameCredits transfered to a given address that has not yet been spent
+      parameters:
+        - $ref: '#/parameters/address_hash'
+      responses:
+        200:
+          description: Return balance
+          schema:
+            type: number
+            format: float
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
   
   /addresses/{address_hash}/unspent:
     get:

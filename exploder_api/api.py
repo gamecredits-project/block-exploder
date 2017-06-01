@@ -5,7 +5,7 @@ import ConfigParser
 from flask_cors import CORS
 from gateways import DatabaseGateway
 from pymongo import MongoClient
-from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, \
+from serializers import TransactionSerializer, BlockSerializer, HashrateSerializer, \
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
@@ -110,6 +110,11 @@ def get_address_volume(address_hash):
 def get_address_unspent(address_hash):
     unspent = db.get_address_unspent(address_hash)
     return unspent
+
+
+def get_address_balance(address_hash):
+    balance = db.get_address_balance(address_hash)
+    return balance
 
 
 #############
