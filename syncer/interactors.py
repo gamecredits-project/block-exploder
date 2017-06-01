@@ -373,7 +373,7 @@ class BlockchainAnalyzer(object):
         response = requests.get(self.config.get('syncer', 'game_price_url'))
         json_data = json.loads(response.text)[0]
         if json_data and json_data['price_usd']:
-            return json_data['price_usd']
+            return float(json_data['price_usd'])
         return None
 
     def save_game_price(self, price):

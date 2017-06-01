@@ -6,7 +6,7 @@ from flask_cors import CORS
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, VoutSerializer, HashrateSerializer, \
-    NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer
+    NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
 ######################
@@ -152,6 +152,11 @@ def get_bootstrap_link():
         "url": bootstrap_server_path,
         "generated": generated
     }
+
+
+def get_usd_price():
+    stats = db.get_network_stats()
+    return PriceSerializer.to_web(stats["usd_price"])
 
 
 ##############

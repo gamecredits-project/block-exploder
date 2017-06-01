@@ -384,6 +384,22 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /network/price:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_usd_price
+      summary: Get GameCredits USD price from coinmarketcap
+      responses:
+        200:
+          description: Return USD price
+          schema:
+            $ref: '#/definitions/Price'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
   /client/sync_history:
     get:
       summary: Latest sync history information
@@ -694,6 +710,13 @@ definitions:
         type: string
       generated:
         type: integer
+
+  Price:
+    type: object
+    properties:
+      priceUSD:
+        type: number
+        format: float
 
   SyncHistory:
     type: object

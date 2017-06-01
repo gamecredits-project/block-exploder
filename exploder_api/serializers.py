@@ -82,6 +82,14 @@ class NetworkStatsSerializer(object):
         }
 
 
+class PriceSerializer(object):
+    @staticmethod
+    def to_web(price):
+        return {
+            "priceUSD": price
+        }
+
+
 class ClientInfoSerializer(object):
     @staticmethod
     def to_web(client_info):

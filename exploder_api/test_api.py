@@ -195,6 +195,11 @@ class NetworkTestCase(unittest.TestCase):
         data = json.loads(result.text)
         self.assertTrue(data)
 
+    def test_get_usd_price(self):
+        result = requests.get(self.url + "network/price")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+
 
 class ClientTestCase(unittest.TestCase):
     @classmethod
