@@ -101,8 +101,8 @@ class DatabaseGateway(object):
     def get_latest_hashrates(self, limit):
         return list(self.hashrate.find().sort("timestamp", pymongo.DESCENDING).limit(limit))
 
-    def get_block_count(self):
-        return self.blocks.count()
+    def get_block_count(self, chain):
+        return self.blocks.find({"chain": chain}).count()
 
     def get_transaction_count(self):
         return self.transactions.count()

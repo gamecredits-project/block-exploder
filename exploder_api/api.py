@@ -130,7 +130,7 @@ def get_latest_hashrates(limit):
 def get_network_stats():
     hash_rate = db.get_latest_hashrates(limit=1)
     stats = db.get_network_stats()
-    block_count = db.get_block_count()
+    block_count = db.get_block_count(config.get('syncer', 'main_chain'))
     tr_count = db.get_transaction_count()
     return NetworkStatsSerializer.to_web(stats, hash_rate[0], block_count, tr_count)
 

@@ -698,7 +698,7 @@ definitions:
         description: Size of the blockchain (in GB)
       numBlocks:
         type: integer
-        description: Total number of blocks
+        description: Total number of blocks in the main chain
       numTransactions:
         type: integer
         description: Total number of transactions
