@@ -74,7 +74,8 @@ class DailyTask(Task):
         client_ip = get_client_ip(url)
         version = analizer.get_client_version()
         peer_info = analizer.get_peer_info()
-        analizer.save_client_info(version, client_ip, peer_info)
+        updated_peer_info = analizer.update_peer_location(peer_info)
+        analizer.save_client_info(version, client_ip, updated_peer_info)
 
         bootstrap_dir = config.get('syncer', 'bootstrap_dir')
         generate_bootstrap(

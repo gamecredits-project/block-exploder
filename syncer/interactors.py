@@ -347,6 +347,22 @@ class BlockchainAnalyzer(object):
     def get_peer_info(self):
         return self.rpc.getpeerinfo()
 
+    def update_peer_location(self, peer_info):
+        """
+        Update peer info with latitude and longitude from freegeoip.net
+        """
+        for peer in peer_info:
+            addr = peer["addr"]
+            if addr:
+                # Remove port from ip address
+                ip = addr.split(':')[0]
+                response = requests.get("%s/%s/%s" % (self.config.get('syncer', 'geo_ip_url'), "json", ip))
+                json_data = json.loads(response.text)
+                if json_data and json_data['latitude'] and json_data['longitude']:
+                    peer['latitude'] = json_data['latitude']
+                    peer['longitude'] = json_data['longitude']
+        return peer_info
+
     def save_client_info(self, version, ip, peer_info):
         if version and peer_info:
             self.db.put_client_info(version=version, ip=ip, peer_info=peer_info)

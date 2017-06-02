@@ -763,9 +763,14 @@ definitions:
       addr:
         type: string
         description: The ip address and port of the peer
-      addrlocal:
-        type: string
-        description: Local address
+      latitude:
+        type: number
+        format: float
+        description: Coordinate that specifies the north–south position of a point on the Earth's surface
+      longitude:
+        type: number
+        format: float
+        description: Coordinate that specifies the east-west position of a point on the Earth's surface
       services:
         type: string
         description: The services
@@ -787,9 +792,6 @@ definitions:
       pingtime:
         type: integer
         description: Ping time
-      pingwait:
-        type: integer
-        description: Ping wait
       version:
         type: integer
         description: The peer version, such as 7001
