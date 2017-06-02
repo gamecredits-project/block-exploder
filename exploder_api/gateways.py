@@ -39,8 +39,8 @@ class DatabaseGateway(object):
         highest_in_chain = self.get_highest_in_chain(block['chain'])
         return highest_in_chain['height'] - block['height']
 
-    def get_block_count(self):
-        return self.blocks.count()
+    def get_block_count(self, chain):
+        return self.blocks.find({"chain": chain}).count()
 
     ###############
     #  ADDRESSES  #
