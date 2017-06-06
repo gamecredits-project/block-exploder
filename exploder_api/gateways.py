@@ -75,9 +75,13 @@ class DatabaseGateway(object):
 
         return result[0]['balance']
 
-    def get_address_transactions(self, address, limit=25, offset=0):
-        return self.transactions.find({"vout.addresses": address})\
-            .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit)
+    def get_address_transactions(self, address, start, limit):
+        if not start:
+            return list(self.transactions.find({"vout.addresses": address})
+                        .sort("blocktime", pymongo.DESCENDING).limit(limit))
+
+        return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$lte": start}})
+                    .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
     def get_address_num_transactions(self, address):
         pipeline = [

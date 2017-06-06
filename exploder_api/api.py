@@ -99,9 +99,20 @@ def get_transactions_by_blockhash(blockhash):
 ###############
 #  ADDRESSES  #
 ###############
-def get_address_transactions(address_hash, limit, offset):
-    trs = db.get_address_transactions(address_hash, limit, offset)
-    return [TransactionSerializer.to_web(tr) for tr in trs]
+def get_address_transactions(address_hash, start=None):
+    trs = db.get_address_transactions(address_hash, start, limit=51)
+
+    if len(trs) == 51:
+        last_transaction = trs[len(trs) - 1]
+        return {
+            "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
+            "next": "/addresses/%s?start=%s" % (address_hash, last_transaction['blocktime'])
+        }
+    else:
+        return {
+            "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
+            "next": None
+        }
 
 
 def get_address_num_transactions(address_hash):

@@ -226,31 +226,19 @@ paths:
       operationId: exploder_api.api.get_address_transactions
       summary: Return an array of transactions to given address
       description: |
-        List latest  <limit> transactions in the GameCredits blockchain and skip <offset> transactions
+        Return a list of transactions that this address appears in
       parameters:
         - $ref: '#/parameters/address_hash'
-        - name: limit
+        - name: start
           in: query
-          description: Number of transactions to return.
+          description: Timestamp of the start transaction, used for pagination
           required: false
           type: integer
-          minimum: 1
-          maximum: 1000
-          default: 25
-        - name: offset
-          in: query
-          description: Number of transactions to skip.
-          required: false
-          type: integer
-          minimum: 0
-          default: 0
       responses:
         200:
           description: Return address
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Transaction'
+            $ref: '#/definitions/TransactionsPaginated'
         default:
           description: Unexpected error
           schema:
@@ -767,6 +755,18 @@ definitions:
       numTransactions:
         type: integer
         description: Total number of transactions
+
+  TransactionsPaginated:
+    type: object
+    properties:
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+      next:
+        type: string
+        description: Relative url of the next page of transactions, null if there's no more transactions
+
 
   Bootstrap:
     type: object
