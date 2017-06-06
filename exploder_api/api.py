@@ -6,7 +6,8 @@ from flask_cors import CORS
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, HashrateSerializer, \
-    NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer
+    NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
+    SearchSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
 ######################
@@ -179,6 +180,14 @@ def get_latest_sync_history(limit, offset):
 def get_client_info():
     client_info = db.get_client_info()
     return ClientInfoSerializer.to_web(client_info)
+
+
+############
+#  SEARCH  #
+############
+def search(search_param):
+    param_type = db.search(search_param)
+    return SearchSerializer.to_web(search_param, param_type)
 
 
 def create_and_run_app(port=5000):

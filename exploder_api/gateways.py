@@ -157,3 +157,27 @@ class DatabaseGateway(object):
 
     def get_client_info(self):
         return self.client_info.find_one()
+
+    ############
+    #  SEARCH  #
+    ############
+    def search(self, parameter):
+        """
+        Search blocks, transactions and addresses for :parameter:
+
+        @param parameter: Block hash, transaction id or address hash
+        @type parameter: string
+        @return: Type of the parameter if successful, otherwise None
+        @rtype: string
+        """
+        if parameter:
+            block = self.blocks.find_one({"hash": parameter})
+            if block:
+                return "block"
+            transaction = self.transactions.find_one({"txid": parameter})
+            if transaction:
+                return "transaction"
+            address = self.transactions.find_one({"vout.addresses": parameter})
+            if address:
+                return "address"
+        return None

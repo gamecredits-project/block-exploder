@@ -99,3 +99,12 @@ class ClientInfoSerializer(object):
             "peerInfo": client_info["peer_info"],
             "syncProgress": client_info["sync_progress"]
         }
+
+
+class SearchSerializer(object):
+    @staticmethod
+    def to_web(search_param, param_type):
+        return {
+            "searchBy": search_param,
+            "type": param_type
+        }
