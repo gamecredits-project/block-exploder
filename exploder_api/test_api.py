@@ -208,18 +208,51 @@ class ClientTestCase(unittest.TestCase):
 
     def test_get_latest_sync_history(self):
         params = {
-            "limit": 5
+            "limit": 2
         }
         result = requests.get(self.url + "client/sync_history", params)
         self.assertEquals(result.status_code, 200)
         self.assertTrue(result.text)
         data = json.loads(result.text)
-        self.assertEquals(len(data), 5)
+        self.assertEquals(len(data), 2)
 
     def test_get_client_info(self):
         result = requests.get(self.url + "client/info")
         self.assertEquals(result.status_code, 200)
         self.assertTrue(result.text)
+
+
+class SearchTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = "http://127.0.0.1/api/"
+
+    def test_search(self):
+        # First find some txid
+        params = {
+            "limit": 1
+        }
+        result = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        # Try to get transaction with that txid
+        txid = data[0]["txid"]
+        result = requests.get(self.url + "search/" + txid)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], txid)
+        self.assertEquals(data["type"], "transaction")
+
+    def test_invalid_search(self):
+        result = requests.get(self.url + "search/" + "blabla")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], "blabla")
+        self.assertFalse(data["type"])
 
 
 if __name__ == "__main__":

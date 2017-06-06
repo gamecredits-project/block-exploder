@@ -473,6 +473,24 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /search/{search_param}:
+    get:
+      tags:
+        - Search
+      operationId: exploder_api.api.search
+      summary: Search blockchain for specific block, transaction or address
+      parameters:
+        - $ref: '#/parameters/search_param'
+      responses:
+        200:
+          description: Return whether sent parameter is block, transaction, address or null
+          schema:
+            $ref: '#/definitions/SearchParamType'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
 parameters:
   block_hash:
     name: block_hash
@@ -489,6 +507,12 @@ parameters:
   address_hash:
     name: address_hash
     description: Unique address identifier
+    in: path
+    type: string
+    required: true
+  search_param:
+    name: search_param
+    description: Block hash, address hash or transaction id
     in: path
     type: string
     required: true
@@ -831,3 +855,13 @@ definitions:
       syncnode:
         type: boolean
         description: If sync node
+
+  SearchParamType:
+    type: object
+    properties:
+      searchBy:
+        type: string
+        description: Block hash, transaction id or address hash with which this search was performed
+      type:
+        type: string
+        description: Type of the search parameter (block, transaction, address or null)
