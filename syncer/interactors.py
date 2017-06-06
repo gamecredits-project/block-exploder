@@ -25,6 +25,11 @@ class Blockchain(object):
         # Global counter for creating unique identifiers
         self._counter = itertools.count()
 
+        if self.config.getboolean('syncer', 'unspent_tracking'):
+            self.unspent_tracking = True
+        else:
+            self.unspent_tracking = False
+
         # Skip the taken identifiers
         while self._get_unique_chain_identifier() in self.db.get_chain_identifiers():
             pass
@@ -64,10 +69,19 @@ class Blockchain(object):
         block.chainwork = fork_point.chainwork + block.work
         block.chain = fork_point.chain
         self.db.update_block(block.previousblockhash, {"nextblockhash": block.hash})
-        self.db.put_block(block)
+        self.db.put_block(block,)
         return block
 
     def insert_block(self, block):
+        # If we do not track unspent (historical sync)
+        # we consider all transactions spent and then
+        # later update their status if they are unspent.
+        # This is an optimization tweak.
+        if not self.unspent_tracking:
+            for tr in block.tx:
+                for vout in tr.vout:
+                    vout.spent = True
+
         highest_block = self.db.get_highest_block()
 
         # If the db is empty create the coinbase block
@@ -82,6 +96,10 @@ class Blockchain(object):
         # Current block appends to the main chain
         if block.previousblockhash == highest_block.hash:
             added_block = self._append_to_main_chain(block)
+
+            if self.unspent_tracking:
+                self.update_unspent(added_block.tx)
+
             return {
                 "block": added_block,
                 "fork": "",
@@ -95,6 +113,9 @@ class Blockchain(object):
                 block = self._create_fork_of_main_chain(block, fork_point)
             else:
                 block = self._grow_sidechain(block, fork_point)
+
+            if self.unspent_tracking:
+                self.update_unspent(added_block.tx)
 
             if block.chainwork > highest_block.chainwork:
                 block = self.reconverge(block)
@@ -110,6 +131,11 @@ class Blockchain(object):
                     "fork": fork_point.hash,
                     "reconverge": False
                 }
+
+    def update_unspent(self, transactions):
+        for tr in transactions:
+            for vin in tr.vin:
+                self.db.mark_output_spent(vin.prev_txid, vin.vout_index)
 
     def reconverge(self, new_top_block):
         logging.info("[RECONVERGE] New top block is now %s" % new_top_block)

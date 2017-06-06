@@ -9,7 +9,8 @@ class VoutSerializer(object):
             "asm": vout.asm,
             "addresses": vout.addresses,
             "type": vout.type,
-            "reqSigs": vout.reqSigs
+            "reqSigs": vout.reqSigs,
+            "spent": vout.spent
         }
 
 

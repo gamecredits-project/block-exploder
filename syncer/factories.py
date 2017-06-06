@@ -61,7 +61,8 @@ class MongoVoutFactory(object):
             txid=mongo_vout.get('txid'),
             addresses=mongo_vout.get('addresses'),
             type=mongo_vout['type'],
-            asm=mongo_vout['asm']
+            asm=mongo_vout['asm'],
+            spent=mongo_vout['spent']
         )
 
 

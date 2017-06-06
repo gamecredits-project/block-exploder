@@ -47,23 +47,30 @@ if __name__ == '__main__':
     db = client.exploder
 
     num_threads = 16
-    min_blocktime = db.transactions.find().sort("blocktime", pymongo.ASCENDING)\
-        .limit(1).next()['blocktime']
+    num_transactions = db.transactions.count()
+    trs_per_thread = num_transactions / num_threads
+
+    print ("Total trs: %s, trs per thread: %s" % (num_transactions, trs_per_thread))
+
+    vertices = []
+    offset = 0
+    for i in range(num_threads):
+        blocktime = db.transactions.find().sort("blocktime", pymongo.ASCENDING)\
+            .skip(offset).limit(1).next()['blocktime']
+        vertices.append(blocktime)
+        offset += trs_per_thread
+
     max_blocktime = db.transactions.find().sort("blocktime", pymongo.DESCENDING)\
         .limit(1).next()['blocktime']
 
-    print "Min %s max %s" % (min_blocktime, max_blocktime)
-    interval_width = float(max_blocktime - min_blocktime) / num_threads
+    vertices.append(max_blocktime)
 
-    # TO OPTIMIZE: create bins with same number of transactions for every thread
-    # instead dividing by time, that way we achive optimal parallelization.
     intervals = []
-    previous = min_blocktime
-    for i in range(num_threads - 1):
-        intervals.append((previous, previous + interval_width))
-        previous += interval_width
+    # Make intervals
+    for i in range(len(vertices) - 1):
+        intervals.append((vertices[i], vertices[i + 1]))
 
-    intervals.append((previous, max_blocktime))
+    print intervals
 
     start = time.time()
 

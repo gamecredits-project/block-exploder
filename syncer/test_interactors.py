@@ -53,6 +53,7 @@ class InsertBlockTestCaseWithTestData(unittest.TestCase):
         CONFIG_FILE = os.environ['EXPLODER_CONFIG']
         cls.config = ConfigParser.RawConfigParser()
         cls.config.read(CONFIG_FILE)
+        cls.config.set('syncer', 'unspent_tracking', "False")
 
         cls.client = get_mongo_connection()
         cls.db = cls.client.test_database

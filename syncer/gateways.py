@@ -59,15 +59,6 @@ class MongoDatabaseGateway(object):
         if self.tr_cache:
             self.transactions.insert_many([TransactionSerializer.to_database(tr) for tr in self.tr_cache.values()])
 
-        # vins_to_insert = []
-        # vouts_to_insert = []
-        # for tr in self.tr_cache.values():
-        #     vins_to_insert += [VinSerializer.to_database(vin, tr.txid) for vin in tr.vin]
-        #     for (index, vout) in enumerate(tr.vout):
-        #         vouts_to_insert += VoutSerializer.to_database(vout, tr.txid, index)
-
-        # self.vins.insert_many(vins_to_insert)
-        # self.vouts.insert_many(vouts_to_insert)
         self.block_cache = {}
         self.tr_cache = {}
 
@@ -239,6 +230,16 @@ class MongoDatabaseGateway(object):
             raise KeyError("[put_transaction] Transaction with txid %s already exists in the database" % tr.txid)
 
         self.tr_cache[tr.txid] = tr
+
+    def mark_output_spent(self, txid, vout_index):
+        if txid in self.tr_cache:
+            self.tr_cache[txid].vout[vout_index].spent = True
+        else:
+            self.transactions.update_one({
+                'txid': txid
+            }, {
+                '$set': {"vout.%s.spent" % vout_index: True}
+            })
 
     #########################
     #   NETWORK METHODS    #
