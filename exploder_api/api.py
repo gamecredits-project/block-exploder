@@ -103,6 +103,10 @@ def get_address_transactions(address_hash, limit, offset):
     return [TransactionSerializer.to_web(tr) for tr in trs]
 
 
+def get_address_num_transactions(address_hash):
+    return db.get_address_num_transactions(address_hash)
+
+
 def get_address_volume(address_hash):
     return db.get_address_volume(address_hash)
 

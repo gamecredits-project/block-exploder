@@ -277,6 +277,26 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /addresses/{address_hash}/transaction-count:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_num_transactions
+      summary: Return the number of transactions for a given address
+      description: |
+        Number of transactions this address appears in
+      parameters:
+        - $ref: '#/parameters/address_hash'
+      responses:
+        200:
+          description: Return number of transactions
+          schema:
+            type: integer
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
   /addresses/{address_hash}/balance:
     get:
       tags:

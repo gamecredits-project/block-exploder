@@ -67,14 +67,32 @@ class DatabaseGateway(object):
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
         ])
+
+        result = list(result)
+
         if not result:
             return 0
 
-        return result.next()['balance']
+        return result[0]['balance']
 
     def get_address_transactions(self, address, limit=25, offset=0):
         return self.transactions.find({"vout.addresses": address})\
             .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit)
+
+    def get_address_num_transactions(self, address):
+        pipeline = [
+            {"$match": {"vout.addresses": address}},
+            {"$project": {"vout.addresses": 1}},
+            {"$group": {"_id": "vout.addresses", "num_transactions": {"$sum": 1}}}
+        ]
+
+        result = self.transactions.aggregate(pipeline)
+
+        result = list(result)
+        if not result:
+            return 0
+
+        return result[0]['num_transactions']
 
     def get_address_volume(self, address):
         pipeline = [
