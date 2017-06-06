@@ -9,6 +9,7 @@ from serializers import TransactionSerializer, BlockSerializer, HashrateSerializ
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
     SearchSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from helpers import validate_address, validate_sha256_hash
 
 ######################
 #  INITIALIZE STUFF  #
@@ -36,6 +37,8 @@ def get_latest_blocks(limit, offset):
 
 
 def get_block_by_hash(block_hash):
+    if not validate_sha256_hash(block_hash):
+        return "Invalid block hash", 400
     try:
         return BlockSerializer.to_web(db.get_block_by_hash(block_hash))
     except KeyError:
@@ -50,6 +53,8 @@ def get_block_by_height(height):
 
 
 def get_block_confirmations(block_hash):
+    if not validate_sha256_hash(block_hash):
+        return "Invalid block hash", 400
     try:
         block = db.get_block_by_hash(block_hash)
     except KeyError:
@@ -65,6 +70,8 @@ def get_block_confirmations(block_hash):
 #  TRANSACTIONS  #
 ##################
 def get_transaction_by_txid(txid):
+    if not validate_sha256_hash(txid):
+        return "Invalid transaction ID", 400
     try:
         return TransactionSerializer.to_web(db.get_transaction_by_txid(txid))
     except KeyError:
@@ -72,6 +79,8 @@ def get_transaction_by_txid(txid):
 
 
 def get_transaction_confirmations(txid):
+    if not validate_sha256_hash(txid):
+        return "Invalid transaction ID", 400
     try:
         tr = db.get_transaction_by_txid(txid)
     except KeyError:
@@ -90,6 +99,8 @@ def get_latest_transactions(limit, offset):
 
 
 def get_transactions_by_blockhash(blockhash):
+    if not validate_sha256_hash(blockhash):
+        return "Invalid block hash", 400
     try:
         return [TransactionSerializer.to_web(tr) for tr in db.get_transactions_by_blockhash(blockhash)]
     except KeyError:
@@ -100,24 +111,34 @@ def get_transactions_by_blockhash(blockhash):
 #  ADDRESSES  #
 ###############
 def get_address_transactions(address_hash, limit, offset):
+    if not validate_address(address_hash):
+        return "Invalid address hash", 400
     trs = db.get_address_transactions(address_hash, limit, offset)
     return [TransactionSerializer.to_web(tr) for tr in trs]
 
 
 def get_address_num_transactions(address_hash):
+    if not validate_address(address_hash):
+        return "Invalid address hash", 400
     return db.get_address_num_transactions(address_hash)
 
 
 def get_address_volume(address_hash):
+    if not validate_address(address_hash):
+        return "Invalid address hash", 400
     return db.get_address_volume(address_hash)
 
 
 def get_address_unspent(address_hash):
+    if not validate_address(address_hash):
+        return "Invalid address hash", 400
     unspent = db.get_address_unspent(address_hash)
     return unspent
 
 
 def get_address_balance(address_hash):
+    if not validate_address(address_hash):
+        return "Invalid address hash", 400
     balance = db.get_address_balance(address_hash)
     return balance
 

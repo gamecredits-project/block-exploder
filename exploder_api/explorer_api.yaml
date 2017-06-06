@@ -57,6 +57,8 @@ paths:
           description: Return block
           schema:
             $ref: '#/definitions/Block'
+        400:
+          description: Invalid block hash
         404:
           description: Block with given hash doesn't exist
         default:
@@ -81,6 +83,8 @@ paths:
           description: Number of confirmations
           schema:
             $ref: '#/definitions/BlockConfirmations'
+        400:
+          description: Invalid block hash
         404:
           description: Block with given hash doesn't exist
         default:
@@ -164,6 +168,8 @@ paths:
           description: Return transaction
           schema:
             $ref: '#/definitions/Transaction'
+        400:
+          description: Invalid transaction ID
         404:
           description: Transaction with given txid doesn't exist
         default:
@@ -188,6 +194,8 @@ paths:
           description: Number of confirmations
           schema:
             $ref: '#/definitions/TransactionConfirmations'
+        400:
+          description: Invalid transaction ID
         404:
           description: Transaction with given txid doesn't exist
         default:
@@ -214,6 +222,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Transaction'
+        400:
+          description: Invalid block hash
         default:
           description: Unexpected error
           schema:
@@ -251,6 +261,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Transaction'
+        400:
+          description: Invalid address hash
         default:
           description: Unexpected error
           schema:
@@ -272,6 +284,8 @@ paths:
           schema:
             type: number
             format: float
+        400:
+          description: Invalid address hash
         default:
           description: Unexpected error
           schema:
@@ -292,6 +306,8 @@ paths:
           description: Return number of transactions
           schema:
             type: integer
+        400:
+          description: Invalid address hash
         default:
           description: Unexpected error
           schema:
@@ -313,6 +329,8 @@ paths:
           schema:
             type: number
             format: float
+        400:
+          description: Invalid address hash
         default:
           description: Unexpected error
           schema:
@@ -333,6 +351,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Transaction'
+        400:
+          description: Invalid address hash
         default:
           description: Unexpected error
           schema:

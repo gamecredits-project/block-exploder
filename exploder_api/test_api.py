@@ -33,6 +33,11 @@ class BlocksTestCase(unittest.TestCase):
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
 
+    def test_get_block_by_invalid_hash(self):
+        # Block by invalid hash should return 400
+        res = requests.get(self.url + "blocks/invalidhash")
+        self.assertEquals(res.status_code, 400)
+
     def test_get_block_by_height(self):
         # First find some block height
         params = {
@@ -117,6 +122,11 @@ class TransactionsTestCase(unittest.TestCase):
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
 
+    def test_get_transaction_by_invalid_txid(self):
+        # Transaction by invalid txid should return 400
+        res = requests.get(self.url + "transactions/invalidtxid")
+        self.assertEquals(res.status_code, 400)
+
     def test_get_transaction_confirmations(self):
         # First find some txid
         params = {
@@ -155,6 +165,11 @@ class AddressesTestCase(unittest.TestCase):
         res = requests.get(self.url + "addresses/" + hash)
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
+
+    def test_get_address_by_invalid_hash(self):
+        # Transaction by invalid hash should return 400
+        res = requests.get(self.url + "transactions/invalidhash")
+        self.assertEquals(res.status_code, 400)
 
     def test_get_address_unspent(self):
         # First find some address hash

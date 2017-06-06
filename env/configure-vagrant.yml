@@ -34,3 +34,7 @@
     - game_price_url: "https://api.coinmarketcap.com/v1/ticker/gamecredits"
     - unspent_tracking: False
     - geo_ip_url: "https://freegeoip.net"
+    - address_min_length: 26
+    - address_max_length: 34
+    - game_address_starts_with: ['G', '3']
+    - sha256_hash_length: 64
