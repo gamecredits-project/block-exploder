@@ -17,6 +17,36 @@ class BlocksTestCase(unittest.TestCase):
         self.assertEquals(result.status_code, 200)
         self.assertTrue(result.text)
 
+    def test_get_latest_blocks_too_small_limit(self):
+        params = {
+            "limit": -3
+        }
+        res = requests.get(self.url + "blocks/latest", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_blocks_too_big_limit(self):
+        params = {
+            "limit": 10000000000000000000
+        }
+        res = requests.get(self.url + "blocks/latest", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_blocks_too_small_offset(self):
+        params = {
+            "limit": 10,
+            "offset": -2
+        }
+        res = requests.get(self.url + "blocks/latest", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_blocks_too_big_offset(self):
+        params = {
+            "limit": 10,
+            "offset": 10000000000000000000
+        }
+        res = requests.get(self.url + "blocks/latest", params)
+        self.assertEquals(res.status_code, 400)
+
     def test_get_block_by_hash(self):
         # First find some block hash
         params = {
@@ -101,6 +131,36 @@ class TransactionsTestCase(unittest.TestCase):
         result = requests.get(self.url + "transactions/latest", params)
         self.assertEquals(result.status_code, 200)
         self.assertTrue(result.text)
+
+    def test_get_latest_transactions_too_small_limit(self):
+        params = {
+            "limit": -3
+        }
+        res = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_transactions_too_big_limit(self):
+        params = {
+            "limit": 10000000000000000000
+        }
+        res = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_transactions_too_small_offset(self):
+        params = {
+            "limit": 10,
+            "offset": -2
+        }
+        res = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_transactions_too_big_offset(self):
+        params = {
+            "limit": 10,
+            "offset": 10000000000000000000
+        }
+        res = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(res.status_code, 400)
 
     def test_get_transactions_by_blockhash(self):
         # First find some block hash
@@ -244,6 +304,36 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(result.text)
         data = json.loads(result.text)
         self.assertEquals(len(data), 2)
+
+    def test_get_latest_sync_history_too_small_limit(self):
+        params = {
+            "limit": -3
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_sync_history_too_big_limit(self):
+        params = {
+            "limit": 10000000000000000000
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_sync_history_too_small_offset(self):
+        params = {
+            "limit": 10,
+            "offset": -2
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_sync_history_too_big_offset(self):
+        params = {
+            "limit": 10,
+            "offset": 10000000000000000000
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
 
     def test_get_client_info(self):
         result = requests.get(self.url + "client/info")

@@ -32,6 +32,8 @@ rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:%s"
 #  BLOCKS  #
 ############
 def get_latest_blocks(limit, offset):
+    if not isinstance(offset, int):
+        return "Offset too large", 400
     blocks = db.get_latest_blocks(limit, offset)
     return [BlockSerializer.to_web(block) for block in blocks]
 
@@ -99,6 +101,8 @@ def get_transaction_confirmations(txid):
 
 
 def get_latest_transactions(limit, offset):
+    if not isinstance(offset, int):
+        return "Offset too large", 400
     transactions = db.get_latest_transactions(limit, offset)
     return [TransactionSerializer.to_web(tr) for tr in transactions]
 
@@ -210,6 +214,8 @@ def get_usd_price():
 #   CLIENT   #
 ##############
 def get_latest_sync_history(limit, offset):
+    if not isinstance(offset, int):
+        return "Offset too large", 400
     sync_history = db.get_latest_sync_history(limit, offset)
     return [SyncHistorySerializer.to_web(history) for history in sync_history]
 
