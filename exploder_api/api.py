@@ -120,6 +120,8 @@ def get_transactions_by_blockhash(blockhash):
 #  ADDRESSES  #
 ###############
 def get_address_transactions(address_hash, start=None):
+    if start and (not isinstance(start, int)):
+        return "Start too large", 400
     if not validate_address(address_hash):
         return "Invalid address hash", 400
     trs = db.get_address_transactions(address_hash, start, limit=51)

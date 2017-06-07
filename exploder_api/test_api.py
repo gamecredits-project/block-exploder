@@ -241,8 +241,44 @@ class AddressesTestCase(unittest.TestCase):
         self.assertTrue(res.text)
 
     def test_get_address_by_invalid_hash(self):
-        # Transaction by invalid hash should return 400
-        res = requests.get(self.url + "transactions/invalidhash")
+        # Addresses by invalid hash should return 400
+        res = requests.get(self.url + "addresses/invalidhash")
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_address_start_too_big(self):
+        # First find some address hash
+        params = {
+            "limit": 10
+        }
+        result = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        # Try to get address with that hash
+        hash = data[0]["vout"][0]["addresses"][0]
+        param = {
+            "start": 10000000000000000000
+        }
+        res = requests.get(self.url + "addresses/" + hash, param)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_address_start_too_small(self):
+        # First find some address hash
+        params = {
+            "limit": 10
+        }
+        result = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        # Try to get address with that hash
+        hash = data[0]["vout"][0]["addresses"][0]
+        param = {
+            "start": -3
+        }
+        res = requests.get(self.url + "addresses/" + hash, param)
         self.assertEquals(res.status_code, 400)
 
     def test_get_address_unspent(self):
