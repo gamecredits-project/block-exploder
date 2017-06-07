@@ -46,6 +46,11 @@ def get_block_by_hash(block_hash):
 
 
 def get_block_by_height(height):
+    # If we don't check whether height is integer
+    # MongoDB will throw OverflowError
+    # because MongoDB can only handle up to 8-byte ints
+    if not isinstance(height, int):
+        return "Block height too large", 400
     try:
         return BlockSerializer.to_web(db.get_block_by_height(height))
     except KeyError:

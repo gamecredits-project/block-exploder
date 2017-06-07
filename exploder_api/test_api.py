@@ -56,6 +56,20 @@ class BlocksTestCase(unittest.TestCase):
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
 
+    def test_get_block_by_too_small_height(self):
+        block_height = {
+            "height": -3
+        }
+        res = requests.get(self.url + "blocks", block_height)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_block_by_too_big_height(self):
+        block_height = {
+            "height": 10000000000000000000
+        }
+        res = requests.get(self.url + "blocks", block_height)
+        self.assertEquals(res.status_code, 400)
+
     def test_get_block_confirmations(self):
         # First find some block hash
         params = {
