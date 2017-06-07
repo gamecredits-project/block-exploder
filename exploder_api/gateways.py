@@ -101,6 +101,10 @@ class DatabaseGateway(object):
         return result[0]['num_transactions']
 
     def get_address_volume(self, address):
+        # Check if the address is unused on the blockchain
+        if not self.transactions.find_one({"vout.addresses": address}):
+            return 0
+
         pipeline = [
             {"$match": {"vout.addresses": address}},
             {"$unwind": "$vout"},

@@ -297,6 +297,28 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
 
+    def test_get_address_volume(self):
+        # First find some address hash
+        params = {
+            "limit": 10
+        }
+        result = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        hash = data[0]["vout"][0]["addresses"][0]
+        res = requests.get(self.url + "addresses/" + hash + "/volume")
+        self.assertEquals(res.status_code, 200)
+        self.assertTrue(res.text)
+
+    def test_get_address_volume_for_unused_address(self):
+        # Volume for unused address should be 0
+        res = requests.get(self.url + "addresses/GVukVukVukeHjpNa1kRPydyW7TzAXhW4ud/volume")
+        self.assertEquals(res.status_code, 200)
+        self.assertTrue(res.text)
+        self.assertEquals(int(res.text), 0)
+
 
 class NetworkTestCase(unittest.TestCase):
     @classmethod
