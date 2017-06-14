@@ -50,16 +50,18 @@ class DatabaseGateway(object):
     def get_address_unspent(self, address):
         unspent = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
-            {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1}},
             {"$match": {"vout.spent": False, "vout.addresses": address}}
         ])
 
-        unspent = list(unspent)
+        results = []
+        for uns in unspent:
+            uns['vout']['txid'] = uns['txid']
+            uns['vout']['index'] = uns['index']
+            results.append(uns['vout'])
 
-        for tr in unspent:
-            del tr['_id']
-
-        return unspent
+        return results
 
     def get_address_balance(self, address):
         result = self.transactions.aggregate([

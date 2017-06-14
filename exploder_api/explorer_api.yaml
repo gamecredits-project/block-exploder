@@ -345,7 +345,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Transaction'
+              $ref: '#/definitions/Vout'
         400:
           description: Invalid address hash
         default:
@@ -614,21 +614,6 @@ definitions:
           $ref: '#/definitions/Vout'
         description: List of transaction outputs
 
-  AddressUnspent:
-    type: object
-    properties:
-      address:
-        type: string
-        description: Unique identifier of the address
-      balance:
-        type: number
-        description: Estimated balance of this address
-      unspent:
-        type: array
-        description: Array of unspent transaction outputs
-        items:
-          $ref: '#/definitions/Vout'
-
   Vout:
     type: object
     properties:
@@ -654,6 +639,9 @@ definitions:
       asm:
         type: string
         description: Output Script
+      spent:
+        type: boolean
+        description: Is this output spent
 
   Vin:
     type: object

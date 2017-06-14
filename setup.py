@@ -13,7 +13,11 @@ setup(
         'raven',
         'flask_cors'
     ],
+    setup_requires=[
+        'pytest_runner'
+    ],
+    tests_require=['pytest'],
     package_data={'exploder_api': ['*.yaml']},
     include_package_data=True,
-    zip_safe=False
+    zip_safe=False,
 )

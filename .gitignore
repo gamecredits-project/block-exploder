@@ -5,3 +5,4 @@
 exploder.egg-info/*
 *.zip
 .cache
+.eggs

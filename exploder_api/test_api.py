@@ -319,13 +319,19 @@ class AddressesTestCase(unittest.TestCase):
         self.assertTrue(res.text)
         self.assertEquals(int(res.text), 0)
 
+    def test_get_address_balance(self):
+        pass
+
+    def test_get_address_transaction_count(self):
+        pass
+
 
 class NetworkTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.url = "http://127.0.0.1/api/"
 
-    def test_get_hashrates(self):
+    def test_get_network_hashrates(self):
         params = {
             "limit": 5
         }
@@ -342,10 +348,13 @@ class NetworkTestCase(unittest.TestCase):
         data = json.loads(result.text)
         self.assertTrue(data)
 
-    def test_get_usd_price(self):
+    def test_get_netowrk_price(self):
         result = requests.get(self.url + "network/price")
         self.assertEquals(result.status_code, 200)
         self.assertTrue(result.text)
+
+    def test_get_network_bootstrap(self):
+        pass
 
 
 class ClientTestCase(unittest.TestCase):

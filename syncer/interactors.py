@@ -115,7 +115,7 @@ class Blockchain(object):
                 block = self._grow_sidechain(block, fork_point)
 
             if self.unspent_tracking:
-                self.update_unspent(added_block.tx)
+                self.update_unspent(block.tx)
 
             if block.chainwork > highest_block.chainwork:
                 block = self.reconverge(block)

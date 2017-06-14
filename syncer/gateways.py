@@ -1,9 +1,9 @@
 import pymongo
 from decimal import Decimal
 
-from factories import MongoBlockFactory, MongoTransactionFactory, MongoVoutFactory, MongoVinFactory
-from serializers import BlockSerializer, TransactionSerializer, VinSerializer, \
-    VoutSerializer, HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer, \
+from factories import MongoBlockFactory, MongoTransactionFactory
+from serializers import BlockSerializer, TransactionSerializer, \
+    HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer, \
     ClientInfoSerializer, ClientSyncProgressSerializer, PriceSerializer
 from pymongo import MongoClient
 
@@ -20,8 +20,6 @@ class MongoDatabaseGateway(object):
         # Mongo collections to persist the blockchain
         self.blocks = database.blocks
         self.transactions = database.transactions
-        # self.vins = database.vin
-        # self.vouts = database.vout
         self.hashrate = database.hashrate
         self.network_stats = database.network_stats
         self.sync_history = database.sync_history
