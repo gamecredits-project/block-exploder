@@ -319,11 +319,20 @@ class AddressesTestCase(unittest.TestCase):
         self.assertTrue(res.text)
         self.assertEquals(int(res.text), 0)
 
-    def test_get_address_balance(self):
-        pass
-
     def test_get_address_transaction_count(self):
-        pass
+        # First find some address hash
+        params = {
+            "limit": 10
+        }
+        result = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        hash = data[0]["vout"][0]["addresses"][0]
+        res = requests.get(self.url + "addresses/" + hash + "/balance")
+        self.assertEquals(res.status_code, 200)
+        self.assertTrue(res.text)
 
 
 class NetworkTestCase(unittest.TestCase):
