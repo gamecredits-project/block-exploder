@@ -10,6 +10,7 @@ import ConfigParser
 import os
 import raven
 import logging
+import time
 from raven.contrib.celery import register_signal, register_logger_signal
 
 
@@ -63,7 +64,8 @@ class DailyTask(Task):
         analizer = BlockchainAnalyzer(database, rpc_client, config)
         # Save hash_rate
         hash_rate = analizer.get_network_hash_rate()
-        analizer.save_network_hash_rate(hash_rate)
+        timestamp = time.time()
+        analizer.save_network_hash_rate(hash_rate, timestamp)
         # Save network stats
         supply = analizer.get_supply()
         size = analizer.get_blockchain_size()

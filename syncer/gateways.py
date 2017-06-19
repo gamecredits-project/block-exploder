@@ -1,5 +1,6 @@
 import pymongo
 from decimal import Decimal
+import time
 
 from factories import MongoBlockFactory, MongoTransactionFactory
 from serializers import BlockSerializer, TransactionSerializer, \
@@ -242,12 +243,9 @@ class MongoDatabaseGateway(object):
     #########################
     #   NETWORK METHODS    #
     #########################
-    def put_hashrate(self, hash_rate, time=None):
-        if hash_rate:
-            if time:
-                self.hashrate.insert_one(HashrateSerializer.to_database(hash_rate, time))
-            else:
-                self.hashrate.insert_one(HashrateSerializer.to_database(hash_rate))
+    def put_hashrate(self, hash_rate, timestamp):
+        if hash_rate and timestamp:
+            self.hashrate.insert_one(HashrateSerializer.to_database(hash_rate, timestamp))
 
     def update_network_stats(self, supply, blockchain_size):
         stats = self.network_stats.find_one()

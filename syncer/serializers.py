@@ -1,6 +1,3 @@
-import time
-
-
 class VoutSerializer(object):
     @staticmethod
     def to_database(vout):
@@ -81,7 +78,7 @@ class BlockSerializer(object):
 
 class HashrateSerializer(object):
     @staticmethod
-    def to_database(rate, timestamp=time.time()):
+    def to_database(rate, timestamp):
         return {
             "hashrate": rate,
             "timestamp": timestamp

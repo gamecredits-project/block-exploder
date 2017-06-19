@@ -330,9 +330,9 @@ class BlockchainAnalyzer(object):
         hps = float(cum_work) / 86400
         return int(hps)
 
-    def save_network_hash_rate(self, hash_rate, time=None):
-        if hash_rate:
-            self.db.put_hashrate(int(hash_rate), time)
+    def save_network_hash_rate(self, hash_rate, timestamp):
+        if hash_rate and timestamp:
+            self.db.put_hashrate(int(hash_rate), timestamp)
 
     def get_supply(self):
         height = self.db.get_blockchain_height()
