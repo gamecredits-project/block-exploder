@@ -310,14 +310,19 @@ class AddressesTestCase(unittest.TestCase):
         hash = data[0]["vout"][0]["addresses"][0]
         res = requests.get(self.url + "addresses/" + hash + "/volume")
         self.assertEquals(res.status_code, 200)
-        self.assertTrue(res.text)
+        d = json.loads(res.text)
+        self.assertEquals(d["address"], hash)
+        self.assertTrue(isinstance(d["volume"], (int, float)))
 
     def test_get_address_volume_for_unused_address(self):
         # Volume for unused address should be 0
-        res = requests.get(self.url + "addresses/GVukVukVukeHjpNa1kRPydyW7TzAXhW4ud/volume")
+        unused = "GVukVukVukeHjpNa1kRPydyW7TzAXhW4ud"
+        res = requests.get(self.url + "addresses/" + unused + "/volume")
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
-        self.assertEquals(int(res.text), 0)
+        d = json.loads(res.text)
+        self.assertEquals(d["address"], unused)
+        self.assertEquals(int(d["volume"]), 0)
 
     def test_get_address_balance(self):
         # First find some address hash
@@ -332,7 +337,9 @@ class AddressesTestCase(unittest.TestCase):
         hash = data[0]["vout"][0]["addresses"][0]
         res = requests.get(self.url + "addresses/" + hash + "/balance")
         self.assertEquals(res.status_code, 200)
-        self.assertTrue(res.text)
+        d = json.loads(res.text)
+        self.assertEquals(d["address"], hash)
+        self.assertTrue(isinstance(d["balance"], (int, float)))
 
     def test_get_address_transaction_count(self):
         # First find some address hash
@@ -347,7 +354,9 @@ class AddressesTestCase(unittest.TestCase):
         hash = data[0]["vout"][0]["addresses"][0]
         res = requests.get(self.url + "addresses/" + hash + "/transaction-count")
         self.assertEquals(res.status_code, 200)
-        self.assertTrue(res.text)
+        d = json.loads(res.text)
+        self.assertEquals(d["address"], hash)
+        self.assertTrue(isinstance(d["transactionCount"], int))
 
 
 class NetworkTestCase(unittest.TestCase):

@@ -7,7 +7,8 @@ from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, HashrateSerializer, \
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
-    SearchSerializer
+    SearchSerializer, TransactoinCountSerializer, VolumeSerializer, \
+    BalanceSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from helpers import validate_address, validate_sha256_hash
 
@@ -142,13 +143,15 @@ def get_address_transactions(address_hash, start=None):
 def get_address_num_transactions(address_hash):
     if not validate_address(address_hash):
         return "Invalid address hash", 400
-    return db.get_address_num_transactions(address_hash)
+    tr_count = db.get_address_num_transactions(address_hash)
+    return TransactoinCountSerializer.to_web(address_hash, tr_count)
 
 
 def get_address_volume(address_hash):
     if not validate_address(address_hash):
         return "Invalid address hash", 400
-    return db.get_address_volume(address_hash)
+    volume = db.get_address_volume(address_hash)
+    return VolumeSerializer.to_web(address_hash, volume)
 
 
 def get_address_unspent(address_hash):
@@ -162,7 +165,7 @@ def get_address_balance(address_hash):
     if not validate_address(address_hash):
         return "Invalid address hash", 400
     balance = db.get_address_balance(address_hash)
-    return balance
+    return BalanceSerializer.to_web(address_hash, balance)
 
 
 #############

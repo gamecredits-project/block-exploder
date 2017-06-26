@@ -277,8 +277,7 @@ paths:
         200:
           description: Return volume
           schema:
-            type: number
-            format: float
+            $ref: '#/definitions/Volume'
         400:
           description: Invalid address hash
         default:
@@ -300,7 +299,7 @@ paths:
         200:
           description: Return number of transactions
           schema:
-            type: integer
+            $ref: '#/definitions/TransactionCount'
         400:
           description: Invalid address hash
         default:
@@ -322,8 +321,7 @@ paths:
         200:
           description: Return balance
           schema:
-            type: number
-            format: float
+            $ref: '#/definitions/Balance'
         400:
           description: Invalid address hash
         default:
@@ -902,3 +900,35 @@ definitions:
       type:
         type: string
         description: Type of the search parameter (block, transaction, address or null)
+
+  TransactionCount:
+    type: object
+    properties:
+      address:
+        type: string
+        description: GameCredits address
+      transactionCount:
+        type: integer
+        description: Number of transactions this address appears in
+
+  Volume:
+    type: object
+    properties:
+      address:
+        type: string
+        description: GameCredits address
+      volume:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to a given address
+
+  Balance:
+    type: object
+    properties:
+      address:
+        type: string
+        description: GameCredits address
+      balance:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to a given address that has not yet been spent

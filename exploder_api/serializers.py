@@ -108,3 +108,30 @@ class SearchSerializer(object):
             "searchBy": search_param,
             "type": param_type
         }
+
+
+class TransactoinCountSerializer(object):
+    @staticmethod
+    def to_web(address, num):
+        return {
+            "address": address,
+            "transactionCount": num
+        }
+
+
+class VolumeSerializer(object):
+    @staticmethod
+    def to_web(address, volume):
+        return {
+            "address": address,
+            "volume": volume
+        }
+
+
+class BalanceSerializer(object):
+    @staticmethod
+    def to_web(address, balance):
+        return {
+            "address": address,
+            "balance": balance
+        }
