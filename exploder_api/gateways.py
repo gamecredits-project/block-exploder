@@ -2,7 +2,6 @@ import pymongo
 
 from helpers import validate_address
 
-
 class DatabaseGateway(object):
     def __init__(self, database, config):
         self.blocks = database.blocks
@@ -185,11 +184,17 @@ class DatabaseGateway(object):
         if parameter:
             # Only check if address is valid
             # (address exists even if noone has claimed it yet)
+
+            # Implement over and under flow catch error
             if validate_address(parameter):
                 return "address"
             block = self.blocks.find_one({"hash": parameter})
             if block:
                 return "block"
+            if parameter.isdigit():
+                height = self.blocks.find_one({"height": int(parameter)})
+                if height:
+                    return "block"
             transaction = self.transactions.find_one({"txid": parameter})
             if transaction:
                 return "transaction"

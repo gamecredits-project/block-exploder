@@ -50,7 +50,7 @@ paths:
       operationId: exploder_api.api.get_block_by_hash
       description: |
         Return a single block with a given blockhash
-      tags: 
+      tags:
         - Blocks
       parameters:
         - $ref: '#/parameters/block_hash'
@@ -74,7 +74,6 @@ paths:
       operationId: exploder_api.api.get_block_confirmations
       description: |
         Returns number of confirmations for the given block.
-
         Confirmations are calculated as the number of blocks after this block in the blockchain.
       tags:
         - Blocks
@@ -122,7 +121,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  
+
   /transactions/latest:
     get:
       summary: Latest transactions
@@ -189,7 +188,6 @@ paths:
       operationId: exploder_api.api.get_transaction_confirmations
       description: |
         Returns number of confirmations for the given transaction.
-
         Confirmations are calculated as the number of blocks in the blockchain after the block that contains this transaction.
       tags:
         - Transactions
@@ -328,7 +326,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  
+
   /addresses/{address_hash}/unspent:
     get:
       tags:
@@ -429,7 +427,7 @@ paths:
       responses:
         200:
           description: Return bootstrap.dat link
-          schema: 
+          schema:
             $ref: '#/definitions/Bootstrap'
         404:
           description: Bootstrap.dat doesn't exist on the server
@@ -501,7 +499,7 @@ paths:
       responses:
         200:
           description: An array of sync history information
-          schema: 
+          schema:
             $ref: '#/definitions/ClientInfo'
         default:
           description: Unexpected error
@@ -513,12 +511,12 @@ paths:
       tags:
         - Search
       operationId: exploder_api.api.search
-      summary: Search blockchain for specific block, transaction or address
+      summary: Search blockchain for specific block hash, block height, transaction or address
       parameters:
         - $ref: '#/parameters/search_param'
       responses:
         200:
-          description: Return whether sent parameter is block, transaction, address or null
+          description: Return whether sent parameter is block hash, block height, transaction, address or null
           schema:
             $ref: '#/definitions/SearchParamType'
         default:
@@ -530,6 +528,12 @@ parameters:
   block_hash:
     name: block_hash
     description: Unique block identifier
+    in: path
+    type: string
+    required: true
+  block_height:
+    name: block_height
+    description: Unique block height
     in: path
     type: string
     required: true
@@ -547,7 +551,7 @@ parameters:
     required: true
   search_param:
     name: search_param
-    description: Block hash, address hash or transaction id
+    description: Block hash, address hash, block heigth or transaction id
     in: path
     type: string
     required: true
@@ -586,7 +590,7 @@ definitions:
       blocktime:
         type: integer
         description: |
-          Unix timestamp representing the time the block 
+          Unix timestamp representing the time the block
           containing this transaction was mined
       version:
         type: integer
@@ -662,7 +666,7 @@ definitions:
       coinbase:
         type: string
         description: Coinbase data for generation transactions
-  
+
   Block:
     type: object
     properties:
@@ -750,11 +754,10 @@ definitions:
         format: float
         description: |
           Unix timestamp representing the time the hashrate was calculated
-
   NetworkInfo:
     type: object
     properties:
-      coinSupply: 
+      coinSupply:
         type: integer
         description: Current GameCredits supply
       hashrate:
@@ -801,7 +804,7 @@ definitions:
   SyncHistory:
     type: object
     properties:
-      startTime: 
+      startTime:
         type: number
         format: float
         description: |

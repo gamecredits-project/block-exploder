@@ -54,8 +54,11 @@ def generate_bootstrap(datadir_path, output_directory):
         out.write(data)
 
     # Compress (zip) the bootstrap file
+    # Instead of os.path.basename the following code could be used: arcname='bootstrap.dat'
+    # arcname='bootstrap.dat' creates a directory that is named after the zip file
     with ZipFile(os.path.join(output_directory, 'bootstrap.zip'), 'w') as myzip:
-        myzip.write(os.path.join(output_directory, 'bootstrap.dat'))
+        myzip.write(os.path.join(output_directory, 'bootstrap.dat'), os.path.basename('bootstrap.dat'))
+
 
 
 def _is_block_file(filename):
