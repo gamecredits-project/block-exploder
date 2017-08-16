@@ -33,3 +33,15 @@ def validate_sha256_hash(hash):
     if len(hash) != config.getint('syncer', 'sha256_hash_length'):
         return False
     return True
+
+
+def check_parameter_if_int(parameter):
+    """
+       Check if :parameter: is a number
+       Currently not in use
+    """
+    try:
+        int(parameter)
+        return True
+    except ValueError:
+        return False
