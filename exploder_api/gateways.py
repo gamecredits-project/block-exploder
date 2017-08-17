@@ -1,4 +1,5 @@
 import pymongo
+import sys
 
 from helpers import validate_address, check_parameter_if_int
 
@@ -192,7 +193,7 @@ class DatabaseGateway(object):
             if block:
                 return "block"
             if parameter.isdigit():
-                if len(str(int(parameter))) <= 18:
+                if len(str(int(parameter))) <= len(str(int(sys.maxint))):
                     height = self.blocks.find_one({"height": int(parameter)})
                     if height:
                         return "block"
