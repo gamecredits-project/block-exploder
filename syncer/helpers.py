@@ -37,6 +37,9 @@ def generate_bootstrap(datadir_path, output_directory):
     """
     Generates bootstrap file from blockfiles in the datadir
     """
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
     blocks_path = os.path.join(datadir_path, 'blocks')
 
     # Find block files
