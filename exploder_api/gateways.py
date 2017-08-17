@@ -192,9 +192,10 @@ class DatabaseGateway(object):
             if block:
                 return "block"
             if parameter.isdigit():
-                height = self.blocks.find_one({"height": int(parameter)})
-                if height:
-                    return "block"
+                if len(str(int(parameter))) <= 18:
+                    height = self.blocks.find_one({"height": int(parameter)})
+                    if height:
+                        return "block"
             transaction = self.transactions.find_one({"txid": parameter})
             if transaction:
                 return "transaction"
