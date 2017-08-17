@@ -195,6 +195,8 @@ class BlockchainSyncer(object):
         self.rpc = rpc_client
 
     def _update_sync_progress(self):
+    # visina bloka iz mreze
+    # check da li je i GC klijent u sync
         client_height = self.rpc.getblockcount()
         highest_known = self.db.get_highest_block()
 
@@ -244,7 +246,7 @@ class BlockchainSyncer(object):
 
         # Continue parsing where we left off
         if highest_known:
-            self.blk_files = self.blk_files[highest_known.dat["index"]:]
+            self.blk_files = self.blk_files[highest_known.dat['index']:]
 
         parsed = 0
         for (i, f) in enumerate(self.blk_files):

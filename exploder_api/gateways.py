@@ -1,6 +1,6 @@
 import pymongo
 
-from helpers import validate_address
+from helpers import validate_address, check_parameter_if_int
 
 class DatabaseGateway(object):
     def __init__(self, database, config):
