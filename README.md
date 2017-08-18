@@ -4,6 +4,7 @@ How to run the development environment:
 
 1. `cd env && vagrant up` - Start the Vagrant virtual machine
 2. `vagrant ssh` - Log in to the virtual machine
+3. Disable transparent hugepages so Mongo works properly https://docs.mongodb.com/manual/tutorial/transparent-huge-pages/. Reload vagrant after this step.
 3. `sudo pip install ansible` - Install Ansible
 4. `ansible-playbook /code/env/configure-vagrant.yml` - Run the configuration
 
