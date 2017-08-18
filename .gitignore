@@ -7,3 +7,4 @@ exploder.egg-info/*
 .cache
 .eggs
 .idea/
+.vscode
