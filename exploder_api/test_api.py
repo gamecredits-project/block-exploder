@@ -1,12 +1,13 @@
 import unittest
 import requests
 import json
+import sys
 
 
 class BlocksTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:8080/api/"
 
     def test_get_latest_blocks(self):
         params = {
@@ -121,7 +122,7 @@ class BlocksTestCase(unittest.TestCase):
 class TransactionsTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:8080/api/"
 
     def test_get_latest_transactions(self):
         params = {
@@ -222,7 +223,7 @@ class TransactionsTestCase(unittest.TestCase):
 class AddressesTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:8080/api/"
 
     def test_get_address(self):
         # First find some address hash
@@ -362,7 +363,7 @@ class AddressesTestCase(unittest.TestCase):
 class NetworkTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:8080/api/"
 
     def test_get_network_hashrates(self):
         params = {
@@ -393,7 +394,7 @@ class NetworkTestCase(unittest.TestCase):
 class ClientTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:8080/api/"
 
     def test_get_latest_sync_history(self):
         params = {
@@ -444,7 +445,7 @@ class ClientTestCase(unittest.TestCase):
 class SearchTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:8080/api/"
 
     def test_search(self):
         # First find some txid
@@ -465,6 +466,25 @@ class SearchTestCase(unittest.TestCase):
         self.assertEquals(data["searchBy"], txid)
         self.assertEquals(data["type"], "transaction")
 
+        params = {
+            "limit": 1
+        }
+
+        result = requests.get(self.url + 'blocks/latest', params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        # Try to get block with that block_height
+        block_height = data[0]['height']
+        result = requests.get(self.url + "search/" + str(block_height))
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], str(block_height))
+        self.assertEquals(data["type"], "block")
+
+
     def test_invalid_search(self):
         result = requests.get(self.url + "search/" + "blabla")
         self.assertEquals(result.status_code, 200)
@@ -472,6 +492,26 @@ class SearchTestCase(unittest.TestCase):
         data = json.loads(result.text)
         self.assertEquals(data["searchBy"], "blabla")
         self.assertFalse(data["type"])
+
+    def test_int_overflow_in_block_search(self):
+        block_height = 1000
+        if len(str(int(block_height))) <= len(str(int(sys.maxint))):
+            result = requests.get(self.url + 'search/' + str(block_height))
+            self.assertEquals(result.status_code, 200)
+            self.assertTrue(result.text)
+            data = json.loads(result.text)
+            self.assertEquals(data["searchBy"], str(block_height))
+            self.assertEquals(data["type"], "block")
+        else:
+            result = requests.get(self.url + 'search/' + str(block_height))
+            data = json.loads(result.text)
+            self.assertEquals(data["searchBy"], str(block_height))
+            self.assertFalse(data["type"])
+
+
+
+
+
 
 
 if __name__ == "__main__":

@@ -38,3 +38,4 @@
     - address_max_length: 34
     - game_address_starts_with: ['G', '3']
     - sha256_hash_length: 64
+    - test_url: 'http://127.0.0.1:8080/api/'
