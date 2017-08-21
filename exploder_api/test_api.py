@@ -2,12 +2,19 @@ import unittest
 import requests
 import json
 import sys
+import os
+import ConfigParser
+
+
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
 
 
 class BlocksTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1:8080/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_latest_blocks(self):
         params = {
@@ -122,7 +129,7 @@ class BlocksTestCase(unittest.TestCase):
 class TransactionsTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1:8080/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_latest_transactions(self):
         params = {
@@ -223,7 +230,7 @@ class TransactionsTestCase(unittest.TestCase):
 class AddressesTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1:8080/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_address(self):
         # First find some address hash
@@ -363,7 +370,7 @@ class AddressesTestCase(unittest.TestCase):
 class NetworkTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1:8080/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_network_hashrates(self):
         params = {
@@ -394,7 +401,7 @@ class NetworkTestCase(unittest.TestCase):
 class ClientTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1:8080/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_latest_sync_history(self):
         params = {
@@ -445,7 +452,7 @@ class ClientTestCase(unittest.TestCase):
 class SearchTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1:8080/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_search(self):
         # First find some txid
@@ -507,11 +514,6 @@ class SearchTestCase(unittest.TestCase):
             data = json.loads(result.text)
             self.assertEquals(data["searchBy"], str(block_height))
             self.assertFalse(data["type"])
-
-
-
-
-
 
 
 if __name__ == "__main__":

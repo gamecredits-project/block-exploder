@@ -194,14 +194,16 @@ class BlockchainSyncer(object):
         # Client RPC connection
         self.rpc = rpc_client
 
+    def _get_network_height(self):
+        avg = lambda arr: sum(arr)/len(arr)
+        return int(avg([p['startingheight'] for p in self.rpc.getpeerinfo()]))
+
     def _update_sync_progress(self):
-    # visina bloka iz mreze
-    # check da li je i GC klijent u sync
-        client_height = self.rpc.getblockcount()
+        network_height = self._get_network_height()
         highest_known = self.db.get_highest_block()
 
         if highest_known:
-            self.sync_progress = float(highest_known.height * 100) / client_height
+            self.sync_progress = float(highest_known.height * 100) / network_height
         else:
             self.sync_progress = 0
 
@@ -237,8 +239,8 @@ class BlockchainSyncer(object):
         if highest_known:
             blocks_in_db = highest_known.height
 
-        client_height = self.rpc.getblockcount()
-        limit_calc = int((client_height - blocks_in_db) * self.stream_sync_limit / 100)
+        network_height = self._get_network_height()
+        limit_calc = int((network_height - blocks_in_db) * self.stream_sync_limit / 100)
         if sync_limit:
             limit = min([sync_limit, limit_calc])
         else:
@@ -258,12 +260,17 @@ class BlockchainSyncer(object):
 
             while has_length(stream, 80) and parsed < limit:
                 # parse block from stream
-                block = BlockFactory.from_stream(stream)
-                self.blockchain.insert_block(block)
-                parsed += 1
+                try:
+                    block = BlockFactory.from_stream(stream)
+                    self.blockchain.insert_block(block)
+                    parsed += 1
 
-                if block.height % 1000 == 0:
-                    self._print_progress()
+                    if block.height % 1000 == 0:
+                        self._print_progress()
+                except ValueError:
+                    logging.info("Incomplete block in .dat file, wait a little bit.")
+                    stream.close()
+                    break
 
         self.db.flush_cache()
 
