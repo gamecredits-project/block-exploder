@@ -39,4 +39,4 @@
     - address_max_length: 34
     - game_address_starts_with: ['G', '3']
     - sha256_hash_length: 64
-    - application_port: 8080
+    - application_port: 80
