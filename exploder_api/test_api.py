@@ -484,12 +484,13 @@ class SearchTestCase(unittest.TestCase):
 
         # Try to get block with that block_height
         block_height = data[0]['height']
-        result = requests.get(self.url + "search/" + str(block_height))
-        self.assertEquals(result.status_code, 200)
-        self.assertTrue(result.text)
-        data = json.loads(result.text)
-        self.assertEquals(data["searchBy"], str(block_height))
-        self.assertEquals(data["type"], "block")
+        if len(str(int(block_height))) <= len(str(int(sys.maxint))):
+            result = requests.get(self.url + "search/" + str(block_height))
+            self.assertEquals(result.status_code, 200)
+            self.assertTrue(result.text)
+            data = json.loads(result.text)
+            self.assertEquals(data["searchBy"], str(block_height))
+            self.assertEquals(data["type"], "block")
 
 
     def test_invalid_search(self):
@@ -502,18 +503,10 @@ class SearchTestCase(unittest.TestCase):
 
     def test_int_overflow_in_block_search(self):
         block_height = 1000000000000000000000000000
-        if len(str(int(block_height))) <= len(str(int(sys.maxint))):
-            result = requests.get(self.url + 'search/' + str(block_height))
-            self.assertEquals(result.status_code, 200)
-            self.assertTrue(result.text)
-            data = json.loads(result.text)
-            self.assertEquals(data["searchBy"], str(block_height))
-            self.assertEquals(data["type"], "block")
-        else:
-            result = requests.get(self.url + 'search/' + str(block_height))
-            data = json.loads(result.text)
-            self.assertEquals(data["searchBy"], str(block_height))
-            self.assertFalse(data["type"])
+        result = requests.get(self.url + 'search/' + str(block_height))
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], str(block_height))
+        self.assertFalse(data["type"])
 
 
 if __name__ == "__main__":
