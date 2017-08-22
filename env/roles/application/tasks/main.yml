@@ -4,6 +4,14 @@
 - name: Copy the configuration file
   template: src=templates/exploder.conf dest={{ exploder_conf_dir }}/exploder.conf
 
+- name: Add the EXPLODER_CONFIG environment variable to .bashrc
+  lineinfile:
+    dest={{ ansible_env.HOME }}/.bashrc
+    line="export EXPLODER_CONFIG={{ exploder_conf_dir }}/exploder.conf"
+    state=present
+    insertafter=EOF
+    create=True
+
 - name: Install the application (production version)
   pip: chdir={{ code_dir }} state=present name=.
   when:
