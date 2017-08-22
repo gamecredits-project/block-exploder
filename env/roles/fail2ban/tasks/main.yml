@@ -1,0 +1,7 @@
+- name: Install fail2ban module
+  apt: name=fail2ban state=present
+  become: True
+
+- name: Copy fail2ban local config file
+  template: src=templates/jail.conf dest=/etc/fail2ban/jail.local
+  become: True
