@@ -11,6 +11,7 @@
     - application
     - configure-gamecreditsd
     - celery
+    - fail2ban
   vars:
     - rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
     - rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"
@@ -38,4 +39,4 @@
     - address_max_length: 34
     - game_address_starts_with: ['G', '3']
     - sha256_hash_length: 64
-    - test_url: 'http://127.0.0.1:8080/api/'
+    - application_port: 8080

@@ -1,0 +1,9 @@
+[nginx-block-users]
+enabled  = true
+port     = http,https
+filter   = nginx-block-users
+logpath  = %(nginx_access_log)s
+maxretry = 5
+findtime = 2
+bantime  = 30
+action   = iptables[name=HTTP, port=http, protocol=tcp]

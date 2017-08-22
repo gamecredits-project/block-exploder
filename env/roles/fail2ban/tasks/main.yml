@@ -1,0 +1,15 @@
+- name: Install fail2ban packages
+  apt: pkg=fail2ban state=present
+  become: True
+
+- name: Copy fail2ban local config file
+  template: src=templates/jail.local dest=/etc/fail2ban/jail.local force=yes
+  become: True
+
+- name: Copy fail2ban nginx-block-users.conf to filter.d
+  template: src=templates/nginx-block-users.conf dest=/etc/fail2ban/filter.d/nginx-block-users.conf force=yes
+  become: True
+
+- name: Restart fail2ban
+  service: name=fail2ban state=restarted
+  become: True
