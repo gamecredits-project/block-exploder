@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Flask-SocketIO Test</title>
+</head>
+<body>
+  <div class="container">
+    <h1>Block socket</h1>
+    <h3 id="blockConnected"></h3>
+    <table class="table">
+      <thead>
+      <tr>
+        <th>Height</th>
+        <th>Age</th>
+        <th>Transactions</th>
+        <th>Total sent</th>
+        <th>Size(kB)</th>
+      </tr>
+    </thead>
+    <tbody id='blockTbody'>
+    </tbody>
+  </table>
+  <h1>Transaction socket</h1>
+  <h3 id="txConnected"></h3>
+  <table class="table">
+    <thead>
+    <tr id="trID" style="top: 50px;">
+      <th>Tx id</th>
+      <th>Tx total</th>
+    </tr>
+  </thead>
+  <tbody id='txTbody'>
+  </tbody>
+</table>
+</div>
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+
+            blockNamespace = '/block';
+            txNamespace = '/tx';
+
+            var blockSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + blockNamespace);
+            var txSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + txNamespace);
+
+            blockSocket.on('connect', function() {
+                blockSocket.emit('block_connected');
+            });
+
+            txSocket.on('connect', function() {
+                txSocket.emit('tx_connected');
+            });
+
+            blockSocket.on('block_response', function(data) {
+               $('#blockConnected').text("User: " + data.block_data);
+               // console.log(data.data);
+            });
+
+            txSocket.on('tx_response', function(data) {
+               $('#txConnected').text("User: " + data.tx_data);
+               // console.log(data.data);
+            });
+
+            //Proveriti kljuceve pre nego sto pozoves JSON objekat
+            blockSocket.on('background_block_sender', function(msg) {
+              // $('#log').append('<br>' + $('<div/>').text(msg.data[0].height).html());
+
+              // $('#myTbody').append(
+              //   '<tr>' +
+              //   '<td>' + msg.data.id + '</td>'+
+              //   '<td>' + msg.data.title + '</td>'+
+              //   '</tr>'
+              // );
+
+              $('#blockTbody').prepend(
+                '<tr>' +
+                '<td>' + msg.latest_block_data.height + '</td>'+
+                '<td>' + msg.latest_block_data.time + '</td>'+
+                '<td>' + msg.latest_block_data.tx.length + '</td>'+
+                '<td>' + msg.latest_block_data.total + '</td>'+
+                '<td>' + msg.latest_block_data.size + '</td>'+
+                '</tr>'
+              );
+              console.log(msg.latest_block_data.height)
+            });
+
+            txSocket.on('background_tx_sender', function(msg) {
+
+              $('#txTbody').prepend(
+                '<tr>' +
+                '<td>' + msg.latest_tx_data.txid + '</td>'+
+                '<td>' + msg.latest_tx_data.total + ' GAME'+'</td>'+
+                '</tr>'
+              );
+              console.log(msg)
+            });
+        });
+    </script>
+</body>
+</html>

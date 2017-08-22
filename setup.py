@@ -12,6 +12,8 @@ setup(
         'mock',
         'raven',
         'flask_cors'
+        # 'flask',
+        # 'flask_socketio'
     ],
     setup_requires=[
         'pytest_runner'

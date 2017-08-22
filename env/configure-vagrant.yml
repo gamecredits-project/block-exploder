@@ -12,7 +12,7 @@
     - configure-gamecreditsd
     - celery
     - fail2ban
-    - socket
+    # - socket
   vars:
     - rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
     - rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"

@@ -1,7 +1,0 @@
-- name: Copy the socket supervisor conf file
-  template: src=templates/socket-supervisor.conf dest=/etc/supervisor/conf.d/socket-supervisor.conf
-  become: True
-
-- name: Restart the supervisor process
-  supervisorctl: name=socket state=restarted
-  become: True
