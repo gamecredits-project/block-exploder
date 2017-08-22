@@ -501,7 +501,7 @@ class SearchTestCase(unittest.TestCase):
         self.assertFalse(data["type"])
 
     def test_int_overflow_in_block_search(self):
-        block_height = 1000
+        block_height = 1000000000000000000000000000
         if len(str(int(block_height))) <= len(str(int(sys.maxint))):
             result = requests.get(self.url + 'search/' + str(block_height))
             self.assertEquals(result.status_code, 200)
