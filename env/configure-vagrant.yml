@@ -12,11 +12,12 @@
     - configure-gamecreditsd
     - celery
     - fail2ban
-    # - socket
+    - socket
   vars:
     - rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
     - rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"
     - rpc_port: 8332
+    - server_name = "blockexplorer.gamecredits.com"
     - code_dir: "/exploder"
     - log_dir: "{{ ansible_env.HOME }}/logs"
     - datadir_path: "{{ ansible_env.HOME }}/.gamecredits"
@@ -41,6 +42,9 @@
     - game_address_starts_with: ['G', '3']
     - sha256_hash_length: 64
     - application_port: 80
+    - fail2ban_maxretry = 600
+    - fail2ban_findtime = 60
+    - fail2ban_bantime = 600
     - exploder_ui_dir: "/home/vagrant/block-exploder-ui/dist"
     - ssl_certificate: "/home/gameadmin/certs/blockexplorer.gamecredits.com.chained.crt"
     - ssl_certificate_key: "/home/gameadmin/certs/blockexplorer.gamecredits.com.key"
