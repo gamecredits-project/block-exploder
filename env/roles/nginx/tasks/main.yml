@@ -5,3 +5,7 @@
 - name: Enable port 80 in UFW
   ufw: rule=allow port=80
   become: True
+
+- name: Enable port 5004 in UFW
+  ufw: rule=allow port=5004
+  become: True

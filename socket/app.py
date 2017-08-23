@@ -10,7 +10,7 @@ LOG = logging.getLogger('werkzeug')
 LOG.setLevel(logging.ERROR)
 
 
-@conf.app.route('/')
+@conf.app.route('/socket.io')
 def index():
     return render_template('index.html', async_mode=conf.socketio.async_mode)
 
@@ -32,4 +32,4 @@ def tx_connect():
 
 
 if __name__ == '__main__':
-    conf.socketio.run(conf.app, debug=True, port=5004)
+    conf.socketio.run(conf.app, debug=False, port=5004)
