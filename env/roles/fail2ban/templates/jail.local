@@ -3,7 +3,7 @@ enabled  = true
 port     = http,https
 filter   = nginx-block-users
 logpath  = %(nginx_access_log)s
-maxretry = 5
-findtime = 2
-bantime  = 30
-action   = iptables[name=HTTP, port=http, protocol=tcp]
+maxretry = {{ fail2ban_maxretry }}
+findtime = {{ fail2ban_findtime }}
+bantime  = {{ fail2ban_bantime }}
+action   = iptables[name=HTTP, port='http,https', protocol=tcp]
