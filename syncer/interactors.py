@@ -202,6 +202,8 @@ class BlockchainSyncer(object):
         network_height = self._get_network_height()
         highest_known = self.db.get_highest_block()
 
+        logging.info("[UPDATE_PROGRESS] Network height: %s" % network_height)
+
         if highest_known:
             self.sync_progress = float(highest_known.height * 100) / network_height
         else:
@@ -215,7 +217,7 @@ class BlockchainSyncer(object):
         start_block = self.db.get_highest_block()
 
         self._update_sync_progress()
-
+        logging.info("[SYNC_AUTO] Starting. Current progress: %s%%" % self.sync_progress)
         if self.sync_progress < self.stream_sync_limit:
             self.sync_stream(sync_limit=limit)
 
