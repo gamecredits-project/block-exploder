@@ -6,4 +6,4 @@ logpath  = %(nginx_access_log)s
 maxretry = {{ fail2ban_maxretry }}
 findtime = {{ fail2ban_findtime }}
 bantime  = {{ fail2ban_bantime }}
-action   = iptables[name=HTTP, port='http,https', protocol=tcp]
+action   = iptables-multiport[name=HTTP, port='http,https', protocol=tcp]
