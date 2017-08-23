@@ -200,12 +200,14 @@ class BlockchainSyncer(object):
 
     def _update_sync_progress(self):
         network_height = self._get_network_height()
+        client_height = self.rpc.getblockcount()
+
+        best_height = max([network_height, client_height])
+
         highest_known = self.db.get_highest_block()
 
-        logging.info("[UPDATE_PROGRESS] Network height: %s" % network_height)
-
         if highest_known:
-            self.sync_progress = float(highest_known.height * 100) / network_height
+            self.sync_progress = float(highest_known.height * 100) / best_height
         else:
             self.sync_progress = 0
 
