@@ -40,15 +40,19 @@
 - name: Copy the nginx conf file
   template: src=templates/exploder-nginx.conf dest=/etc/nginx/sites-available/exploder-nginx.conf
   become: True
+  tags: nginx
 
 - name: Disable the default website
   file: path=/etc/nginx/sites-enabled/default state=absent
   become: True
+  tags: nginx
 
 - name: Enable the application in nginx
   file: src=/etc/nginx/sites-available/exploder-nginx.conf dest=/etc/nginx/sites-enabled/exploder-nginx.conf state=link
   become: True
+  tags: nginx
 
 - name: Restart nginx
   service: name=nginx state=restarted
   become: True
+  tags: nginx

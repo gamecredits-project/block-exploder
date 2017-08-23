@@ -41,3 +41,8 @@
     - game_address_starts_with: ['G', '3']
     - sha256_hash_length: 64
     - application_port: 80
+    - exploder_ui_dir: "/home/vagrant/block-exploder-ui/dist"
+    - ssl_certificate: "/home/gameadmin/certs/blockexplorer.gamecredits.com.chained.crt"
+    - ssl_certificate_key: "/home/gameadmin/certs/blockexplorer.gamecredits.com.key"
+    - https: False
+    - with_ui: True
