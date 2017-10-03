@@ -45,9 +45,10 @@
             blockNamespace = '/block';
             txNamespace = '/tx';
 
-            var blockSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + blockNamespace);
-            var txSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + txNamespace);
-
+           var blockSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + blockNamespace);
+           var txSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + txNamespace);
+	    // var blockSocket = io.connect('http://127.0.0.1:5004' + blockNamespace);
+	    // var txSocket = io.connect('http://127.0.0.1:5004' + txNamespace);
             blockSocket.on('connect', function() {
                 blockSocket.emit('block_connected');
             });

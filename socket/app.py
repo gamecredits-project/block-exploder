@@ -15,6 +15,15 @@ def index():
     return render_template('index.html', async_mode=conf.socketio.async_mode)
 
 
+@conf.socketio.on('disconnect_block', namespace='/block')
+def disconnect_block():
+    conf.disconnect()
+
+
+@conf.socketio.on('disconnect_tx', namespace='/tx')
+def disconnect_tx():
+    conf.disconnect()
+
 @conf.socketio.on('block_connected', namespace='/block')
 def block_connect():
     if iv.THREAD_BLOCK is None:
