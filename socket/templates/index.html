@@ -6,6 +6,9 @@
 <body>
   <div class="container">
     <h1>Block socket</h1>
+    <button id="transakcijaKonektovan">Konektuj</button>
+    <button id="transakcijaDiskonektovan">Diskonektuj</button>
+    <h1 id="konektovan"></h1>
     <h3 id="blockConnected"></h3>
     <table class="table">
       <thead>
@@ -57,13 +60,24 @@
             });
 
             blockSocket.on('block_response', function(data) {
-               $('#blockConnected').text("User: " + data.block_data);
-               // console.log(data.data);
+               console.log("nesto");
+               $('#blockConnected').text("User: " + data.block_dataa);
             });
 
             txSocket.on('tx_response', function(data) {
                $('#txConnected').text("User: " + data.tx_data);
                // console.log(data.data);
+            });
+
+            $('#transakcijaDiskonektovan').click(function(){
+              txSocket.emit("disconnect_tx");
+
+              console.log("Kliknuo si na diskonekt");
+            });
+
+            $('#transakcijaKonektovan').click(function(){
+              txSocket.emit('tx_connected');
+              console.log("Kliknuo si na konekt");
             });
 
             //Proveriti kljuceve pre nego sto pozoves JSON objekat
@@ -75,7 +89,7 @@
               //   '<td>' + msg.data.id + '</td>'+
               //   '<td>' + msg.data.title + '</td>'+
               //   '</tr>'
-              // );
+              // );konektovan
 
               $('#blockTbody').prepend(
                 '<tr>' +

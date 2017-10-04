@@ -2,7 +2,7 @@ import helpers as helpp
 import config as conf
 import initiated_values as iv
 
-iv.CURRENT_BLOCK = helpp.get_latest_five_blocks()[0]['height']
+iv.CURRENT_BLOCK = helpp.get_latest_five_blocks()[-1]['height']
 # For dev mode uncomment line bellow, it will call last 4 block and its transactions
 # Instead of waiting for new block to be created
 # iv.CURRENT_BLOCK = helpp.get_latest_five_blocks()[-1]['height']

@@ -63,6 +63,7 @@ class DatabaseGateway(object):
 
         return results
 
+
     def get_address_balance(self, address):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
@@ -102,6 +103,21 @@ class DatabaseGateway(object):
 
         return result[0]['num_transactions']
 
+    def post_addresses_num_transactions(self, addresses):
+        pipeline = [
+            {"$match": {"vout.addresses": {"$in":addresses}}},
+            {"$project": {"vout.addresses": 1}},
+            {"$group": {"_id": "vout.addresses", "num_transactions": {"$sum": 1}}}
+        ]
+
+        result = self.transactions.aggregate(pipeline)
+
+        result = list(result)
+        if not result:
+            return 0
+
+        return result[0]['num_transactions']
+
     def get_address_volume(self, address):
         # Check if the address is unused on the blockchain
         if not self.transactions.find_one({"vout.addresses": address}):
@@ -121,6 +137,7 @@ class DatabaseGateway(object):
             return 0
 
         return result.next()['volume']
+
 
     ##################
     #  TRANSACTIONS  #

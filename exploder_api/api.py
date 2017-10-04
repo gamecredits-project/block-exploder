@@ -146,6 +146,15 @@ def get_address_num_transactions(address_hash):
     tr_count = db.get_address_num_transactions(address_hash)
     return TransactoinCountSerializer.to_web(address_hash, tr_count)
 
+def post_addresses_num_transactions(addresses_hash):
+    addresses_hash_no_json = addresses_hash['addresses']
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
+    tr_count = db.post_addresses_num_transactions(addresses_hash_no_json)
+    return TransactoinCountSerializer.to_web(addresses_hash_no_json, tr_count)
+
 
 def get_address_volume(address_hash):
     if not validate_address(address_hash):

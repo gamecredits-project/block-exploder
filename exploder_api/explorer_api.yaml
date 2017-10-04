@@ -305,6 +305,34 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /addresses/transaction-count:
+    post:
+      operationId: exploder_api.api.post_addresses_num_transactions
+      summary: Return the number of transactions for a given list of addresses
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddresses'
+      tags:
+        - MultipleAddresses
+      responses:
+        200:
+          description: Return number of transactions of all addresses
+          schema:
+            $ref: '#/definitions/TransactionCount'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
   /addresses/{address_hash}/balance:
     get:
       tags:
@@ -555,6 +583,7 @@ parameters:
     in: path
     type: string
     required: true
+
 definitions:
   Error:
     type: object
@@ -580,6 +609,14 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Transaction'
+
+  MultipleAddresses:
+    type: object
+    properties:
+      addresess:
+        type: array
+        items:
+          type: string
 
   Transaction:
     type: object
