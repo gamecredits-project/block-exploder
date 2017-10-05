@@ -80,6 +80,23 @@ class DatabaseGateway(object):
 
         return result[0]['balance']
 
+    def post_addresses_balance(self, addresses):
+        result = self.transactions.aggregate([
+            {"$match": {"vout.addresses": {"$in": addresses} }},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
+            {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses } }},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
+            {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
+        ])
+
+        result = list(result)
+
+        if not result:
+            return 0
+
+        return result[0]['balance']
+
+
     def get_address_transactions(self, address, start, limit):
         if not start:
             return list(self.transactions.find({"vout.addresses": address})

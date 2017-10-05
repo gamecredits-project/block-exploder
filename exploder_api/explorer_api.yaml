@@ -320,12 +320,12 @@ paths:
           schema:
             $ref: '#/definitions/MultipleAddresses'
       tags:
-        - MultipleAddresses
+        - Addresses
       responses:
         200:
           description: Return number of transactions of all addresses
           schema:
-            $ref: '#/definitions/TransactionCount'
+            $ref: '#/definitions/Balance'
         400:
           description: Invalid address hash
         default:
@@ -348,6 +348,34 @@ paths:
           description: Return balance
           schema:
             $ref: '#/definitions/Balance'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/balance:
+    post:
+      operationId: exploder_api.api.post_addresses_balance
+      summary: Return the balance sum for a given list of addresses
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddresses'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: Return balance sum of all addresses
+          schema:
+            $ref: '#/definitions/TransactionCount'
         400:
           description: Invalid address hash
         default:
@@ -613,7 +641,7 @@ definitions:
   MultipleAddresses:
     type: object
     properties:
-      addresess:
+      addresses:
         type: array
         items:
           type: string

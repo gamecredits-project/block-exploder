@@ -176,6 +176,14 @@ def get_address_balance(address_hash):
     balance = db.get_address_balance(address_hash)
     return BalanceSerializer.to_web(address_hash, balance)
 
+def post_addresses_balance(addresses_hash):
+    addresses_hash_no_json = addresses_hash['addresses']
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
+    balance = db.post_addresses_balance(addresses_hash_no_json)
+    return BalanceSerializer.to_web(addresses_hash_no_json, balance)
 
 #############
 #  NETWORK  #
