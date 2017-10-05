@@ -95,6 +95,39 @@ class TestGateways(object):
 
         return result.next()
 
+    def post_addresses_unspent(self, addresses):
+        pipeline = [
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1}},
+            {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}}
+        ]
+
+        unspent = self.transactions.aggregate(pipeline)
+
+        results = []
+        for uns in unspent:
+            uns['vout']['txid'] = uns['txid']
+            uns['vout']['index'] = uns['index']
+            results.append(uns['vout'])
+
+        return results
+
+    def get_address_unspent(self, address):
+        unspent = self.transactions.aggregate([
+            {"$match": {"vout.addresses": address}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1}},
+            {"$match": {"vout.spent": True, "vout.addresses": address}}
+        ])
+
+        results = []
+        for uns in unspent:
+            uns['vout']['txid'] = uns['txid']
+            uns['vout']['index'] = uns['index']
+            results.append(uns['vout'])
+
+        return results
 
 
 test_gate = TestGateways(database=mongo.exploder, config=config)
@@ -108,6 +141,6 @@ test_gate = TestGateways(database=mongo.exploder, config=config)
 # print test_gate.get_address_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
 
 # print test_gate.get_address_num_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
-arr = test_gate.post_addresses_balance(["GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
+arr = test_gate.post_addresses_unspent(["GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
 # print test_gate.get_address_volume("GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq")
 print arr

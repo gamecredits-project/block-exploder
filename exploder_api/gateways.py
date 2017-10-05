@@ -65,13 +65,13 @@ class DatabaseGateway(object):
 
     def post_addresses_unspent(self, addresses):
         pipeline = [
-            {"$match": {"vout.addresses": {"$in": addresses }}},
+            {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
             {"$project": {"vout": 1, "txid": 1, "index": 1}},
-            {"$match": {"vout": False, "vout.addresses": {"$in": addresses }}}
+            {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}}
         ]
 
-        unspent = self.transactions.aggregate(pipline)
+        unspent = self.transactions.aggregate(pipeline)
 
         results = []
         for uns in unspent:
