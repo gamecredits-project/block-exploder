@@ -162,6 +162,16 @@ def get_address_volume(address_hash):
     volume = db.get_address_volume(address_hash)
     return VolumeSerializer.to_web(address_hash, volume)
 
+# POST ADDRESS VOLUME
+def post_addresses_volume(addresses_hash):
+    addresses_hash_no_json = addresses_hash['addresses']
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
+    total_volume = db.post_addresses_volume(addresses_hash_no_json)
+    return VolumeSerializer.to_web(addresses_hash_no_json, total_volume)
+
 
 def get_address_unspent(address_hash):
     if not validate_address(address_hash):

@@ -283,6 +283,34 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /addresses/volume:
+    post:
+      operationId: exploder_api.api.post_addresses_volume
+      summary: Return the total volume of the given addresses
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddresses'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: Return the total volume of the given addresses
+          schema:
+            $ref: '#/definitions/Volume'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
   /addresses/{address_hash}/transaction-count:
     get:
       tags:
@@ -320,7 +348,7 @@ paths:
           schema:
             $ref: '#/definitions/MultipleAddresses'
       tags:
-        - MultipleAddresses
+        - Addresses
       responses:
         200:
           description: Return number of transactions of all addresses
@@ -613,7 +641,7 @@ definitions:
   MultipleAddresses:
     type: object
     properties:
-      addresess:
+      addresses:
         type: array
         items:
           type: string

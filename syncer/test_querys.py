@@ -22,48 +22,6 @@ class TestGateways(object):
         self.client_info = database.client_info
         self.config = config
 
-    def show_me(self, element):
-        print element
-
-    def get_address_unspent(self, addresses):
-        unspent = self.transactions.aggregate([
-            {"$match": {"vout.addresses": {"$in":addresses}}},
-            {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-            {"$project": {"vout": 1, "txid": 1, "index": 1}},
-            {"$match": {"vout.spent": False, "vout.addresses": {"$in":addresses}}}
-        ])
-
-        results = []
-        for uns in unspent:
-            uns['vout']['txid'] = uns['txid']
-            uns['vout']['index'] = uns['index']
-            results.append(uns['vout'])
-
-        return results
-
-    def get_address_balance(self, address):
-        result = self.transactions.aggregate([
-            {"$match": {"vout.addresses": address}},
-            {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": False, "vout.addresses": address}},
-            {"$project": {"vout.addresses": 1, "vout.value": 1}},
-            {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
-        ])
-
-        result = list(result)
-
-        if not result:
-            print 0
-
-        print "hi"
-
-    # def get_address_transactions(self):
-    #     # if not start:
-    #     return self.blocks.find({"height": {"$in": [1795109, 1795108]}})
-    #
-    #     # return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$lte": start}})
-    #                 #.sort("blocktime", pymongo.DESCENDING).limit(limit))
-
     def get_address_transactions(self, addresses, start):
         if not start:
             self.transactions.find({"vout.addresses": {"$in": addresses}})
@@ -71,7 +29,6 @@ class TestGateways(object):
         for address in self.transactions.find({"vout.addresses": {"$in": addresses}}):
             list_of_transactions.append(address)
         return list_of_transactions
-                    #.sort("blocktime", pymongo.DESCENDING).limit(limit))
 
     def get_address_num_transactions(self, address):
         pipeline = [
@@ -89,6 +46,48 @@ class TestGateways(object):
         return result[0]['num_transactions']
 
 
+    def post_addresses_volume(self, addresses):
+        # Check if the address is unused on the blockchain
+        if not self.transactions.find({"vout.addresses": {"$in":addresses}}):
+            return 0
+
+        pipeline = [
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$unwind": "$vout"},
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
+            {"$group": {"_id": "", "volume": {"$sum":"$vout.value"}}}
+        ]
+
+        result = self.transactions.aggregate(pipeline)
+        result = list(result)
+
+        if not result:
+            return 0
+
+        return result
+
+    def get_address_volume(self, address):
+        # Check if the address is unused on the blockch ain
+        if not self.transactions.find_one({"vout.addresses": address}):
+            return 0
+
+        pipeline = [
+            {"$match": {"vout.addresses": address}},
+            {"$unwind": "$vout"},
+            {"$match": {"vout.addresses": address}},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
+            {"$group": {"_id": "$vout.addresses", "volume": {"$sum": "$vout.value"}}}
+        ]
+
+        result = self.transactions.aggregate(pipeline)
+
+        if not result:
+            return 0
+
+        return result.next()['volume']
+
+
 
 test_gate = TestGateways(database=mongo.exploder, config=config)
 #test_gate.get_address_unspent("GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq")
@@ -100,4 +99,7 @@ test_gate = TestGateways(database=mongo.exploder, config=config)
 # print test_gate.get_address_num_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
 # print test_gate.get_address_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
 
-print test_gate.get_address_num_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
+# print test_gate.get_address_num_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
+arr = test_gate.post_addresses_volume(["GUU68sZq86xY8rDbhma1g7uVM79uJVzygW", "GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL"])
+# print test_gate.get_address_volume("GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq")
+print arr
