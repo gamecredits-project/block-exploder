@@ -178,6 +178,15 @@ def get_address_unspent(address_hash):
     unspent = db.get_address_unspent(address_hash)
     return unspent
 
+def post_addresses_unspent(addresses_hash):
+    addresses_hash_no_json = addresses_hash['addresses']
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
+    unspent = db.post_addresses_unspent(addresses_hash_no_json)
+    return unspent
+
 
 def get_address_balance(address_hash):
     if not validate_address(address_hash):

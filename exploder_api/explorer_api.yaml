@@ -432,6 +432,35 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /addresses/unspent:
+    post:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.post_addresses_unspent
+      summary: Return the number of unspent transactions for the given addresses
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddresses'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: Return balance sum of all addresses
+          schema:
+            $ref: '#/definitions/Vout'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
 
   /network/pushtx:
     post:
