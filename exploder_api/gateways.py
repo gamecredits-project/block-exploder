@@ -82,9 +82,9 @@ class DatabaseGateway(object):
 
     def post_addresses_balance(self, addresses):
         result = self.transactions.aggregate([
-            {"$match": {"vout.addresses": {"$in": addresses} }},
+            {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses } }},
+            {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses }}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
         ])

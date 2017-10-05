@@ -162,7 +162,6 @@ def get_address_volume(address_hash):
     volume = db.get_address_volume(address_hash)
     return VolumeSerializer.to_web(address_hash, volume)
 
-# POST ADDRESS VOLUME
 def post_addresses_volume(addresses_hash):
     addresses_hash_no_json = addresses_hash['addresses']
     for address_hash in addresses_hash_no_json:

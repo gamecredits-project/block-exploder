@@ -67,25 +67,33 @@ class TestGateways(object):
 
         return result
 
-    def get_address_volume(self, address):
-        # Check if the address is unused on the blockch ain
-        if not self.transactions.find_one({"vout.addresses": address}):
-            return 0
 
+    def post_addresses_balance(self, addresses):
         pipeline = [
-            {"$match": {"vout.addresses": address}},
-            {"$unwind": "$vout"},
-            {"$match": {"vout.addresses": address}},
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
+            {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses}}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
-            {"$group": {"_id": "$vout.addresses", "volume": {"$sum": "$vout.value"}}}
+            {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
         ]
 
+        # pipeline = [
+        #     {"$match": {"vout.addresses": {"$in": addresses}}},
+        #     {"$unwind": "$vout"},
+        #     {"$match": {"vout.addresses": {"$in": addresses}}},
+        #     {"$project": {"vout.addresses": 1, "vout.value": 1}},
+        #     {"$group": {"_id": "", "volume": {"$sum":"$vout.value"}}}
+        # ]
+
         result = self.transactions.aggregate(pipeline)
+        result = list(result)
+
+        # result = list(result)
 
         if not result:
             return 0
 
-        return result.next()['volume']
+        return result.next()
 
 
 
@@ -100,6 +108,6 @@ test_gate = TestGateways(database=mongo.exploder, config=config)
 # print test_gate.get_address_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
 
 # print test_gate.get_address_num_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
-arr = test_gate.post_addresses_volume(["GUU68sZq86xY8rDbhma1g7uVM79uJVzygW", "GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL"])
+arr = test_gate.post_addresses_balance(["GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
 # print test_gate.get_address_volume("GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq")
 print arr
