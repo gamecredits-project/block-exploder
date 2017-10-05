@@ -86,7 +86,7 @@ class DatabaseGateway(object):
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
             {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses } }},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
-            {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
+            {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
         ])
 
         result = list(result)
