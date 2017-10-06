@@ -129,6 +129,14 @@ class TestGateways(object):
 
         return results
 
+    def post_addresses_transactions(self, addresses):
+        if not start:
+            return list(self.transactions.find({"vout.addresses": {"$in":addresses}})
+                            .sort("blocktime", pymongo.DESCENDING).limit(limit))
+
+        return list(self.transactions.find({"vout.addresses": {"$in":addresses} , "blocktime": {"$lte": start}})
+                    .sort("blocktime", pymongo.DESCENDING).limit(limit))
+
 
 test_gate = TestGateways(database=mongo.exploder, config=config)
 #test_gate.get_address_unspent("GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq")
@@ -141,6 +149,9 @@ test_gate = TestGateways(database=mongo.exploder, config=config)
 # print test_gate.get_address_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
 
 # print test_gate.get_address_num_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq","GeoGVuTQymomAyui4rwHpAWRoZnWzcNoZL","GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
-arr = test_gate.post_addresses_unspent(["GUU68sZq86xY8rDbhma1g7uVM79uJVzygW"])
+arr = test_gate.get_address_transactions(["GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq"])
+counter = 0
+for element in arr:
+    counter += 1
 # print test_gate.get_address_volume("GN9xNC69QqxFXNLuSCRShLsorhtiSC7Xdq")
 print arr
