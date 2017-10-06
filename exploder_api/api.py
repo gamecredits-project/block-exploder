@@ -139,6 +139,34 @@ def get_address_transactions(address_hash, start=None):
             "next": None
         }
 
+def post_addresses_transactions(addresses_hash, start=None):
+    if start and (not isinstance(start, int)):
+        return "Start too large", 400
+
+    if not check_if_address_post_key_is_valid(addresses_hash):
+        return "Bad post request", 400
+
+    addresses_hash_no_json = addresses_hash['addresses']
+
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
+    trs = db.post_addresses_transactions(addresses_hash_no_json, start, limit=51)
+
+
+    if len(trs) == 51:
+        last_transaction = trs[len(trs) - 1]
+        return {
+            "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
+            "next": "/addresses/%s?start=%s" % (addresses_hash_no_json, last_transaction['blocktime'])
+        }
+    else:
+        return {
+            "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
+            "next": None
+        }
+
 
 def get_address_num_transactions(address_hash):
     if not validate_address(address_hash):
@@ -167,7 +195,12 @@ def get_address_volume(address_hash):
     return VolumeSerializer.to_web(address_hash, volume)
 
 def post_addresses_volume(addresses_hash):
+
+    if not check_if_address_post_key_is_valid(addresses_hash):
+        return "Bad post request", 400
+
     addresses_hash_no_json = addresses_hash['addresses']
+
     for address_hash in addresses_hash_no_json:
         if not validate_address(address_hash):
             return "Invalid address hash", 400
@@ -183,6 +216,10 @@ def get_address_unspent(address_hash):
     return unspent
 
 def post_addresses_unspent(addresses_hash):
+
+    if not check_if_address_post_key_is_valid(addresses_hash):
+        return "Bad post request", 400
+
     addresses_hash_no_json = addresses_hash['addresses']
     for address_hash in addresses_hash_no_json:
         if not validate_address(address_hash):
@@ -199,7 +236,11 @@ def get_address_balance(address_hash):
     return BalanceSerializer.to_web(address_hash, balance)
 
 def post_addresses_balance(addresses_hash):
+    if not check_if_address_post_key_is_valid(addresses_hash):
+        return "Bad post request", 400
+
     addresses_hash_no_json = addresses_hash['addresses']
+
     for address_hash in addresses_hash_no_json:
         if not validate_address(address_hash):
             return "Invalid address hash", 400

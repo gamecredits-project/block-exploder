@@ -123,6 +123,15 @@ class DatabaseGateway(object):
         return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$lte": start}})
                     .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
+
+    def post_addresses_transactions(self, addresses, start, limit):
+        if not start:
+            return list(self.transactions.find({"vout.addresses": {"$in": addresses}})
+                        .sort("blocktime", pymongo.DESCENDING).limit(limit))
+
+        return list(self.transactions.find({"vout.addresses": {"$in": addresses}, "blocktime": {"$lte": start}})
+                    .sort("blocktime", pymongo.DESCENDING).limit(limit))
+
     def get_address_num_transactions(self, address):
         pipeline = [
             {"$match": {"vout.addresses": address}},
