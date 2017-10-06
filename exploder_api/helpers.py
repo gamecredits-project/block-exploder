@@ -23,6 +23,14 @@ def validate_address(address):
         return False
     return True
 
+def check_if_address_post_key_is_valid(address_hash):
+    """
+    Check if :address_hash: has a appropriate body
+    """
+    for key in address_hash.keys():
+        if not key != 'addresses':
+            return True    
+
 
 def validate_sha256_hash(hash):
     """

@@ -10,7 +10,7 @@ from serializers import TransactionSerializer, BlockSerializer, HashrateSerializ
     SearchSerializer, TransactoinCountSerializer, VolumeSerializer, \
     BalanceSerializer
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from helpers import validate_address, validate_sha256_hash
+from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid
 
 ######################
 #  INITIALIZE STUFF  #
@@ -147,6 +147,10 @@ def get_address_num_transactions(address_hash):
     return TransactoinCountSerializer.to_web(address_hash, tr_count)
 
 def post_addresses_num_transactions(addresses_hash):
+
+    if not check_if_address_post_key_is_valid(addresses_hash):
+        return "Bad post request", 400
+
     addresses_hash_no_json = addresses_hash['addresses']
     for address_hash in addresses_hash_no_json:
         if not validate_address(address_hash):
