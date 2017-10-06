@@ -430,146 +430,146 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 400)
 
 
-# class NetworkTestCase(unittest.TestCase):
-#     @classmethod
-#     def setUpClass(cls):
-#         cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
-#
-#     def test_get_network_hashrates(self):
-#         params = {
-#             "limit": 5
-#         }
-#         result = requests.get(self.url + "network/hashrates", params)
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#         data = json.loads(result.text)
-#         self.assertEquals(len(data), 5)
-#
-#     def test_get_network_info(self):
-#         result = requests.get(self.url + "network/info")
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#         data = json.loads(result.text)
-#         self.assertTrue(data)
-#
-#     def test_get_netowrk_price(self):
-#         result = requests.get(self.url + "network/price")
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#
-#     def test_get_network_bootstrap(self):
-#         pass
-#
-#
-# class ClientTestCase(unittest.TestCase):
-#     @classmethod
-#     def setUpClass(cls):
-#         cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
-#
-#     def test_get_latest_sync_history(self):
-#         params = {
-#             "limit": 2
-#         }
-#         result = requests.get(self.url + "client/sync_history", params)
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#         data = json.loads(result.text)
-#         self.assertEquals(len(data), 2)
-#
-#     def test_get_latest_sync_history_too_small_limit(self):
-#         params = {
-#             "limit": -3
-#         }
-#         res = requests.get(self.url + "client/sync_history", params)
-#         self.assertEquals(res.status_code, 400)
-#
-#     def test_get_latest_sync_history_too_big_limit(self):
-#         params = {
-#             "limit": 10000000000000000000
-#         }
-#         res = requests.get(self.url + "client/sync_history", params)
-#         self.assertEquals(res.status_code, 400)
-#
-#     def test_get_latest_sync_history_too_small_offset(self):
-#         params = {
-#             "limit": 10,
-#             "offset": -2
-#         }
-#         res = requests.get(self.url + "client/sync_history", params)
-#         self.assertEquals(res.status_code, 400)
-#
-#     def test_get_latest_sync_history_too_big_offset(self):
-#         params = {
-#             "limit": 10,
-#             "offset": 10000000000000000000
-#         }
-#         res = requests.get(self.url + "client/sync_history", params)
-#         self.assertEquals(res.status_code, 400)
-#
-#     def test_get_client_info(self):
-#         result = requests.get(self.url + "client/info")
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#
-#
-# class SearchTestCase(unittest.TestCase):
-#     @classmethod
-#     def setUpClass(cls):
-#         cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
-#
-#     def test_search(self):
-#         # First find some txid
-#         params = {
-#             "limit": 1
-#         }
-#         result = requests.get(self.url + "transactions/latest", params)
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#         data = json.loads(result.text)
-#
-#         # Try to get transaction with that txid
-#         txid = data[0]["txid"]
-#         result = requests.get(self.url + "search/" + txid)
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#         data = json.loads(result.text)
-#         self.assertEquals(data["searchBy"], txid)
-#         self.assertEquals(data["type"], "transaction")
-#
-#         params = {
-#             "limit": 1
-#         }
-#
-#         result = requests.get(self.url + 'blocks/latest', params)
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#         data = json.loads(result.text)
-#
-#         # Try to get block with that block_height
-#         block_height = data[0]['height']
-#         if len(str(int(block_height))) <= len(str(int(sys.maxint))):
-#             result = requests.get(self.url + "search/" + str(block_height))
-#             self.assertEquals(result.status_code, 200)
-#             self.assertTrue(result.text)
-#             data = json.loads(result.text)
-#             self.assertEquals(data["searchBy"], str(block_height))
-#             self.assertEquals(data["type"], "block")
-#
-#
-#     def test_invalid_search(self):
-#         result = requests.get(self.url + "search/" + "blabla")
-#         self.assertEquals(result.status_code, 200)
-#         self.assertTrue(result.text)
-#         data = json.loads(result.text)
-#         self.assertEquals(data["searchBy"], "blabla")
-#         self.assertFalse(data["type"])
-#
-#     def test_int_overflow_in_block_search(self):
-#         block_height = 1000000000000000000000000000
-#         result = requests.get(self.url + 'search/' + str(block_height))
-#         data = json.loads(result.text)
-#         self.assertEquals(data["searchBy"], str(block_height))
-#         self.assertFalse(data["type"])
+class NetworkTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
+
+    def test_get_network_hashrates(self):
+        params = {
+            "limit": 5
+        }
+        result = requests.get(self.url + "network/hashrates", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(len(data), 5)
+
+    def test_get_network_info(self):
+        result = requests.get(self.url + "network/info")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertTrue(data)
+
+    def test_get_netowrk_price(self):
+        result = requests.get(self.url + "network/price")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+
+    def test_get_network_bootstrap(self):
+        pass
+
+
+class ClientTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
+
+    def test_get_latest_sync_history(self):
+        params = {
+            "limit": 2
+        }
+        result = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(len(data), 2)
+
+    def test_get_latest_sync_history_too_small_limit(self):
+        params = {
+            "limit": -3
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_sync_history_too_big_limit(self):
+        params = {
+            "limit": 10000000000000000000
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_sync_history_too_small_offset(self):
+        params = {
+            "limit": 10,
+            "offset": -2
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_latest_sync_history_too_big_offset(self):
+        params = {
+            "limit": 10,
+            "offset": 10000000000000000000
+        }
+        res = requests.get(self.url + "client/sync_history", params)
+        self.assertEquals(res.status_code, 400)
+
+    def test_get_client_info(self):
+        result = requests.get(self.url + "client/info")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+
+
+class SearchTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
+
+    def test_search(self):
+        # First find some txid
+        params = {
+            "limit": 1
+        }
+        result = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        # Try to get transaction with that txid
+        txid = data[0]["txid"]
+        result = requests.get(self.url + "search/" + txid)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], txid)
+        self.assertEquals(data["type"], "transaction")
+
+        params = {
+            "limit": 1
+        }
+
+        result = requests.get(self.url + 'blocks/latest', params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        # Try to get block with that block_height
+        block_height = data[0]['height']
+        if len(str(int(block_height))) <= len(str(int(sys.maxint))):
+            result = requests.get(self.url + "search/" + str(block_height))
+            self.assertEquals(result.status_code, 200)
+            self.assertTrue(result.text)
+            data = json.loads(result.text)
+            self.assertEquals(data["searchBy"], str(block_height))
+            self.assertEquals(data["type"], "block")
+
+
+    def test_invalid_search(self):
+        result = requests.get(self.url + "search/" + "blabla")
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], "blabla")
+        self.assertFalse(data["type"])
+
+    def test_int_overflow_in_block_search(self):
+        block_height = 1000000000000000000000000000
+        result = requests.get(self.url + 'search/' + str(block_height))
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], str(block_height))
+        self.assertFalse(data["type"])
 
 
 if __name__ == "__main__":
