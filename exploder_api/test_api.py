@@ -248,6 +248,57 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
 
+    def test_post_addresses(self):
+        params = {
+        "addresses": [
+          "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+          "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
+    def test_post_invalid_addresses(self):
+        params = {
+        "addresses": [
+          "thisisinvalidaddress1",
+          "thisisinvalidaddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
+    def test_post_invalid_key_data_for_addresses(self):
+        params = {
+        "ThisIsInvalidKey": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
     def test_get_address_by_invalid_hash(self):
         # Addresses by invalid hash should return 400
         res = requests.get(self.url + "addresses/invalidhash")
@@ -305,6 +356,61 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
 
+    def test_post_addresses_unspent(self):
+        params = {
+        "addresses": [
+          "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+          "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/unspent", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.text)
+
+        response = json.loads(result.text)
+        self.assertEqual(params['addresses'], response['address'])
+
+        # If address found with parametar `unspent: false`, change it in the params variable
+        # self.assertEquals(response['spent'], False)
+
+    def test_post_invalid_addresses_unspent(self):
+        params = {
+        "addresses": [
+          "thisisinvalidaddress1",
+          "thisisinvalidaddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/unspent", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
+    def test_post_invalid_key_data_for_addresses_unspent(self):
+        params = {
+        "ThisIsInvalidKey": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/unspent", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
+
     def test_get_address_volume(self):
         # First find some address hash
         params = {
@@ -348,6 +454,53 @@ class AddressesTestCase(unittest.TestCase):
         d = json.loads(res.text)
         self.assertEquals(d["address"], hash)
         self.assertTrue(isinstance(d["balance"], (int, float)))
+
+    def test_post_addresses_balance(self):
+        params = {
+        "addresses": [
+          "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+          "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/balance", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.text)
+
+        response = json.loads(result.text)
+
+        self.assertEquals(params['addresses'], response['address'])
+        self.assertTrue(isinstance(response['balance'], (int, float)))
+
+    def test_post_invalid_addresses_balance(self):
+        params = {
+        "addresses": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/balance", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+    def test_post_invalid_key_data_for_addresses_balance(self):
+        params = {
+        "ThisIsInvalidKey": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/balance", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
 
     def test_get_address_transaction_count(self):
         # First find some address hash
