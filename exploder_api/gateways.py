@@ -194,12 +194,12 @@ class DatabaseGateway(object):
         ]
 
         result = self.transactions.aggregate(pipeline)
-        # result = list(result)
+        result = list(result)
 
         if not result:
             return 0
 
-        return result.next()['volume']
+        return result[0]['volume']
 
 
     ##################
