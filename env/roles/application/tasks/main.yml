@@ -4,6 +4,14 @@
 - name: Copy the configuration file
   template: src=templates/exploder.conf dest={{ exploder_conf_dir }}/exploder.conf
 
+- name: Add the EXPLODER_CONFIG environment variable to .bashrc
+  lineinfile:
+    dest={{ ansible_env.HOME }}/.bashrc
+    line="export EXPLODER_CONFIG={{ exploder_conf_dir }}/exploder.conf"
+    state=present
+    insertafter=EOF
+    create=True
+
 - name: Install the application (production version)
   pip: chdir={{ code_dir }} state=present name=.
   when:
@@ -32,15 +40,19 @@
 - name: Copy the nginx conf file
   template: src=templates/exploder-nginx.conf dest=/etc/nginx/sites-available/exploder-nginx.conf
   become: True
+  tags: nginx
 
 - name: Disable the default website
   file: path=/etc/nginx/sites-enabled/default state=absent
   become: True
+  tags: nginx
 
 - name: Enable the application in nginx
   file: src=/etc/nginx/sites-available/exploder-nginx.conf dest=/etc/nginx/sites-enabled/exploder-nginx.conf state=link
   become: True
+  tags: nginx
 
 - name: Restart nginx
   service: name=nginx state=restarted
   become: True
+  tags: nginx

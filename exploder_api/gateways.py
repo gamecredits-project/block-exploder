@@ -63,6 +63,25 @@ class DatabaseGateway(object):
 
         return results
 
+    def post_addresses_unspent(self, addresses):
+        pipeline = [
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1}},
+            {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}}
+        ]
+
+        unspent = self.transactions.aggregate(pipeline)
+
+        results = []
+        for uns in unspent:
+            uns['vout']['txid'] = uns['txid']
+            uns['vout']['index'] = uns['index']
+            results.append(uns['vout'])
+
+        return results
+
+
     def get_address_balance(self, address):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
@@ -79,6 +98,23 @@ class DatabaseGateway(object):
 
         return result[0]['balance']
 
+    def post_addresses_balance(self, addresses):
+        result = self.transactions.aggregate([
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
+            {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses }}},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
+            {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
+        ])
+
+        result = list(result)
+
+        if not result:
+            return 0
+
+        return result[0]['balance']
+
+
     def get_address_transactions(self, address, start, limit):
         if not start:
             return list(self.transactions.find({"vout.addresses": address})
@@ -87,9 +123,33 @@ class DatabaseGateway(object):
         return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$lte": start}})
                     .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
+
+    def post_addresses_transactions(self, addresses, start, limit):
+        if not start:
+            return list(self.transactions.find({"vout.addresses": {"$in": addresses}})
+                        .sort("blocktime", pymongo.DESCENDING).limit(limit))
+
+        return list(self.transactions.find({"vout.addresses": {"$in": addresses}, "blocktime": {"$lte": start}})
+                    .sort("blocktime", pymongo.DESCENDING).limit(limit))
+
     def get_address_num_transactions(self, address):
         pipeline = [
             {"$match": {"vout.addresses": address}},
+            {"$project": {"vout.addresses": 1}},
+            {"$group": {"_id": "vout.addresses", "num_transactions": {"$sum": 1}}}
+        ]
+
+        result = self.transactions.aggregate(pipeline)
+
+        result = list(result)
+        if not result:
+            return 0
+
+        return result[0]['num_transactions']
+
+    def post_addresses_num_transactions(self, addresses):
+        pipeline = [
+            {"$match": {"vout.addresses": {"$in":addresses}}},
             {"$project": {"vout.addresses": 1}},
             {"$group": {"_id": "vout.addresses", "num_transactions": {"$sum": 1}}}
         ]
@@ -121,6 +181,26 @@ class DatabaseGateway(object):
             return 0
 
         return result.next()['volume']
+
+    def post_addresses_volume(self, addresses):
+        # Check if the address is unused on the blockchain
+
+        pipeline = [
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$unwind": "$vout"},
+            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
+            {"$group": {"_id": "", "volume": {"$sum":"$vout.value"}}}
+        ]
+
+        result = self.transactions.aggregate(pipeline)
+        result = list(result)
+
+        if not result:
+            return 0
+
+        return result[0]['volume']
+
 
     ##################
     #  TRANSACTIONS  #

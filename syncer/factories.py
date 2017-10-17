@@ -27,7 +27,7 @@ class MongoBlockFactory(object):
             dat=mongo_block['dat'],
             nextblockhash=mongo_block['nextblockhash'],
             height=mongo_block['height'],
-            chainwork=int(mongo_block['chainwork'], 16),
+            chainwork=long(mongo_block['chainwork'], 16),
             chain=mongo_block['chain'],
             total=mongo_block['total']
         )

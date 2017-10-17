@@ -74,7 +74,6 @@ def _is_block_file(filename):
 def get_client_ip(url):
     """
     Returns server's ip
-
     @param url: Link for api that returns your ip
     @type url: string
     @return: This server's ip if successful, otherwise None
