@@ -194,12 +194,20 @@ class BlockchainSyncer(object):
         # Client RPC connection
         self.rpc = rpc_client
 
+    def _get_network_height(self):
+        avg = lambda arr: sum(arr)/len(arr)
+        return int(avg([p['startingheight'] for p in self.rpc.getpeerinfo()]))
+
     def _update_sync_progress(self):
+        network_height = self._get_network_height()
         client_height = self.rpc.getblockcount()
+
+        best_height = max([network_height, client_height])
+
         highest_known = self.db.get_highest_block()
 
         if highest_known:
-            self.sync_progress = float(highest_known.height * 100) / client_height
+            self.sync_progress = float(highest_known.height * 100) / best_height
         else:
             self.sync_progress = 0
 
@@ -211,7 +219,7 @@ class BlockchainSyncer(object):
         start_block = self.db.get_highest_block()
 
         self._update_sync_progress()
-
+        logging.info("[SYNC_AUTO] Starting. Current progress: %s%%" % self.sync_progress)
         if self.sync_progress < self.stream_sync_limit:
             self.sync_stream(sync_limit=limit)
 
@@ -235,8 +243,8 @@ class BlockchainSyncer(object):
         if highest_known:
             blocks_in_db = highest_known.height
 
-        client_height = self.rpc.getblockcount()
-        limit_calc = int((client_height - blocks_in_db) * self.stream_sync_limit / 100)
+        network_height = self._get_network_height()
+        limit_calc = int((network_height - blocks_in_db) * self.stream_sync_limit / 100)
         if sync_limit:
             limit = min([sync_limit, limit_calc])
         else:
@@ -244,7 +252,7 @@ class BlockchainSyncer(object):
 
         # Continue parsing where we left off
         if highest_known:
-            self.blk_files = self.blk_files[highest_known.dat["index"]:]
+            self.blk_files = self.blk_files[highest_known.dat['index']:]
 
         parsed = 0
         for (i, f) in enumerate(self.blk_files):
@@ -256,12 +264,17 @@ class BlockchainSyncer(object):
 
             while has_length(stream, 80) and parsed < limit:
                 # parse block from stream
-                block = BlockFactory.from_stream(stream)
-                self.blockchain.insert_block(block)
-                parsed += 1
+                try:
+                    block = BlockFactory.from_stream(stream)
+                    self.blockchain.insert_block(block)
+                    parsed += 1
 
-                if block.height % 1000 == 0:
-                    self._print_progress()
+                    if block.height % 1000 == 0:
+                        self._print_progress()
+                except ValueError:
+                    logging.info("Incomplete block in .dat file, wait a little bit.")
+                    stream.close()
+                    break
 
         self.db.flush_cache()
 

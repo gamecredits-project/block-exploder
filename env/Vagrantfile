@@ -10,7 +10,11 @@ Vagrant.configure("2") do |config|
     blockexplorer.vm.box = "thedivic/gamecredits"
     blockexplorer.vm.synced_folder "..", "/exploder"
     # blockexplorer.vm.synced_folder "../../gamecredits-pip", "/gamecredits-pip"
+
+
+
     blockexplorer.vm.network "forwarded_port", guest: 80, host: 8080
+    blockexplorer.vm.network "forwarded_port", guest: 5004, host: 8081
 
     blockexplorer.vm.provider "virtualbox" do |vb|
       # vb.gui = true

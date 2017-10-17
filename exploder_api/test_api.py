@@ -1,12 +1,21 @@
 import unittest
 import requests
 import json
+import sys
+import os
+import ConfigParser
+
+
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
 
 
 class BlocksTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
+
 
     def test_get_latest_blocks(self):
         params = {
@@ -14,7 +23,8 @@ class BlocksTestCase(unittest.TestCase):
             "offset": 3
         }
         result = requests.get(self.url + "blocks/latest", params)
-        self.assertEquals(result.status_code, 200)
+        print result
+        self.assertEqual(result.status_code, 200)
         self.assertTrue(result.text)
 
     def test_get_latest_blocks_too_small_limit(self):
@@ -121,7 +131,7 @@ class BlocksTestCase(unittest.TestCase):
 class TransactionsTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_latest_transactions(self):
         params = {
@@ -222,7 +232,7 @@ class TransactionsTestCase(unittest.TestCase):
 class AddressesTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_address(self):
         # First find some address hash
@@ -234,11 +244,60 @@ class AddressesTestCase(unittest.TestCase):
         self.assertTrue(result.text)
         data = json.loads(result.text)
 
+
         # Try to get address with that hash
         hash = data[0]["vout"][0]["addresses"][0]
         res = requests.get(self.url + "addresses/" + hash)
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
+
+    def test_post_addresses(self):
+        params = {
+            "addresses": [
+                "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+                "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+                    ]
+                }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
+    def test_post_invalid_addresses(self):
+        params = {
+        "addresses": [
+          "thisisinvalidaddress1",
+          "thisisinvalidaddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
+    def test_post_invalid_key_data_for_addresses(self):
+        params = {
+        "ThisIsInvalidKey": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
 
     def test_get_address_by_invalid_hash(self):
         # Addresses by invalid hash should return 400
@@ -297,6 +356,59 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEquals(res.status_code, 200)
         self.assertTrue(res.text)
 
+    def test_post_addresses_unspent(self):
+        params = {
+        "addresses": [
+          "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+          "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/unspent", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.text)
+
+        response = json.loads(result.text)
+        print response
+        self.assertEqual(params['addresses'], response['address'])
+
+        # If address found with parametar `unspent: false`, change it in the params variable
+        # self.assertEquals(response['spent'], False)
+
+    def test_post_invalid_addresses_unspent(self):
+        params = {
+        "addresses": [
+          "thisisinvalidaddress1",
+          "thisisinvalidaddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/unspent", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+        # Response in json format
+        # data = json.loads(result.text)
+
+    def test_post_invalid_key_data_for_addresses_unspent(self):
+        params = {
+        "ThisIsInvalidKey": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/unspent", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+
     def test_get_address_volume(self):
         # First find some address hash
         params = {
@@ -313,6 +425,23 @@ class AddressesTestCase(unittest.TestCase):
         d = json.loads(res.text)
         self.assertEquals(d["address"], hash)
         self.assertTrue(isinstance(d["volume"], (int, float)))
+
+    def test_post_addresses_volume(self):
+        params = {
+            "addresses": [
+                "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+                "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+            ]
+        }
+
+        headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
+
+        result = requests.post(self.url + "addresses/volume", data=json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        json_load = json.loads(result.text)
+
+        self.assertEqual(json_load['address'],params['addresses'])
+        self.assertTrue(isinstance(json_load['volume'], (int, float)))
 
     def test_get_address_volume_for_unused_address(self):
         # Volume for unused address should be 0
@@ -341,6 +470,53 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEquals(d["address"], hash)
         self.assertTrue(isinstance(d["balance"], (int, float)))
 
+    def test_post_addresses_balance(self):
+        params = {
+        "addresses": [
+          "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+          "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/balance", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.text)
+
+        response = json.loads(result.text)
+
+        self.assertEquals(params['addresses'], response['address'])
+        self.assertTrue(isinstance(response['balance'], (int, float)))
+
+    def test_post_invalid_addresses_balance(self):
+        params = {
+        "addresses": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/balance", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+    def test_post_invalid_key_data_for_addresses_balance(self):
+        params = {
+        "ThisIsInvalidKey": [
+          "ThisIsInvalidAddress1",
+          "ThisIsInvalidAddress2"
+          ]
+        }
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+        result = requests.post(self.url + "addresses/balance", data= json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
     def test_get_address_transaction_count(self):
         # First find some address hash
         params = {
@@ -358,11 +534,71 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEquals(d["address"], hash)
         self.assertTrue(isinstance(d["transactionCount"], int))
 
+    def test_get_address_transaction_count(self):
+        # First find some address hash
+        params = {
+            "limit": 2
+        }
+        result = requests.get(self.url + "transactions/latest", params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        hash = data[0]["vout"][0]["addresses"][0]
+        res = requests.get(self.url + "addresses/" + hash + "/transaction-count")
+        self.assertEquals(res.status_code, 200)
+        d = json.loads(res.text)
+        self.assertEquals(d["address"], hash)
+        self.assertTrue(isinstance(d["transactionCount"], int))
+
+    def test_post_addresses_transaction_count(self):
+        params = {
+            "addresses": [
+                "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+                "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+            ]
+        }
+
+        headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
+
+        result = requests.post(self.url + "addresses/transaction-count", data=json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 200)
+
+        json_load = json.loads(result.text)
+
+        self.assertEqual(json_load['address'],params['addresses'])
+        self.assertTrue(isinstance(json_load['transactionCount'], int))
+
+    def test_post_addresses_transaction_count_invalid_parameters(self):
+        params = {
+            "addresses": [
+                "ginvalidparametersd"
+            ]
+        }
+
+        headers = {'Content-type': 'application/json', 'Accept': 'application/json', 'Nasty-headers': 'Nastyvalues'}
+
+        result = requests.post(self.url + "addresses/transaction-count", data=json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+
+    def test_post_addresses_transaction_count_invalid_key(self):
+        params = {
+            "invalidaddresses": [
+                "GRvuZivKzVNU8zA3bGANWXgR9JijBDop79",
+                "GcpzphoLCjw9oYk8S2YNBYTQUrvBmXLBRS"
+            ]
+        }
+
+        headers = {'Content-type': 'application/json', 'Accept': 'application/json', 'Nasty-headers': 'Nastyvalues'}
+
+        result = requests.post(self.url + "addresses/transaction-count", data=json.dumps(params), headers=headers)
+        self.assertEqual(result.status_code, 400)
+
 
 class NetworkTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_network_hashrates(self):
         params = {
@@ -393,7 +629,7 @@ class NetworkTestCase(unittest.TestCase):
 class ClientTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_get_latest_sync_history(self):
         params = {
@@ -444,7 +680,7 @@ class ClientTestCase(unittest.TestCase):
 class SearchTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.url = "http://127.0.0.1/api/"
+        cls.url = "http://127.0.0.1:%s/api/" % config.get('syncer', 'application_port')
 
     def test_search(self):
         # First find some txid
@@ -465,12 +701,39 @@ class SearchTestCase(unittest.TestCase):
         self.assertEquals(data["searchBy"], txid)
         self.assertEquals(data["type"], "transaction")
 
+        params = {
+            "limit": 1
+        }
+
+        result = requests.get(self.url + 'blocks/latest', params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        # Try to get block with that block_height
+        block_height = data[0]['height']
+        if len(str(int(block_height))) <= len(str(int(sys.maxint))):
+            result = requests.get(self.url + "search/" + str(block_height))
+            self.assertEquals(result.status_code, 200)
+            self.assertTrue(result.text)
+            data = json.loads(result.text)
+            self.assertEquals(data["searchBy"], str(block_height))
+            self.assertEquals(data["type"], "block")
+
+
     def test_invalid_search(self):
         result = requests.get(self.url + "search/" + "blabla")
         self.assertEquals(result.status_code, 200)
         self.assertTrue(result.text)
         data = json.loads(result.text)
         self.assertEquals(data["searchBy"], "blabla")
+        self.assertFalse(data["type"])
+
+    def test_int_overflow_in_block_search(self):
+        block_height = 1000000000000000000000000000
+        result = requests.get(self.url + 'search/' + str(block_height))
+        data = json.loads(result.text)
+        self.assertEquals(data["searchBy"], str(block_height))
         self.assertFalse(data["type"])
 
 

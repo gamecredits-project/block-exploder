@@ -117,7 +117,6 @@ app.conf.beat_schedule = {
     'hashrate-once-a-day': {
         'task': 'syncer.tasks.DailyTask',
         'schedule': crontab(minute=0, hour=12),  # It's high noon
-        # 'schedule': 60.0    # Uncomment this for debug
     },
     'every-30-seconds': {
         'task': 'syncer.tasks.HalfMinuteTask',

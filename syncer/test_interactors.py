@@ -30,15 +30,27 @@ class InsertBlockTestCaseWithMocking(unittest.TestCase):
         self.assertEqual(block.chain, self.config.get('syncer', 'main_chain'))
 
     def test_append_to_main_chain(self):
+        """
+        If new mined block's previousblockhash is our highest block in the db
+        we should only extend the main chain, fork shouldn't happen
+        """
+
+        # First we mock the new mined block
         block2 = copy.deepcopy(self.example_block)
         block2.hash = "somefakehash"
+
+        # Mock the previousblockhash so it points to the highest_in_chain
         block2.previousblockhash = self.example_block.hash
+
+        # Mock get highest block db method
         self.db.get_highest_block.return_value = self.example_block
         self.db.get_block_by_hash.return_value = self.example_block
 
+        # Call the insert block method
         result = self.chain.insert_block(block2)
         added_block = result['block']
 
+        # There should be no fork or reconverge
         self.assertFalse(result['fork'])
         self.assertFalse(result['reconverge'])
 

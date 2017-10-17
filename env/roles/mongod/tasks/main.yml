@@ -1,11 +1,12 @@
-# sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+# sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
 - name: Add mongo apt key
-  apt_key: keyserver=hkp://keyserver.ubuntu.com:80 state=present id=EA312927
+  apt_key: keyserver=hkp://keyserver.ubuntu.com:80 state=present id=0C49F3730359A14518585931BC711F9BA15703C6
   become: True
 
 # echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+# echo "deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.4.list
 - name: Add apt repository to for mongo
-  apt_repository: filename=mongodb-org-3.2 repo="deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" state=present update_cache=yes
+  apt_repository: filename=mongodb-org-3.4 repo="deb [ arch=amd64,arm64 ] http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.4 multiverse" state=present update_cache=yes
   become: True
 
 # sudo apt-get install -y mongodb-org

@@ -1,0 +1,9 @@
+[nginx-block-users]
+enabled  = true
+port     = http,https
+filter   = nginx-block-users
+logpath  = %(nginx_access_log)s
+maxretry = {{ fail2ban_maxretry }}
+findtime = {{ fail2ban_findtime }}
+bantime  = {{ fail2ban_bantime }}
+action   = iptables-multiport[name=HTTP, port='http,https', protocol=tcp]
