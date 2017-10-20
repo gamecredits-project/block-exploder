@@ -265,7 +265,9 @@ paths:
       tags:
         - Adresses
       operationId: exploder_api.api.post_addresses_transactions
-      summary: Return the total volume of the given addresses
+      summary: Return an array of transactions for given addresses
+      description: |
+        Return a list of transactions that this addresses appear in
       consumes:
         - application/json
       produces:
@@ -372,6 +374,8 @@ paths:
     post:
       operationId: exploder_api.api.post_addresses_num_transactions
       summary: Return the number of transactions for a given list of addresses
+      description: |
+        Number of transactions this addresses appear in
       consumes:
         - application/json
       produces:
@@ -388,7 +392,7 @@ paths:
         200:
           description: Return number of transactions of all addresses
           schema:
-            $ref: '#/definitions/Balance'
+            $ref: '#/definitions/TransactionCount'
         400:
           description: Invalid address hash
         default:
@@ -422,6 +426,8 @@ paths:
     post:
       operationId: exploder_api.api.post_addresses_balance
       summary: Return the balance sum for a given list of addresses
+      description: |
+        Balance is the total amount of GameCredits transfered to the given addresses that has not yet been spent
       consumes:
         - application/json
       produces:
@@ -438,7 +444,7 @@ paths:
         200:
           description: Return balance sum of all addresses
           schema:
-            $ref: '#/definitions/TransactionCount'
+            $ref: '#/definitions/Balance'
         400:
           description: Invalid address hash
         default:
@@ -467,6 +473,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+
   /addresses/unspent:
     post:
       tags:
