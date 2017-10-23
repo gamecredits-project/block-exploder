@@ -40,7 +40,6 @@
     - address_min_length: 26
     - address_max_length: 34
     - game_address_starts_with: ['G', '3']
-    - key_for_address_post_requests: 'addresses'
     - sha256_hash_length: 64
     - application_port: 80
     - fail2ban_maxretry: 600

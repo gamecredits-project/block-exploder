@@ -159,7 +159,7 @@ def post_addresses_transactions(addresses_hash, start=None):
         last_transaction = trs[len(trs) - 1]
         return {
             "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
-            "next": "/addresses/%s?start=%s" % (addresses_hash_no_json, last_transaction['blocktime'])
+            "next": last_transaction['blocktime']
         }
     else:
         return {
