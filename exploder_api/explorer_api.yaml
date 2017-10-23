@@ -267,7 +267,7 @@ paths:
       operationId: exploder_api.api.post_addresses_transactions
       summary: Return an array of transactions for given addresses
       description: |
-        Return a list of transactions that this addresses appear in
+        Return a list of transactions that these addresses appear in
       consumes:
         - application/json
       produces:
@@ -340,7 +340,7 @@ paths:
         200:
           description: Return the total volume of the given addresses
           schema:
-            $ref: '#/definitions/Volume'
+            $ref: '#/definitions/MultipleAddressesVolume'
         400:
           description: Invalid address hash
         default:
@@ -375,7 +375,7 @@ paths:
       operationId: exploder_api.api.post_addresses_num_transactions
       summary: Return the number of transactions for a given list of addresses
       description: |
-        Number of transactions this addresses appear in
+        Number of transactions these addresses appear in
       consumes:
         - application/json
       produces:
@@ -392,7 +392,7 @@ paths:
         200:
           description: Return number of transactions of all addresses
           schema:
-            $ref: '#/definitions/TransactionCount'
+            $ref: '#/definitions/MultipleAddressesTransactionCount'
         400:
           description: Invalid address hash
         default:
@@ -425,7 +425,7 @@ paths:
   /addresses/balance:
     post:
       operationId: exploder_api.api.post_addresses_balance
-      summary: Return the balance sum for a given list of addresses
+      summary: Return the balance sum for the given list of addresses
       description: |
         Balance is the total amount of GameCredits transfered to the given addresses that has not yet been spent
       consumes:
@@ -444,7 +444,7 @@ paths:
         200:
           description: Return balance sum of all addresses
           schema:
-            $ref: '#/definitions/Balance'
+            $ref: '#/definitions/MultipleAddressesBalance'
         400:
           description: Invalid address hash
         default:
@@ -1078,6 +1078,18 @@ definitions:
         type: integer
         description: Number of transactions this address appears in
 
+  MultipleAddressesTransactionCount:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: GameCredits addresses
+      transactionCount:
+        type: integer
+        description: Number of transactions these addresses appears in
+
   Volume:
     type: object
     properties:
@@ -1089,6 +1101,19 @@ definitions:
         format: float
         description: Total amount of GameCredits transfered to a given address
 
+  MultipleAddressesVolume:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: GameCredits addresses
+      volume:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to the given addresses
+
   Balance:
     type: object
     properties:
@@ -1099,3 +1124,17 @@ definitions:
         type: number
         format: float
         description: Total amount of GameCredits transfered to a given address that has not yet been spent
+
+  MultipleAddressesBalance:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: GameCredits addresses
+      balance:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to a given address that has not yet been spent
+
