@@ -139,9 +139,10 @@ def get_address_transactions(address_hash, start=None):
             "next": None
         }
 
-def post_addresses_transactions(addresses_hash, start=None):
-    if start and (not isinstance(start, int)):
-        return "Start too large", 400
+def post_addresses_transactions(addresses_hash):
+    # Start must be declared None, in case that start doesn't
+    # exist in the post body
+    start = None
 
     if not check_if_address_post_key_is_valid(addresses_hash):
         return "Bad post request", 400
@@ -151,7 +152,12 @@ def post_addresses_transactions(addresses_hash, start=None):
     for address_hash in addresses_hash_no_json:
         if not validate_address(address_hash):
             return "Invalid address hash", 400
-
+    
+    if 'start' in addresses_hash:
+        start = addresses_hash['start']
+        if start and(not isinstance(start, int)):
+            return "Start too large", 400
+    
     trs = db.post_addresses_transactions(addresses_hash_no_json, start, limit=51)
 
 

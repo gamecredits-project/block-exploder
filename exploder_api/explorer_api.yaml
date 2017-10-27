@@ -277,13 +277,7 @@ paths:
           name: addresses_hash
           description: Area for addresses list
           schema:
-            $ref: '#/definitions/MultipleAddresses'
-        - name: start
-          in: query
-          description: Timestamp of the start transaction, used for pagination
-          required: false
-          type: integer
-          minimum: 0
+            $ref: '#/definitions/MultipleAddressesAndStart'
       tags:
         - Addresses
       responses:
@@ -736,6 +730,18 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Transaction'
+
+  MultipleAddressesAndStart:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+      start:
+        type: integer
+        format: timestamp
+        description: Timestamp is optional
 
   MultipleAddresses:
     type: object
