@@ -284,7 +284,7 @@ paths:
         200:
           description: Return addresses
           schema:
-            $ref: '#/definitions/TransactionsPaginated'
+            $ref: '#/definitions/AddressesTransactionsPaginated'
         400:
           description: Invalid address hash
         default:
@@ -955,6 +955,16 @@ definitions:
         type: string
         description: Relative url of the next page of transactions, null if there's no more transactions
 
+  AddressesTransactionsPaginated:
+    type: object
+    properties:
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+      next:
+        type: integer
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
 
   Bootstrap:
     type: object
