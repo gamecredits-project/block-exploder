@@ -277,20 +277,14 @@ paths:
           name: addresses_hash
           description: Area for addresses list
           schema:
-            $ref: '#/definitions/MultipleAddresses'
-        - name: start
-          in: query
-          description: Timestamp of the start transaction, used for pagination
-          required: false
-          type: integer
-          minimum: 0
+            $ref: '#/definitions/MultipleAddressesAndStart'
       tags:
         - Addresses
       responses:
         200:
           description: Return addresses
           schema:
-            $ref: '#/definitions/TransactionsPaginated'
+            $ref: '#/definitions/AddressesTransactionsPaginated'
         400:
           description: Invalid address hash
         default:
@@ -737,6 +731,18 @@ definitions:
         items:
           $ref: '#/definitions/Transaction'
 
+  MultipleAddressesAndStart:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+      start:
+        type: integer
+        format: timestamp
+        description: Timestamp is optional
+
   MultipleAddresses:
     type: object
     properties:
@@ -949,6 +955,16 @@ definitions:
         type: string
         description: Relative url of the next page of transactions, null if there's no more transactions
 
+  AddressesTransactionsPaginated:
+    type: object
+    properties:
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+      next:
+        type: integer
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
 
   Bootstrap:
     type: object
