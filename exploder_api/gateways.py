@@ -71,7 +71,7 @@ class DatabaseGateway(object):
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
             {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
-            {"$match": {"vout.spent": True, "vout.addresses": address,
+            {"$match": {"vout.spent": False, "vout.addresses": address,
                         "blocktime": {"$gt": start}}},
             {"$limit": limit}
             ])
@@ -90,7 +90,7 @@ class DatabaseGateway(object):
                 {"$match": {"vout.addresses": {"$in": addresses}}},
                 {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
                 {"$project": {"vout": 1, "txid": 1, "index": 1}},
-                {"$match": {"vout.spent": True, "vout.addresses": {"$in": addresses}}},
+                {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}},
                 {"$limit": limit}
             ]
 
