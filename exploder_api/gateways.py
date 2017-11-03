@@ -56,6 +56,7 @@ class DatabaseGateway(object):
                 {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
                 {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
                 {"$match": {"vout.spent": True, "vout.addresses": address}},
+                {"$sort": {"blocktime": -1}},
                 {"$limit": limit}
                 ])
 
@@ -71,8 +72,9 @@ class DatabaseGateway(object):
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
             {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
-            {"$match": {"vout.spent": False, "vout.addresses": address,
-                        "blocktime": {"$gt": start}}},
+            {"$match": {"vout.spent": True, "vout.addresses": address,
+                        "blocktime": {"$lte": start}}},
+            {"$sort": {"blocktime": -1}},
             {"$limit": limit}
             ])
 
@@ -89,8 +91,9 @@ class DatabaseGateway(object):
             pipeline = [
                 {"$match": {"vout.addresses": {"$in": addresses}}},
                 {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-                {"$project": {"vout": 1, "txid": 1, "index": 1}},
-                {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}},
+                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+                {"$match": {"vout.spent": True, "vout.addresses": {"$in": addresses}}},
+                {"$sort": {"blocktime": -1}},
                 {"$limit": limit}
             ]
 
@@ -109,7 +112,8 @@ class DatabaseGateway(object):
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
             {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
             {"$match": {"vout.spent": True, "vout.addresses": {"$in": addresses},
-                        "blocktime" : {"$gt": start}}},
+                        "blocktime" : {"$lte": start}}},
+            {"$sort": {"blocktime": -1}},
             {"$limit": limit}
         ]
 
@@ -163,7 +167,7 @@ class DatabaseGateway(object):
             return list(self.transactions.find({"vout.addresses": address})
                         .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
-        return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$gt": start}})
+        return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$lte": start}})
                     .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
 
@@ -173,7 +177,7 @@ class DatabaseGateway(object):
                         .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
         return list(self.transactions.find(
-            {"vout.addresses": {"$in": addresses}, "blocktime": {"$gt": start}})
+            {"vout.addresses": {"$in": addresses}, "blocktime": {"$lte": start}})
                     .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
     def get_address_num_transactions(self, address):

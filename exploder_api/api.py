@@ -10,6 +10,7 @@ from serializers import TransactionSerializer, BlockSerializer, HashrateSerializ
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
     SearchSerializer, TransactoinCountSerializer, VolumeSerializer, \
     BalanceSerializer, UnspentTransactionSerializer, AddressSerializer
+
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid
 
@@ -224,11 +225,9 @@ def get_address_unspent(address_hash, start=None):
 
     unspent = db.get_address_unspent(address_hash, start, limit=51)
     if unspent:
-        unspent_transaction_address = unspent[0]['vout']['addresses']
+        unspent_transaction_address = unspent[0]['vout']['addresses'][0]
     else:
         unspent_transaction_address = unspent
-
-    # logging.error(unspent)
 
     if len(unspent) == 51:
         last_unspent_transaction = unspent[len(unspent)-1]
@@ -236,12 +235,12 @@ def get_address_unspent(address_hash, start=None):
         return {
             "next": "/addresses/%s/unspent?start=%s" %
                     (address_hash, last_unspent_transaction['blocktime']),
-            "addresses": unspent_transaction_address,
+            "address": unspent_transaction_address,
             "utxo": [UnspentTransactionSerializer.to_web(tr) for tr in unspent]
         }
 
     return {
-        "addresses": unspent_transaction_address,
+        "address": unspent_transaction_address,
         "utxo": [UnspentTransactionSerializer.to_web(tr) for tr in unspent],
         "next" : None
     }
@@ -253,14 +252,12 @@ def post_addresses_unspent(addresses_hash, start=None):
     if start and (not isinstance(start, int)):
         return "Start too large", 400
 
-    logging.error("Start je: %s" % start)
     addresses_hash_no_json = addresses_hash['addresses']
-    # start = 1509583043
     unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=51)
 
     if len(unspent) == 51:
         last_unspent_transaction = unspent[len(unspent)-1]
-        logging.error(last_unspent_transaction)
+
         return {
             "next": last_unspent_transaction['blocktime'],
             "addresses": addresses_hash['addresses'],
@@ -272,14 +269,6 @@ def post_addresses_unspent(addresses_hash, start=None):
         "utxo": [UnspentTransactionSerializer.to_web(tr) for tr in unspent],
         "next": None
     }
-
-    # addresses_hash_no_json = addresses_hash['addresses']
-    # for address_hash in addresses_hash_no_json:
-    #     if not validate_address(address_hash):
-    #         return "Invalid address hash", 400
-    #
-    # unspent = db.post_addresses_unspent(addresses_hash_no_json)
-    # return unspent
 
 
 def get_address_balance(address_hash):

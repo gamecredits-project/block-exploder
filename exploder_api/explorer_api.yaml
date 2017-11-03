@@ -464,9 +464,8 @@ paths:
         200:
           description: Return address unspent
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Vout'
+
+            $ref: '#/definitions/TransactionUnspent'
         400:
           description: Invalid address hash
         default:
@@ -502,7 +501,7 @@ paths:
         200:
           description: Return balance sum of all addresses
           schema:
-            $ref: '#/definitions/Vout'
+            $ref: '#/definitions/TransactionsUnspent'
         400:
           description: Invalid address hash
         default:
@@ -797,6 +796,63 @@ definitions:
         items:
           $ref: '#/definitions/Vout'
         description: List of transaction outputs
+
+  TransactionUnspent:
+    type: object
+    properties:
+      address:
+        type: string
+        description: Address hash for this request
+      next:
+        type: string
+        description:  Relative url of the next page of transactions, null if there's no more transactions
+      utxo:
+        type: array
+        items:
+          $ref: '#/definitions/Utxo'
+        description: List of utxo objects
+
+  TransactionsUnspent:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: Hashes of all address for this request
+      next:
+        type: string
+        description:  Relative url of the next page of transactions, null if there's no more transactions
+      utxo:
+        type: array
+        items:
+          $ref: '#/definitions/Utxo'
+        description: List of utxo objects
+
+  Utxo:
+    type: object
+    properties:
+      asm:
+        type: string
+        description: Output Script
+      index:
+        type: integer
+        description:  Index of this output in the parent transaction
+      reqSigs:
+        type: integer
+        description: Number of signatures required to spend this transaction
+      spent:
+        type: boolean
+        description: Is this output spent
+      txid:
+        type: string
+        description: Identifier of the parent transaction
+      type:
+        type: string
+        description: Type of the output
+      value:
+        type: integer
+        description: Value of this output
 
   Vout:
     type: object
