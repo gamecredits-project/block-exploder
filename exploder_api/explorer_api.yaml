@@ -805,7 +805,7 @@ definitions:
         description: Address hash for this request
       next:
         type: string
-        description:  Relative url of the next page of transactions, null if there's no more transactions
+        description: Relative url of the next page of transactions, null if there's no more transactions
       utxo:
         type: array
         items:
@@ -822,12 +822,12 @@ definitions:
         description: Hashes of all address for this request
       next:
         type: string
-        description:  Relative url of the next page of transactions, null if there's no more transactions
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
       utxo:
         type: array
         items:
           $ref: '#/definitions/Utxo'
-        description: List of utxo objects
+        description: List of unspent transactions objects (utxo for short)
 
   Utxo:
     type: object
@@ -853,6 +853,9 @@ definitions:
       value:
         type: integer
         description: Value of this output
+      blocktime:
+        type: integer
+        description: Timestamp of the block
 
   Vout:
     type: object

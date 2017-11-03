@@ -231,7 +231,6 @@ def get_address_unspent(address_hash, start=None):
 
     if len(unspent) == 51:
         last_unspent_transaction = unspent[len(unspent)-1]
-        # logging.error(unspent[0]['vout']['addresses'])
         return {
             "next": "/addresses/%s/unspent?start=%s" %
                     (address_hash, last_unspent_transaction['blocktime']),
