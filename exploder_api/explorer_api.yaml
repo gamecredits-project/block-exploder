@@ -454,6 +454,12 @@ paths:
       summary: Return an array of unspent outputs to given address and it's estimated balance
       parameters:
         - $ref: '#/parameters/address_hash'
+        - name: start
+          in: query
+          description: Timestamp of the start transaction, used for pagination
+          required: false
+          type: integer
+          minimum: 0
       responses:
         200:
           description: Return address unspent
@@ -484,6 +490,12 @@ paths:
           description: Area for addresses list
           schema:
             $ref: '#/definitions/MultipleAddresses'
+        - name: start
+          in: query
+          description: Timestamp of the start transaction, used for pagination
+          required: false
+          type: integer
+          minimum: 0
       tags:
         - Addresses
       responses:
@@ -1153,4 +1165,3 @@ definitions:
         type: number
         format: float
         description: Total amount of GameCredits transfered to a given address that has not yet been spent
-

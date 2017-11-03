@@ -1,5 +1,6 @@
 import pymongo
 import sys
+import logging
 
 from helpers import validate_address, check_parameter_if_int
 
@@ -47,28 +48,69 @@ class DatabaseGateway(object):
     ###############
     #  ADDRESSES  #
     ###############
-    def get_address_unspent(self, address):
+    def get_address_unspent(self, address, start, limit):
+
+        if not start:
+            unspent = self.transactions.aggregate([
+                {"$match": {"vout.addresses": address}},
+                {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
+                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+                {"$match": {"vout.spent": True, "vout.addresses": address}},
+                {"$limit": limit}
+                ])
+
+            results = []
+            for uns in unspent:
+                uns['vout']['txid'] = uns['txid']
+                uns['vout']['index'] = uns['index']
+                results.append(uns)
+
+            return results
+
         unspent = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-            {"$project": {"vout": 1, "txid": 1, "index": 1}},
-            {"$match": {"vout.spent": False, "vout.addresses": address}}
-        ])
+            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+            {"$match": {"vout.spent": True, "vout.addresses": address,
+                        "blocktime": {"$gt": start}}},
+            {"$limit": limit}
+            ])
 
         results = []
         for uns in unspent:
             uns['vout']['txid'] = uns['txid']
             uns['vout']['index'] = uns['index']
-            results.append(uns['vout'])
+            results.append(uns)
 
         return results
 
-    def post_addresses_unspent(self, addresses):
+    def post_addresses_unspent(self, addresses, start, limit):
+        if not start:
+            pipeline = [
+                {"$match": {"vout.addresses": {"$in": addresses}}},
+                {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
+                {"$project": {"vout": 1, "txid": 1, "index": 1}},
+                {"$match": {"vout.spent": True, "vout.addresses": {"$in": addresses}}},
+                {"$limit": limit}
+            ]
+
+            unspent = self.transactions.aggregate(pipeline)
+
+            results = []
+            for uns in unspent:
+                uns['vout']['txid'] = uns['txid']
+                uns['vout']['index'] = uns['index']
+                results.append(uns)
+
+            return results
+
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-            {"$project": {"vout": 1, "txid": 1, "index": 1}},
-            {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}}
+            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+            {"$match": {"vout.spent": True, "vout.addresses": {"$in": addresses},
+                        "blocktime" : {"$gt": start}}},
+            {"$limit": limit}
         ]
 
         unspent = self.transactions.aggregate(pipeline)
@@ -77,9 +119,10 @@ class DatabaseGateway(object):
         for uns in unspent:
             uns['vout']['txid'] = uns['txid']
             uns['vout']['index'] = uns['index']
-            results.append(uns['vout'])
+            results.append(uns)
 
         return results
+
 
 
     def get_address_balance(self, address):
@@ -120,7 +163,7 @@ class DatabaseGateway(object):
             return list(self.transactions.find({"vout.addresses": address})
                         .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
-        return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$lte": start}})
+        return list(self.transactions.find({"vout.addresses": address, "blocktime": {"$gt": start}})
                     .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
 
@@ -129,7 +172,8 @@ class DatabaseGateway(object):
             return list(self.transactions.find({"vout.addresses": {"$in": addresses}})
                         .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
-        return list(self.transactions.find({"vout.addresses": {"$in": addresses}, "blocktime": {"$lte": start}})
+        return list(self.transactions.find(
+            {"vout.addresses": {"$in": addresses}, "blocktime": {"$gt": start}})
                     .sort("blocktime", pymongo.DESCENDING).limit(limit))
 
     def get_address_num_transactions(self, address):

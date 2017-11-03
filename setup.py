@@ -12,7 +12,7 @@ setup(
         'mock',
         'raven',
         'flask_cors',
-        'flask',
+        'flask>=0.10.1',
         'flask_socketio',
     ],
     setup_requires=[
