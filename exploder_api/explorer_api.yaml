@@ -741,12 +741,13 @@ definitions:
     properties:
       addresses:
         type: array
+        description: Address this output is referencing
         items:
           type: string
       start:
         type: integer
         format: timestamp
-        description: Timestamp is optional Timestamp that points to the next transactions page, null if there's no more transactions
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
 
   MultipleAddresses:
     type: object
