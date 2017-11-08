@@ -127,9 +127,9 @@ def get_address_transactions(address_hash, start=None):
         return "Start too large", 400
     if not validate_address(address_hash):
         return "Invalid address hash", 400
-    trs = db.get_address_transactions(address_hash, start, limit=51)
+    trs = db.get_address_transactions(address_hash, start, limit=50)
 
-    if len(trs) == 51:
+    if len(trs) == 50:
         last_transaction = trs[len(trs) - 1]
         return {
             "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
@@ -160,10 +160,10 @@ def post_addresses_transactions(addresses_hash):
         if start and(not isinstance(start, int)):
             return "Start too large", 400
 
-    trs = db.post_addresses_transactions(addresses_hash_no_json, start, limit=51)
+    trs = db.post_addresses_transactions(addresses_hash_no_json, start, limit=50)
 
 
-    if len(trs) == 51:
+    if len(trs) == 50:
         last_transaction = trs[len(trs) - 1]
         return {
             "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
@@ -223,13 +223,13 @@ def get_address_unspent(address_hash, start=None):
     if start and (not isinstance(start, int)):
         return "Start too large", 400
 
-    unspent = db.get_address_unspent(address_hash, start, limit=51)
+    unspent = db.get_address_unspent(address_hash, start, limit=50)
     if unspent:
         unspent_transaction_address = unspent[0]['vout']['addresses'][0]
     else:
         unspent_transaction_address = unspent
 
-    if len(unspent) == 51:
+    if len(unspent) == 50:
         last_unspent_transaction = unspent[len(unspent)-1]
         return {
             "next": "/addresses/%s/unspent?start=%s" %
@@ -252,9 +252,9 @@ def post_addresses_unspent(addresses_hash, start=None):
         return "Start too large", 400
 
     addresses_hash_no_json = addresses_hash['addresses']
-    unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=51)
+    unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=50)
 
-    if len(unspent) == 51:
+    if len(unspent) == 50:
         last_unspent_transaction = unspent[len(unspent)-1]
 
         return {
