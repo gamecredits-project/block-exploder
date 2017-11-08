@@ -53,10 +53,12 @@ class MongoDatabaseGateway(object):
 
     def flush_cache(self):
         if self.block_cache:
-            self.blocks.insert_many([BlockSerializer.to_database(block) for block in self.block_cache.values()])
+            self.blocks.insert_many(
+                [BlockSerializer.to_database(block) for block in self.block_cache.values()])
 
         if self.tr_cache:
-            self.transactions.insert_many([TransactionSerializer.to_database(tr) for tr in self.tr_cache.values()])
+            self.transactions.insert_many(
+                [TransactionSerializer.to_database(tr) for tr in self.tr_cache.values()])
 
         self.block_cache = {}
         self.tr_cache = {}

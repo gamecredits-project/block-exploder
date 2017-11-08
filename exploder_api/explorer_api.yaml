@@ -240,7 +240,7 @@ paths:
       operationId: exploder_api.api.get_address_transactions
       summary: Return an array of transactions to given address
       description: |
-        Return a list of transactions that this address appears in
+        Return a list of transactions that this address appears (in descending order by blocktime)
       parameters:
         - $ref: '#/parameters/address_hash'
         - name: start
@@ -251,7 +251,7 @@ paths:
           minimum: 0
       responses:
         200:
-          description: Return address
+          description: Returns transactions
           schema:
             $ref: '#/definitions/TransactionsPaginated'
         400:
@@ -267,7 +267,7 @@ paths:
       operationId: exploder_api.api.post_addresses_transactions
       summary: Return an array of transactions for given addresses
       description: |
-        Return a list of transactions that these addresses appear in
+          Returns 50 latest transactions that these addresses appear in (in descending order by blocktime)
       consumes:
         - application/json
       produces:
@@ -282,7 +282,7 @@ paths:
         - Addresses
       responses:
         200:
-          description: Return addresses
+          description: Returns transactions
           schema:
             $ref: '#/definitions/AddressesTransactionsPaginated'
         400:
@@ -454,13 +454,18 @@ paths:
       summary: Return an array of unspent outputs to given address and it's estimated balance
       parameters:
         - $ref: '#/parameters/address_hash'
+        - name: start
+          in: query
+          description: Timestamp of the start transaction, used for pagination
+          required: false
+          type: integer
+          minimum: 0
       responses:
         200:
-          description: Return address unspent
+          description: |
+            Returns 50 latest transactions that this address appears in (in descending order by blocktime)
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Vout'
+            $ref: '#/definitions/TransactionUnspent'
         400:
           description: Invalid address hash
         default:
@@ -483,14 +488,15 @@ paths:
           name: addresses_hash
           description: Area for addresses list
           schema:
-            $ref: '#/definitions/MultipleAddresses'
+            $ref: '#/definitions/MultipleAddressesAndStart'
       tags:
         - Addresses
       responses:
         200:
-          description: Return balance sum of all addresses
+          description: |
+            Returns 50 latest unspent transactions that these addresses appear in (in descending order by blocktime)
           schema:
-            $ref: '#/definitions/Vout'
+            $ref: '#/definitions/TransactionsUnspent'
         400:
           description: Invalid address hash
         default:
@@ -736,12 +742,13 @@ definitions:
     properties:
       addresses:
         type: array
+        description: Address this output is referencing
         items:
           type: string
       start:
         type: integer
         format: timestamp
-        description: Timestamp is optional
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
 
   MultipleAddresses:
     type: object
@@ -785,6 +792,66 @@ definitions:
         items:
           $ref: '#/definitions/Vout'
         description: List of transaction outputs
+
+  TransactionUnspent:
+    type: object
+    properties:
+      address:
+        type: string
+        description: Address hash for this request
+      next:
+        type: string
+        description: Relative url of the next page of transactions, null if there's no more transactions
+      utxo:
+        type: array
+        items:
+          $ref: '#/definitions/Utxo'
+        description: List of utxo objects
+
+  TransactionsUnspent:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: Hashes of all address for this request
+      next:
+        type: string
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
+      utxo:
+        type: array
+        items:
+          $ref: '#/definitions/Utxo'
+        description: List of unspent transactions objects (utxo for short)
+
+  Utxo:
+    type: object
+    properties:
+      asm:
+        type: string
+        description: Output Script
+      index:
+        type: integer
+        description:  Index of this output in the parent transaction
+      reqSigs:
+        type: integer
+        description: Number of signatures required to spend this transaction
+      spent:
+        type: boolean
+        description: Is this output spent
+      txid:
+        type: string
+        description: Identifier of the parent transaction
+      type:
+        type: string
+        description: Type of the output
+      value:
+        type: integer
+        description: Value of this output
+      blocktime:
+        type: integer
+        description: Timestamp of the block
 
   Vout:
     type: object
@@ -1153,4 +1220,3 @@ definitions:
         type: number
         format: float
         description: Total amount of GameCredits transfered to a given address that has not yet been spent
-

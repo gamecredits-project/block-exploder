@@ -2,13 +2,15 @@ import connexion
 import sys
 import os
 import ConfigParser
+import logging
 from flask_cors import CORS
 from gateways import DatabaseGateway
 from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, HashrateSerializer, \
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
     SearchSerializer, TransactoinCountSerializer, VolumeSerializer, \
-    BalanceSerializer
+    BalanceSerializer, UnspentTransactionSerializer, AddressSerializer
+
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid
 
@@ -125,9 +127,9 @@ def get_address_transactions(address_hash, start=None):
         return "Start too large", 400
     if not validate_address(address_hash):
         return "Invalid address hash", 400
-    trs = db.get_address_transactions(address_hash, start, limit=51)
+    trs = db.get_address_transactions(address_hash, start, limit=50)
 
-    if len(trs) == 51:
+    if len(trs) == 50:
         last_transaction = trs[len(trs) - 1]
         return {
             "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
@@ -152,16 +154,16 @@ def post_addresses_transactions(addresses_hash):
     for address_hash in addresses_hash_no_json:
         if not validate_address(address_hash):
             return "Invalid address hash", 400
-    
+
     if 'start' in addresses_hash:
         start = addresses_hash['start']
         if start and(not isinstance(start, int)):
             return "Start too large", 400
-    
-    trs = db.post_addresses_transactions(addresses_hash_no_json, start, limit=51)
+
+    trs = db.post_addresses_transactions(addresses_hash_no_json, start, limit=50)
 
 
-    if len(trs) == 51:
+    if len(trs) == 50:
         last_transaction = trs[len(trs) - 1]
         return {
             "transactions": [TransactionSerializer.to_web(tr) for tr in trs],
@@ -215,24 +217,59 @@ def post_addresses_volume(addresses_hash):
     return VolumeSerializer.to_web(addresses_hash_no_json, total_volume)
 
 
-def get_address_unspent(address_hash):
+def get_address_unspent(address_hash, start=None):
     if not validate_address(address_hash):
         return "Invalid address hash", 400
-    unspent = db.get_address_unspent(address_hash)
-    return unspent
+    if start and (not isinstance(start, int)):
+        return "Start too large", 400
+
+    unspent = db.get_address_unspent(address_hash, start, limit=50)
+    if unspent:
+        unspent_transaction_address = unspent[0]['vout']['addresses'][0]
+    else:
+        unspent_transaction_address = unspent
+
+    if len(unspent) == 50:
+        last_unspent_transaction = unspent[len(unspent)-1]
+        return {
+            "next": "/addresses/%s/unspent?start=%s" %
+                    (address_hash, last_unspent_transaction['blocktime']),
+            "address": unspent_transaction_address,
+            "utxo": [UnspentTransactionSerializer.to_web(tr) for tr in unspent]
+        }
+
+    return {
+        "address": unspent_transaction_address,
+        "utxo": [UnspentTransactionSerializer.to_web(tr) for tr in unspent],
+        "next" : None
+    }
 
 def post_addresses_unspent(addresses_hash):
 
+    start = addresses_hash['start']
     if not check_if_address_post_key_is_valid(addresses_hash):
         return "Bad post request", 400
+    if start and (not isinstance(start, int)):
+        return "Start too large", 400
 
     addresses_hash_no_json = addresses_hash['addresses']
-    for address_hash in addresses_hash_no_json:
-        if not validate_address(address_hash):
-            return "Invalid address hash", 400
 
-    unspent = db.post_addresses_unspent(addresses_hash_no_json)
-    return unspent
+    unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=50)
+
+    if len(unspent) == 50:
+        last_unspent_transaction = unspent[len(unspent)-1]
+
+        return {
+            "next": last_unspent_transaction['blocktime'],
+            "addresses": addresses_hash['addresses'],
+            "utxo": [UnspentTransactionSerializer.to_web(tr) for tr in unspent]
+        }
+
+    return {
+        "addresses": addresses_hash,
+        "utxo": [UnspentTransactionSerializer.to_web(tr) for tr in unspent],
+        "next": None
+    }
 
 
 def get_address_balance(address_hash):

@@ -253,6 +253,7 @@ class BlockchainSyncer(object):
         # Continue parsing where we left off
         if highest_known:
             self.blk_files = self.blk_files[highest_known.dat['index']:]
+            logging.error(self.blk_files)
 
         parsed = 0
         for (i, f) in enumerate(self.blk_files):

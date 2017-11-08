@@ -35,20 +35,19 @@ class TransactionSerializer(object):
             "vout": tr["vout"]
         }
 
-
-class VoutSerializer(object):
+class UnspentTransactionSerializer(object):
     @staticmethod
-    def to_web(vout):
+    def to_web(tr):
         return {
-            "index": vout["index"],
-            "reqSigs": vout["reqSigs"],
-            "value": vout["value"],
-            "txid": vout["txid"],
-            "address": vout["address"],
-            "type": vout["type"],
-            "asm": vout["asm"]
+            "asm": tr["vout"]["asm"],
+            "index": tr["index"],
+            "reqSigs": tr["vout"]["reqSigs"],
+            "spent": tr["vout"]["spent"],
+            "txid": tr["vout"]["txid"],
+            "type": tr["vout"]["type"],
+            "value": tr["vout"]["value"],
+            "blockTime": tr["blocktime"]
         }
-
 
 class HashrateSerializer(object):
     @staticmethod
@@ -134,4 +133,11 @@ class BalanceSerializer(object):
         return {
             "address": address,
             "balance": balance
+        }
+
+class AddressSerializer(object):
+    @staticmethod
+    def to_web(address):
+        return{
+            "address": address
         }
