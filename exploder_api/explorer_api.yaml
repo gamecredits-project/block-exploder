@@ -240,7 +240,7 @@ paths:
       operationId: exploder_api.api.get_address_transactions
       summary: Return an array of transactions to given address
       description: |
-        Return a list of transactions that this address appears in
+        Return a list of transactions that this address appears (in descending order by blocktime)
       parameters:
         - $ref: '#/parameters/address_hash'
         - name: start
@@ -251,7 +251,7 @@ paths:
           minimum: 0
       responses:
         200:
-          description: Return address
+          description: Returns transactions
           schema:
             $ref: '#/definitions/TransactionsPaginated'
         400:
@@ -267,7 +267,7 @@ paths:
       operationId: exploder_api.api.post_addresses_transactions
       summary: Return an array of transactions for given addresses
       description: |
-        Return a list of transactions that these addresses appear in
+          Returns 50 latest transactions that these addresses appear in (in descending order by blocktime)
       consumes:
         - application/json
       produces:
@@ -282,7 +282,7 @@ paths:
         - Addresses
       responses:
         200:
-          description: Return addresses
+          description: Returns transactions
           schema:
             $ref: '#/definitions/AddressesTransactionsPaginated'
         400:
@@ -462,9 +462,9 @@ paths:
           minimum: 0
       responses:
         200:
-          description: Return address unspent
+          description: |
+            Returns 50 latest transactions that this address appears in (in descending order by blocktime)
           schema:
-
             $ref: '#/definitions/TransactionUnspent'
         400:
           description: Invalid address hash
@@ -493,7 +493,8 @@ paths:
         - Addresses
       responses:
         200:
-          description: Return balance sum of all addresses
+          description: |
+            Returns 50 latest unspent transactions that these addresses appear in (in descending order by blocktime)
           schema:
             $ref: '#/definitions/TransactionsUnspent'
         400:
