@@ -1,5 +1,6 @@
 import os
 import ConfigParser
+import logging
 
 CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
@@ -27,11 +28,11 @@ def check_if_address_post_key_is_valid(address_hash):
     """
     Check if :address_hash: has a appropriate body
     """
-    for key in address_hash.keys():
-        if not key != 'addresses' or not key != ('addresses' and 'start'):
-            return True    
-        else:
-            return False
+    
+    if ('addresses' in address_hash and 'start' in address_hash) or 'addresses' in address_hash:
+        return True
+    else:
+        return False
 
 
 def validate_sha256_hash(hash):
