@@ -95,6 +95,25 @@ class SyncHistorySerializer(object):
             "end_block_height": end_block_height
         }
 
+class PriceHistorySerializer(object):
+    @staticmethod
+    def to_database(price_usd, price_btc, market_cap_usd, timestamp):
+        return {
+            "price_usd": price_usd,
+            "price_btc": price_btc,
+            "market_cap_usd": market_cap_usd,
+            "timestamp": timestamp
+        }
+
+class PriceStatsSerializer(object):
+    @staticmethod
+    def to_database(percentChange24hUSD, percentChange24hBTC, volume24hUSD, timestamp):
+        return {
+            "percentChange24hUSD": percentChange24hUSD,
+            "percentChange24hBTC": percentChange24hBTC,
+            "volume24hUSD": volume24hUSD,
+            "timestamp": timestamp
+        }
 
 class NetworkStatsSerializer(object):
     @staticmethod

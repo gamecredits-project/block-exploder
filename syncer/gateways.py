@@ -5,7 +5,8 @@ import time
 from factories import MongoBlockFactory, MongoTransactionFactory
 from serializers import BlockSerializer, TransactionSerializer, \
     HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer, \
-    ClientInfoSerializer, ClientSyncProgressSerializer, PriceSerializer
+    ClientInfoSerializer, ClientSyncProgressSerializer, PriceSerializer,\
+    PriceHistorySerializer, PriceStatsSerializer
 from pymongo import MongoClient
 
 
@@ -25,6 +26,8 @@ class MongoDatabaseGateway(object):
         self.network_stats = database.network_stats
         self.sync_history = database.sync_history
         self.client_info = database.client_info
+        self.price_history = database.price_history
+        self.price_stats = database.price_stats
 
         self.cache_size = config.getint('syncer', 'cache_size')
 
@@ -273,6 +276,39 @@ class MongoDatabaseGateway(object):
         self.sync_history.insert_one(
             SyncHistorySerializer.to_database(start_time, end_time, start_block_height, end_block_height)
         )
+
+    def put_price_history_info(self, price_usd, price_btc, market_cap_usd, timestamp):
+        self.price_history.insert_one(
+            PriceHistorySerializer.to_database(price_usd, price_btc, market_cap_usd, timestamp)
+        )
+
+    def get_old_btc_price(self, old_timestamp):
+        result = self.price_history.find({
+            'timestamp': {'$gte': 1512519249, '$lte': 1512619249}
+        })
+
+        all_res = []
+        for res in result:
+            all_res.append(res)
+
+        return all_res
+
+    def update_price_stats(self, percentChange24hUSD, percentChange24hBTC, volume24hUSD):
+        stats = self.price_stats.find_one()
+
+        if stats is None:
+            self.price_stats.insert_one(
+                PriceStatsSerializer.to_database(
+                    percentChange24hUSD, percentChange24hBTC,
+                    volume24hUSD, int(time.time())))
+        else:
+            self.price_stats.update_one(
+                {'_id': stats['_id']},
+                {"$set": PriceStatsSerializer.to_database(
+                    percentChange24hUSD, percentChange24hBTC,
+                    volume24hUSD, int(time.time()))
+                }
+            )
 
     #########################
     #    CLIENT METHODS     #
