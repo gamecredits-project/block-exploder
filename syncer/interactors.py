@@ -467,8 +467,8 @@ class CoinmarketcapAnalyzer(object):
         return coinmarket_info
 
     def save_price_history(self, price_usd, price_btc, market_cap_usd, timestamp):
-        if price_usd and price_btc and market_cap_usd:
-            self.db.put_price_history_info(price_usd, price_btc, market_cap_usd, timestamp)
+        if price_usd and price_btc and market_cap_usd and timestamp:
+            self.db.put_price_history_info(float(price_usd), float(price_btc), float(market_cap_usd), timestamp)
 
     # We are returning a negative number if there was a drop in price
     def btc_price_difference_percentage(self, old_price, new_price):
@@ -476,7 +476,7 @@ class CoinmarketcapAnalyzer(object):
             return 0
         try:
             getcontext().prec = 3
-            change_percent = ((new_price-old_price)/old_price)*Decimal(100)
+            change_percent = ((new_price-old_price)/old_price) * Decimal(100)
             return Decimal(change_percent)
         except ZeroDivisionError:
             return 0

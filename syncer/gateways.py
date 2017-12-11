@@ -282,9 +282,14 @@ class MongoDatabaseGateway(object):
             PriceHistorySerializer.to_database(price_usd, price_btc, market_cap_usd, timestamp)
         )
 
-    def get_old_btc_price(self, old_timestamp):
+    def get_old_btc_price(self, timestamp):
+        # old timestamp is 10 minutes older than the new one
+        # old_timestamp = timestamp - 600
+        # old_timestamp is 1h older than the new one
+        old_timestamp = timestamp - 3600
         result = self.price_history.find({
-            'timestamp': {'$gte': 1512519249, '$lte': 1512619249}
+            'timestamp': {'$gte': old_timestamp - 240, '$lte': old_timestamp + 240}
+            # 'timestamp': {'$gte': old_timestamp - 60, '$lte': old_timestamp + 60}
         })
 
         all_res = []

@@ -117,30 +117,35 @@ class FiveMinuteTask(Task):
         database = MongoDatabaseGateway(client.exploder, config)
         coinmarketcap_analyzer = CoinmarketcapAnalyzer(database, config)
 
+        # Information from CoinMarketCap
         coinmarketcap_info = coinmarketcap_analyzer.get_coinmarketcap_game_info()
-        new_price_time = int(time.time())
+
+        # Our time that we are inserting our price, this has to be int because of the time calculations
+        price_timestamp = int(time.time())
+
+        # Method that saves price info and timestamp
         coinmarketcap_analyzer.save_price_history(
             coinmarketcap_info['price_usd'],
             coinmarketcap_info['price_btc'],
             coinmarketcap_info['market_cap_usd'],
-            new_price_time
+            price_timestamp
         )
 
-        new_price = Decimal(coinmarketcap_info['price_btc'])
-        old_price_time = new_price_time - 600
+        # Gets GAME old price, 24h ago
+        old_price = coinmarketcap_analyzer.get_old_btc_price(price_timestamp)
 
-        old_price = coinmarketcap_analyzer.get_old_btc_price(old_price_time)
-        old_price = Decimal(max(old_price))
+        # If we have information about the price 24h ago
+        if old_price:
+            old_price = Decimal(max(old_price))
 
-        percent_change_24h_btc = coinmarketcap_analyzer.btc_price_difference_percentage(old_price, new_price)
+            new_price = Decimal(coinmarketcap_info['price_btc'])
+            percent_change_24h_btc = coinmarketcap_analyzer.btc_price_difference_percentage(old_price, new_price)
 
-        database.update_price_stats(
-            float(coinmarketcap_info['percent_change_24h_usd']),
-            float(percent_change_24h_btc),
-            float(coinmarketcap_info['24h_volume_usd'])
-        )
-
-        logging.info("Ovo na 5 minuta %s" % percent_change_24h_btc)
+            database.update_price_stats(
+                float(coinmarketcap_info['percent_change_24h_usd']),
+                float(percent_change_24h_btc),
+                float(coinmarketcap_info['24h_volume_usd'])
+            )
 
 app = SyncerCelery('tasks', broker='redis://localhost:6379/0')
 app.conf.result_backend = 'redis://localhost:6379/0'
@@ -150,21 +155,21 @@ app.tasks.register(HalfMinuteTask)
 app.tasks.register(FiveMinuteTask)
 
 app.conf.beat_schedule = {
-    # 'sync-every-10-seconds': {
-    #     'task': 'syncer.tasks.SyncTask',
-    #     'schedule': 10.0,
-    # },
-    # 'hashrate-once-a-day': {
-    #     'task': 'syncer.tasks.DailyTask',
-    #     'schedule': crontab(minute=0, hour=12),  # It's high noon
-    # },
-    # 'every-30-seconds': {
-    #     'task': 'syncer.tasks.HalfMinuteTask',
-    #     'schedule': 30.0,
-    # },
+    'sync-every-10-seconds': {
+        'task': 'syncer.tasks.SyncTask',
+        'schedule': 10.0,
+    },
+    'hashrate-once-a-day': {
+        'task': 'syncer.tasks.DailyTask',
+        'schedule': crontab(minute=0, hour=12),  # It's high noon
+    },
+    'every-30-seconds': {
+        'task': 'syncer.tasks.HalfMinuteTask',
+        'schedule': 30.0,
+    },
     'info-every-5-minutes': {
         'task': 'syncer.tasks.FiveMinuteTask',
-        'schedule': crontab(minute='*/2'),
+        'schedule': crontab(minute='*/5'),
     },
 }
 
