@@ -257,6 +257,10 @@ def post_addresses_unspent(addresses_hash):
         if start and (not isinstance(start, int)):
             return "Start too large", 400
 
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
     unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=50)
 
     if len(unspent) == 50:

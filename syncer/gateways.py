@@ -284,12 +284,16 @@ class MongoDatabaseGateway(object):
 
     def get_old_btc_price(self, timestamp):
         # old timestamp is 10 minutes older than the new one
-        # old_timestamp = timestamp - 600
-        # old_timestamp is 1h older than the new one
-        old_timestamp = timestamp - 3600
+        one_day = 86400
+        # This is used for development purposes beacuse we don't want to wait a whole day to test this
+        one_hour = 3600
+        # We use these three minutes to create a time lapse where we want to look for old prices
+        # Three minutes are used because we insert new price every 5 minutes
+        three_minutes = 240
+        
+        old_timestamp = timestamp - one_day
         result = self.price_history.find({
-            'timestamp': {'$gte': old_timestamp - 240, '$lte': old_timestamp + 240}
-            # 'timestamp': {'$gte': old_timestamp - 60, '$lte': old_timestamp + 60}
+            'timestamp': {'$gte': old_timestamp - three_minutes, '$lte': old_timestamp + three_minutes}
         })
 
         all_res = []
@@ -300,20 +304,20 @@ class MongoDatabaseGateway(object):
 
     def update_price_stats(self, percentChange24hUSD, percentChange24hBTC, volume24hUSD):
         stats = self.price_stats.find_one()
-
+        timestamp = int(time.time())
+        
         if stats is None:
             self.price_stats.insert_one(
                 PriceStatsSerializer.to_database(
                     percentChange24hUSD, percentChange24hBTC,
-                    volume24hUSD, int(time.time())))
+                    volume24hUSD, timestamp))
         else:
             self.price_stats.update_one(
                 {'_id': stats['_id']},
                 {"$set": PriceStatsSerializer.to_database(
                     percentChange24hUSD, percentChange24hBTC,
-                    volume24hUSD, int(time.time()))
-                }
-            )
+                        volume24hUSD, timestamp)}
+                )
 
     #########################
     #    CLIENT METHODS     #
