@@ -484,7 +484,7 @@ class CoinmarketcapAnalyzer(object):
             getcontext().prec = 3
             change_percent = ((new_price-old_price)/old_price) * Decimal(100)
             return Decimal(change_percent)
-        except ZeroDivisionError:
+        except ZeroDivisionError, InvalidOperation:
             return 0
 
     # We are getting old price by time so we can calcucate percentual difference

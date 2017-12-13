@@ -5,6 +5,7 @@ class VoutSerializer(object):
             "value": vout.value,
             "asm": vout.asm,
             "addresses": vout.addresses,
+            "index": vout.index,
             "type": vout.type,
             "reqSigs": vout.reqSigs,
             "spent": vout.spent

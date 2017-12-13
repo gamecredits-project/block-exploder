@@ -23,7 +23,6 @@ class BlocksTestCase(unittest.TestCase):
             "offset": 3
         }
         result = requests.get(self.url + "blocks/latest", params)
-        print result
         self.assertEqual(result.status_code, 200)
         self.assertTrue(result.text)
 
@@ -390,9 +389,6 @@ class AddressesTestCase(unittest.TestCase):
         self.assertEqual(result.status_code, 400)
         self.assertTrue(result.text)
 
-        # Response in json format
-        # data = json.loads(result.text)
-
     def test_post_invalid_key_data_for_addresses_unspent(self):
         params = {
         "ThisIsInvalidKey": [
@@ -670,7 +666,7 @@ class NetworkTestCase(unittest.TestCase):
         self.assertTrue(result.text)
 
         data = json.loads(result.text)
-        since = data[-1]["timestamp"]
+        since = int(data[-1]["timestamp"])
         params = {
             "since": since
         }
@@ -687,7 +683,7 @@ class NetworkTestCase(unittest.TestCase):
         self.assertTrue(result.text)
 
         data = json.loads(result.text)
-        until = data[0]["timestamp"]
+        until = int(data[0]["timestamp"])
         params = {
             "until": until
         }
@@ -704,8 +700,8 @@ class NetworkTestCase(unittest.TestCase):
         self.assertTrue(result.text)
 
         data = json.loads(result.text)
-        until = data[0]["timestamp"]
-        since = data[-1]["timestamp"]
+        until = int(data[0]["timestamp"])
+        since = int(data[-1]["timestamp"])
         params = {
             "until": until,
             "since": since,
