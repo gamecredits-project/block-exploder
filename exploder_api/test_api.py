@@ -601,13 +601,13 @@ class NetworkTestCase(unittest.TestCase):
 
     def test_get_network_hashrates(self):
         params = {
-            "limit": 5
+            "limit": 3
         }
         result = requests.get(self.url + "network/hashrates", params)
         self.assertEquals(result.status_code, 200)
         self.assertTrue(result.text)
         data = json.loads(result.text)
-        self.assertEquals(len(data), 5)
+        self.assertEquals(len(data), 3)
 
     def test_get_network_info(self):
         result = requests.get(self.url + "network/info")
