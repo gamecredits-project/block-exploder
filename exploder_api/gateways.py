@@ -107,7 +107,7 @@ class DatabaseGateway(object):
                 uns['vout']['index'] = uns['index']
                 results.append(uns)
 
-            return results
+            return results    
 
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
@@ -296,38 +296,40 @@ class DatabaseGateway(object):
     def get_latest_price_history(self, since, until, limit, offset):
         # Check if there are any parameters, if not get everything from history
         if not since and not until and not limit:
-            return list(self.price_history.find().sort("timestamp", pymongo.DESCENDING).skip(offset))
-        
+            return list(self.price_history.find()
+                        .sort("timestamp", pymongo.DESCENDING).skip(offset))
+
         # Check if there are since and until
         if not since and not until:
-            return list(self.price_history.find().sort("timestamp", pymongo.DESCENDING).skip(offset).limit(limit))
-        
+            return list(self.price_history.find()
+                        .sort("timestamp", pymongo.DESCENDING).skip(offset).limit(limit))
+
         if not until:
             if not limit:
                 return list(self.price_history.find({"timestamp": {"$gte": since}})
-                    .sort("timestamp", pymongo.DESCENDING).skip(offset))
+                            .sort("timestamp", pymongo.DESCENDING).skip(offset))
 
             return list(self.price_history.find({"timestamp": {"$gte": since}})
-                    .sort("timestamp", pymongo.DESCENDING).skip(offset).limit(limit))
+                        .sort("timestamp", pymongo.DESCENDING).skip(offset).limit(limit))
 
         if not since:
             if not limit:
                 return list(self.price_history.find({"timestamp": {"$lte": until}})
-                    .sort("timestamp", pymongo.DESCENDING).skip(offset))
-                    
+                            .sort("timestamp", pymongo.DESCENDING).skip(offset))
+
             return list(self.price_history.find({"timestamp": {"$lte": until}})
-                    .sort("timestamp", pymongo.DESCENDING).skip(offset).limit(limit))
-        
+                        .sort("timestamp", pymongo.DESCENDING).skip(offset).limit(limit))
+
         # If we have all parameters
         return list(self.price_history.find({"timestamp": {"$gte": since, "$lte": until}})
                     .sort("timestamp", pymongo.DESCENDING).skip(offset).limit(limit))
-        
+
     def get_price_stats(self):
         price_stats = self.price_stats.find_one()
         if price_stats:
             return price_stats
         raise KeyError("Price statistics not found")
-    
+
     ############
     #  CLIENT  #
     ############

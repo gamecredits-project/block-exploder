@@ -278,7 +278,7 @@ class AddressesTestCase(unittest.TestCase):
 
         headers = {"Content-type": "application/json", "Accept": "application/json"}
 
-        result = requests.post(self.url + "addresses", data= json.dumps(params), headers=headers)
+        result = requests.post(self.url + "addresses", data=json.dumps(params), headers=headers)
         self.assertEqual(result.status_code, 400)
         self.assertTrue(result.text)
 
@@ -638,11 +638,12 @@ class NetworkTestCase(unittest.TestCase):
         result = requests.get(self.url + "network/price-history", params)
         self.assertEqual(result.status_code, 200)
         self.assertTrue(result.text)
-        
+
         data = json.loads(result.text)
+
         self.assertTrue(data)
         self.assertEquals(len(data), 5)
-    
+
     def test_get_price_history_limit_offset(self):
         params = {
             "limit": 5,
@@ -651,11 +652,11 @@ class NetworkTestCase(unittest.TestCase):
         result = requests.get(self.url + "network/price-history", params)
         self.assertEqual(result.status_code, 200)
         self.assertTrue(result.text)
-        
+
         data = json.loads(result.text)
         self.assertTrue(data)
         self.assertEquals(len(data), 5)
-    
+
     def test_get_price_history_bad_limit(self):
         params = {
             "limit": 100000000000000
@@ -667,7 +668,7 @@ class NetworkTestCase(unittest.TestCase):
         result = requests.get(self.url + "network/price-history")
         self.assertEqual(result.status_code, 200)
         self.assertTrue(result.text)
-        
+
         data = json.loads(result.text)
         since = data[-1]["timestamp"]
         params = {
@@ -684,7 +685,7 @@ class NetworkTestCase(unittest.TestCase):
         result = requests.get(self.url + "network/price-history")
         self.assertEqual(result.status_code, 200)
         self.assertTrue(result.text)
-        
+
         data = json.loads(result.text)
         until = data[0]["timestamp"]
         params = {
@@ -701,7 +702,7 @@ class NetworkTestCase(unittest.TestCase):
         result = requests.get(self.url + "network/price-history")
         self.assertEqual(result.status_code, 200)
         self.assertTrue(result.text)
-        
+
         data = json.loads(result.text)
         until = data[0]["timestamp"]
         since = data[-1]["timestamp"]
@@ -723,7 +724,7 @@ class NetworkTestCase(unittest.TestCase):
         }
         result = requests.get(self.url + "network/price-history", params)
         self.assertEqual(result.status_code, 400)
-        
+
     def test_get_price_stats(self):
         result = requests.get(self.url + "network/price-stats")
         self.assertEquals(result.status_code, 200)

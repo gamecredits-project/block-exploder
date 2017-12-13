@@ -257,6 +257,10 @@ def post_addresses_unspent(addresses_hash):
         if start and (not isinstance(start, int)):
             return "Start too large", 400
 
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
     unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=50)
 
     if len(unspent) == 50:
@@ -347,11 +351,11 @@ def get_price_history(limit,offset, since=None, until=None):
         return "To timestamp is too large", 400
 
     price_history = db.get_latest_price_history(since, until, limit, offset)
-    
+
     return [PriceHistorySerializer.to_web(history) for history in price_history]
 
 def get_price_stats():
-    try: 
+    try:
         return PriceStatsSerializer.to_web(db.get_price_stats())
     except KeyError:
         return "Price statistics not found", 404
