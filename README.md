@@ -12,5 +12,5 @@ How to run the development environment:
 
 The Swagger UI should be available on [http://localhost:8080/api/ui/](http://127.0.0.1:8080/api/ui/)
 
-##FAQ
+## FAQ
 To run test coverage: `test-coverage`
