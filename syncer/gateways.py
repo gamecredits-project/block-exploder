@@ -290,7 +290,7 @@ class MongoDatabaseGateway(object):
         # We use these three minutes to create a time lapse where we want to look for old prices
         # Three minutes are used because we insert new price every 5 minutes
         three_minutes = 240
-        
+
         old_timestamp = timestamp - one_day
         result = self.price_history.find({
             'timestamp': {'$gte': old_timestamp - three_minutes, '$lte': old_timestamp + three_minutes}
@@ -305,7 +305,7 @@ class MongoDatabaseGateway(object):
     def update_price_stats(self, percentChange24hUSD, percentChange24hBTC, volume24hUSD):
         stats = self.price_stats.find_one()
         timestamp = int(time.time())
-        
+
         if stats is None:
             self.price_stats.insert_one(
                 PriceStatsSerializer.to_database(
