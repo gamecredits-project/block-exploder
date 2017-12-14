@@ -253,14 +253,8 @@ class BlockchainSyncer(object):
             limit = limit_calc
 
         # Continue parsing where we left off
-        if highest_known and highest_known.dat != None:
+        if highest_known:
             self.blk_files = self.blk_files[highest_known.dat['index']:]
-        else:
-            # If syncing is stopped inbetween 99% and 100%, highest_known.dat
-            # will return null next time we start the sync because sync_rpc
-            # doesn't insert .dat data in Mongo, easiest workaround is that we let
-            # the sync goes via rpc, it will be slower but it's the easiest
-            self.sync_rpc()
 
         parsed = 0
         for (i, f) in enumerate(self.blk_files):
@@ -276,6 +270,7 @@ class BlockchainSyncer(object):
                     block = BlockFactory.from_stream(stream)
                     self.blockchain.insert_block(block)
                     parsed += 1
+                    logging.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA %s" % block)
 
                     if block.height % 1000 == 0:
                         self._print_progress()
