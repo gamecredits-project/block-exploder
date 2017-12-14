@@ -54,14 +54,14 @@ class MongoDatabaseGateway(object):
         self.transactions.create_index([("vout.addresses", pymongo.DESCENDING)])
         self.transactions.create_index([("vin.prev_txid", pymongo.DESCENDING)])
 
-    def flush_cache(self):
+    def flush_cache(self, is_rpc=None):
         if self.block_cache:
             self.blocks.insert_many(
                 [BlockSerializer.to_database(block) for block in self.block_cache.values()])
 
         if self.tr_cache:
             self.transactions.insert_many(
-                [TransactionSerializer.to_database(tr) for tr in self.tr_cache.values()])
+                [TransactionSerializer.to_database(tr, is_rpc) for tr in self.tr_cache.values()])
 
         self.block_cache = {}
         self.tr_cache = {}
