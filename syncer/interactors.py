@@ -270,7 +270,6 @@ class BlockchainSyncer(object):
                     block = BlockFactory.from_stream(stream)
                     self.blockchain.insert_block(block)
                     parsed += 1
-                    logging.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA %s" % block)
 
                     if block.height % 1000 == 0:
                         self._print_progress()

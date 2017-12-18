@@ -65,11 +65,10 @@ class TransactionSerializer(object):
                 # n is index from GC getrawtransaction method
                 n = is_rpc[0]['vout'][0]['n']
                 formatted['vout'].append(VoutSerializer.to_database_rpc(v, n))
-                logging.info("=======OVO JE INDEX TJ. N RAW TRANSAKCIJE===== %s" % is_rpc[0]['vout'][0]['n'])
 
             return formatted
 
-
+        
 class BlockSerializer(object):
     @staticmethod
     def to_database(block):

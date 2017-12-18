@@ -2,7 +2,6 @@ import connexion
 import sys
 import os
 import ConfigParser
-import logging
 from flask_cors import CORS
 from gateways import DatabaseGateway
 from pymongo import MongoClient
@@ -318,7 +317,7 @@ def get_network_stats():
     stats = db.get_network_stats()
     block_count = db.get_block_count(config.get('syncer', 'main_chain'))
     tr_count = db.get_transaction_count()
-    max_coin_supply = 123
+    max_coin_supply = 84000000
     return NetworkStatsSerializer.to_web(stats, hash_rate[0], block_count, tr_count, max_coin_supply)
 
 def get_bootstrap_link():
