@@ -105,6 +105,8 @@ class PriceStatsSerializer(object):
     @staticmethod
     def to_web(price_stats):
         return {
+            "priceUSD": price_stats["priceUSD"],
+            "priceBTC": price_stats["priceBTC"],
             "percentChange24hUSD": price_stats["percentChange24hUSD"],
             "percentChange24hBTC": price_stats["percentChange24hBTC"],
             "volume24hUSD": price_stats["volume24hUSD"],

@@ -17,8 +17,9 @@ def get_latest_transactions(url):
 
 def get_latest_price_stats():
     res = req.get(conf.LATEST_PRICE_STATS_URL)
-    price_stats = res.json()
+    # If there are no price statistics, api sends 404
+    # We are catching only 'ok' requests
+    if res.status_code == 200:
+        price_stats = res.json()
 
-    return price_stats
-
-# get_latest_price_stats()
+        return price_stats

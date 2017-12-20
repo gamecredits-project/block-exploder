@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Flask-SocketIO Test</title>
+    <title>BlockExplorer Development WebSocket</title>
 </head>
 <body>
   <div class="container">
@@ -41,6 +41,8 @@
 <table class="table">
   <thead>
     <tr id="priceID" style="top: 50px;">
+      <th>Price in USD</th>
+      <th>Price in BTC</th>
       <th>Percent change for USD</th>
       <th>Percent change for BTC</th>
       <th>Volume 24h</th>
@@ -127,8 +129,10 @@
 
               $('#priceStatsTbody').prepend(
                 '<tr>' +
-                '<td>' + msg.latest_price_stats_data.percentChange24hBTC + '%' + '</td>'+
-                '<td>' + msg.latest_price_stats_data.percentChange24hUSD + '%'+'</td>'+
+                '<td>' + msg.latest_price_stats_data.priceUSD + '</td>'+
+                '<td>' + msg.latest_price_stats_data.priceBTC + '</td>'+
+                '<td>' + msg.latest_price_stats_data.percentChange24hUSD + '%' + '</td>'+
+                '<td>' + msg.latest_price_stats_data.percentChange24hBTC + '%'+'</td>'+
                 '<td>' + msg.latest_price_stats_data.volume24hUSD + '</td>'+
                 '<td>' + msg.latest_price_stats_data.timestamp + '</td>'+
                 '</tr>'

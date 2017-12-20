@@ -133,19 +133,28 @@ class FiveMinuteTask(Task):
 
         # Gets GAME old price, 24h ago
         old_price = coinmarketcap_analyzer.get_old_btc_price(price_timestamp)
-
         # If we have information about the price 24h ago
         if old_price:
-            old_price = Decimal(max(old_price))
+            try:
+                old_price = Decimal(max(old_price))
+                # Round old_price number by 8 decimals
+                old_price = round(Decimal(old_price), 8)
 
-            new_price = Decimal(coinmarketcap_info['price_btc'])
-            percent_change_24h_btc = coinmarketcap_analyzer.btc_price_difference_percentage(old_price, new_price)
+                new_price = Decimal(coinmarketcap_info['price_btc'])
+                # Round new_price number by 8 decimals
+                new_price = round(Decimal(new_price), 8)
+                
+                percent_change_24h_btc = coinmarketcap_analyzer.btc_price_difference_percentage(old_price, new_price)
 
-            database.update_price_stats(
-                float(coinmarketcap_info['percent_change_24h_usd']),
-                float(percent_change_24h_btc),
-                float(coinmarketcap_info['24h_volume_usd'])
-            )
+                database.update_price_stats(
+                    float(coinmarketcap_info['price_usd']),
+                    float(coinmarketcap_info['price_btc']),
+                    float(coinmarketcap_info['percent_change_24h_usd']),
+                    float(percent_change_24h_btc),
+                    float(coinmarketcap_info['24h_volume_usd'])
+                )
+            except InvalidOperation as e:
+                logging.error('FIVE_MINUTE_TASK_FAILED ERROR: %s' %e)
 
 app = SyncerCelery('tasks', broker='redis://localhost:6379/0')
 app.conf.result_backend = 'redis://localhost:6379/0'
