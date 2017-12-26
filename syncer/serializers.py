@@ -14,12 +14,11 @@ class VoutSerializer(object):
         }
 
     @staticmethod
-    def to_database_rpc(vout_rpc, index):
+    def to_database_rpc(vout_rpc):
         return {
             "value": vout_rpc.value,
             "asm": vout_rpc.asm,
             "addresses": vout_rpc.addresses,
-            "index": index,
             "type": vout_rpc.type,
             "reqSigs": vout_rpc.reqSigs,
             "spent": vout_rpc.spent
@@ -62,9 +61,8 @@ class TransactionSerializer(object):
             return formatted
         else:
             for v in tr.vout:
-                # n is index from GC getrawtransaction method
-                n = is_rpc[0]['vout'][0]['n']
-                formatted['vout'].append(VoutSerializer.to_database_rpc(v, n))
+                formatted['vout'].append(VoutSerializer.to_database_rpc(v))
+
 
             return formatted
 
