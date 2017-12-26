@@ -1,3 +1,5 @@
+import logging
+
 class VoutSerializer(object):
     @staticmethod
     def to_database(vout):
@@ -5,11 +7,22 @@ class VoutSerializer(object):
             "value": vout.value,
             "asm": vout.asm,
             "addresses": vout.addresses,
+            "index": vout.index,
             "type": vout.type,
             "reqSigs": vout.reqSigs,
             "spent": vout.spent
         }
 
+    @staticmethod
+    def to_database_rpc(vout_rpc):
+        return {
+            "value": vout_rpc.value,
+            "asm": vout_rpc.asm,
+            "addresses": vout_rpc.addresses,
+            "type": vout_rpc.type,
+            "reqSigs": vout_rpc.reqSigs,
+            "spent": vout_rpc.spent
+        }
 
 class VinSerializer(object):
     @staticmethod
@@ -25,7 +38,7 @@ class VinSerializer(object):
 
 class TransactionSerializer(object):
     @staticmethod
-    def to_database(tr):
+    def to_database(tr, is_rpc=None):
         formatted = {
             "version": tr.version,
             "locktime": tr.locktime,
@@ -37,13 +50,20 @@ class TransactionSerializer(object):
             "blocktime": tr.blocktime
         }
 
+
         for v in tr.vin:
             formatted['vin'].append(VinSerializer.to_database(v))
 
-        for v in tr.vout:
-            formatted['vout'].append(VoutSerializer.to_database(v))
+        if not is_rpc:
+            for v in tr.vout:
+                formatted['vout'].append(VoutSerializer.to_database(v))
 
-        return formatted
+            return formatted
+        else:
+            for v in tr.vout:
+                formatted['vout'].append(VoutSerializer.to_database_rpc(v))
+
+            return formatted
 
 
 class BlockSerializer(object):
@@ -95,6 +115,25 @@ class SyncHistorySerializer(object):
             "end_block_height": end_block_height
         }
 
+class PriceHistorySerializer(object):
+    @staticmethod
+    def to_database(price_usd, price_btc, market_cap_usd, timestamp):
+        return {
+            "price_usd": price_usd,
+            "price_btc": price_btc,
+            "market_cap_usd": market_cap_usd,
+            "timestamp": timestamp
+        }
+
+class PriceStatsSerializer(object):
+    @staticmethod
+    def to_database(percentChange24hUSD, percentChange24hBTC, volume24hUSD, timestamp):
+        return {
+            "percentChange24hUSD": percentChange24hUSD,
+            "percentChange24hBTC": percentChange24hBTC,
+            "volume24hUSD": volume24hUSD,
+            "timestamp": timestamp
+        }
 
 class NetworkStatsSerializer(object):
     @staticmethod

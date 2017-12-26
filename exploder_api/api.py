@@ -9,7 +9,8 @@ from pymongo import MongoClient
 from serializers import TransactionSerializer, BlockSerializer, HashrateSerializer, \
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
     SearchSerializer, TransactoinCountSerializer, VolumeSerializer, \
-    BalanceSerializer, UnspentTransactionSerializer, AddressSerializer
+    BalanceSerializer, UnspentTransactionSerializer, AddressSerializer, PriceHistorySerializer, \
+    PriceStatsSerializer
 
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid
@@ -256,6 +257,10 @@ def post_addresses_unspent(addresses_hash):
         if start and (not isinstance(start, int)):
             return "Start too large", 400
 
+    for address_hash in addresses_hash_no_json:
+        if not validate_address(address_hash):
+            return "Invalid address hash", 400
+
     unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=50)
 
     if len(unspent) == 50:
@@ -313,8 +318,8 @@ def get_network_stats():
     stats = db.get_network_stats()
     block_count = db.get_block_count(config.get('syncer', 'main_chain'))
     tr_count = db.get_transaction_count()
-    return NetworkStatsSerializer.to_web(stats, hash_rate[0], block_count, tr_count)
-
+    max_coin_supply = 123
+    return NetworkStatsSerializer.to_web(stats, hash_rate[0], block_count, tr_count, max_coin_supply)
 
 def get_bootstrap_link():
     bootstrap_dir = config.get('syncer', 'bootstrap_dir')
@@ -338,6 +343,22 @@ def get_bootstrap_link():
 def get_usd_price():
     stats = db.get_network_stats()
     return PriceSerializer.to_web(stats["usd_price"])
+
+def get_price_history(limit,offset, since=None, until=None):
+    if (since and (not isinstance(since, int))):
+        return "From timestamp too large", 400
+    elif (until and (not isinstance(until, int))):
+        return "To timestamp is too large", 400
+
+    price_history = db.get_latest_price_history(since, until, limit, offset)
+
+    return [PriceHistorySerializer.to_web(history) for history in price_history]
+
+def get_price_stats():
+    try:
+        return PriceStatsSerializer.to_web(db.get_price_stats())
+    except KeyError:
+        return "Price statistics not found", 404
 
 
 ##############

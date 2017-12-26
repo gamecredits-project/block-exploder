@@ -6,6 +6,7 @@ import itertools
 import logging
 import requests
 import json
+from decimal import *
 from gamecredits.factories import BlockFactory
 from gamecredits.constants import SUBSIDY_HALVING_INTERVAL
 from bitcoinrpc.authproxy import JSONRPCException
@@ -220,6 +221,7 @@ class BlockchainSyncer(object):
 
         self._update_sync_progress()
         logging.info("[SYNC_AUTO] Starting. Current progress: %s%%" % self.sync_progress)
+
         if self.sync_progress < self.stream_sync_limit:
             self.sync_stream(sync_limit=limit)
 
@@ -253,7 +255,6 @@ class BlockchainSyncer(object):
         # Continue parsing where we left off
         if highest_known:
             self.blk_files = self.blk_files[highest_known.dat['index']:]
-            logging.error(self.blk_files)
 
         parsed = 0
         for (i, f) in enumerate(self.blk_files):
@@ -314,7 +315,7 @@ class BlockchainSyncer(object):
             block = BlockFactory.from_rpc(rpc_block, rpc_block_transactions)
             self.blockchain.insert_block(block)
 
-        self.db.flush_cache()
+        self.db.flush_cache(True)
         end_time = datetime.datetime.now()
         diff_time = end_time - start_time
         logging.info("[SYNC_RPC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
@@ -435,3 +436,57 @@ class BlockchainAnalyzer(object):
     def save_game_price(self, price):
         if price:
             self.db.update_game_price(price)
+
+
+
+class CoinmarketcapAnalyzer(object):
+    def __init__(self, database, config):
+
+        # DB is MongoDatabaseGateway instance
+        self.db = database
+        self.config = config
+
+    def get_coinmarketcap_game_info(self):
+        """
+        Return all information needed about GameCredits from coinmarketcap
+        in dictionary
+        """
+        response = requests.get(self.config.get('syncer', 'game_price_url'))
+        json_data = json.loads(response.text)[0]
+
+        coinmarket_info = {}
+        if json_data:
+            coinmarket_info['price_usd'] = json_data['price_usd']
+            coinmarket_info['price_btc'] = json_data['price_btc']
+            coinmarket_info['24h_volume_usd'] = json_data['24h_volume_usd']
+            coinmarket_info['market_cap_usd'] = json_data['market_cap_usd']
+            coinmarket_info['total_supply'] = json_data['total_supply']
+            coinmarket_info['percent_change_24h_usd'] = json_data['percent_change_24h']
+
+        # Retuns tuple
+        return coinmarket_info
+
+    def save_price_history(self, price_usd, price_btc, market_cap_usd, timestamp):
+        if price_usd and price_btc and market_cap_usd and timestamp:
+            self.db.put_price_history_info(float(price_usd), float(price_btc), float(market_cap_usd), timestamp)
+
+    # We are returning a negative number if there was a drop in price
+    def btc_price_difference_percentage(self, old_price, new_price):
+        if new_price == old_price:
+            return 0
+        try:
+            getcontext().prec = 3
+            change_percent = ((new_price-old_price)/old_price) * Decimal(100)
+            return Decimal(change_percent)
+        except ZeroDivisionError, InvalidOperation:
+            return 0
+
+    # We are getting old price by time so we can calcucate percentual difference
+    # in 24 hours
+    def get_old_btc_price(self, timestamp):
+        result = self.db.get_old_btc_price(timestamp)
+        old_prices_in_btc = []
+        for price in result:
+            old_prices_in_btc.append(price['price_btc'])
+
+        return old_prices_in_btc
