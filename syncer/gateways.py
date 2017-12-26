@@ -283,10 +283,13 @@ class MongoDatabaseGateway(object):
         )
 
     def get_old_btc_price(self, timestamp):
-        # old timestamp is 10 minutes older than the new one
+        # This should be used in staging or production
         one_day = 86400
+
         # This is used for development purposes beacuse we don't want to wait a whole day to test this
         one_hour = 3600
+        two_minutes = 120
+        
         # We use these three minutes to create a time lapse where we want to look for old prices
         # Three minutes are used because we insert new price every 5 minutes
         three_minutes = 240
@@ -302,19 +305,19 @@ class MongoDatabaseGateway(object):
 
         return all_res
 
-    def update_price_stats(self, percentChange24hUSD, percentChange24hBTC, volume24hUSD):
+    def update_price_stats(self, priceUSD, priceBTC, percentChange24hUSD, percentChange24hBTC, volume24hUSD):
         stats = self.price_stats.find_one()
         timestamp = int(time.time())
 
         if stats is None:
             self.price_stats.insert_one(
-                PriceStatsSerializer.to_database(
+                PriceStatsSerializer.to_database(priceUSD, priceBTC,
                     percentChange24hUSD, percentChange24hBTC,
                     volume24hUSD, timestamp))
         else:
             self.price_stats.update_one(
                 {'_id': stats['_id']},
-                {"$set": PriceStatsSerializer.to_database(
+                {"$set": PriceStatsSerializer.to_database(priceUSD, priceBTC,
                     percentChange24hUSD, percentChange24hBTC,
                         volume24hUSD, timestamp)}
                 )

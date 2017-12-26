@@ -63,9 +63,10 @@ class TransactionSerializer(object):
             for v in tr.vout:
                 formatted['vout'].append(VoutSerializer.to_database_rpc(v))
 
+
             return formatted
 
-
+        
 class BlockSerializer(object):
     @staticmethod
     def to_database(block):
@@ -127,8 +128,10 @@ class PriceHistorySerializer(object):
 
 class PriceStatsSerializer(object):
     @staticmethod
-    def to_database(percentChange24hUSD, percentChange24hBTC, volume24hUSD, timestamp):
+    def to_database(priceUSD, priceBTC, percentChange24hUSD, percentChange24hBTC, volume24hUSD, timestamp):
         return {
+            "priceUSD": priceUSD,
+            "priceBTC": priceBTC,
             "percentChange24hUSD": percentChange24hUSD,
             "percentChange24hBTC": percentChange24hBTC,
             "volume24hUSD": volume24hUSD,

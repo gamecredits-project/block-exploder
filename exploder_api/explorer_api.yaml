@@ -1137,6 +1137,16 @@ definitions:
   PriceStats:
     type: object
     properties:
+      priceUSD:
+        type: number
+        format: decimal
+        description: |
+          Current price of GAME in USD
+      priceBTC:
+        type: number
+        format: decimal
+        description: |
+          Current price of GAME in BTC
       percentChange24hUSD:
         type: number
         format: float

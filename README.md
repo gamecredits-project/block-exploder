@@ -11,6 +11,7 @@ How to run the development environment:
 7. `ansible-playbook /exploder/env/configure-vagrant.yml` - Run the configuration
 
 The Swagger UI should be available on [http://localhost:8080/api/ui/](http://127.0.0.1:8080/api/ui/)
+The WebSocket UI should be available on [http://localhost:8080/socket.io] 
 
 ## FAQ
 To run test coverage: `test-coverage`

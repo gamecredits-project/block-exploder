@@ -33,7 +33,6 @@ def tx_connected_test():
 def block_mock_data_with_difference_test():
     # difference_between_blocks = int(check_difference_between_blocks(first_block_from_buffer(mock_block_height()) - iv.CURRENT_BLOCK))
     # difference_between_blocks = first_block_from_buffer(mock_block_height()) - iv.CURRENT_BLOCK
-    # print (check_difference_between_blocks_true())
     difference_between_blocks = int(check_difference_between_blocks_true())
     if difference_between_blocks > 0:
         testing_difference_between_blocks(difference_between_blocks)
@@ -51,10 +50,8 @@ def check_difference_between_blocks_false():
 def block_mock_data_no_difference_test():
     # difference_between_blocks = 0
     difference_between_blocks = int(check_difference_between_blocks_false()) - 1
-    # print(int(check_difference_between_blocks_false()) - 1)
     # difference_between_blocks = int(check_difference_between_blocks(0))
     if difference_between_blocks > 0:
-        print('You are not welcome here!')
         testing_difference_between_blocks(difference_between_blocks)
     socket_wait()
 
@@ -64,17 +61,12 @@ def testing_difference_between_blocks(difference_between_blocks):
     while difference_between_blocks > 0:
         # iv.NUMBER_OF_TX_IN_BLOCK += len(
         #     block_buffer(mock_block_height())[-1 + difference_between_blocks]['tx'])
-        # print mock_block_height()
-        # print 'Ovo je unutar one metode'
         json_block_data = block_buffer(mock_block_height())[
             -1 + difference_between_blocks]
-        # print 'Ovo je unutar metode'
-        # print(json_block_data)
         # block_mock_data = Mock(return_value=json_block_data)
         # block_mock_data(json_block_data)
-        # print block_mock_data()
+
         # block_mock_data.return_value
-        # print (block_mock_data.return_value)
         emit('block_mock_data', json_block_data, namespace='/block')
 
         difference_between_blocks -= 1
@@ -116,7 +108,7 @@ class TestSocketIO(unittest.TestCase):
         client.emit('block_connected', namespace='/block')
         received = client.get_received('/block')
         expected_data = ['Block Socket Connected Successfully!']
-        # print received
+
         self.assertEqual(received[0]['args'], expected_data)
 
     def test_tx_connection(self):
@@ -125,7 +117,7 @@ class TestSocketIO(unittest.TestCase):
         client.emit('tx_connected', namespace='/tx')
         received = client.get_received('/tx')
         expected_data = ['Tx Socket Connected Successfully!']
-        # print received
+
         self.assertEqual(received[0]['args'], expected_data)
 
     def test_block_difference(self):
@@ -158,7 +150,6 @@ class TestSocketIO(unittest.TestCase):
         client.get_received('/block')
         client.emit('background_mock_block_sender_with_no_difference', namespace='/block')
         actual_result = client.get_received('/block')
-        # print(actual_result)
 
         # Here we have to instance this mock method
         # mock_check_difference_between_blocks_false()
@@ -168,7 +159,6 @@ class TestSocketIO(unittest.TestCase):
         # self.assertTrue(mock_check_difference_between_blocks_false.called)
         # self.assertFalse(mock_check_difference_between_blocks_true.called)
         expected_result = []
-        # print actual_result
 
         # self.assertFalse(mock.called)
         self.assertEqual(actual_result, expected_result)

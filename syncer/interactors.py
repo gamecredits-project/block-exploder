@@ -472,12 +472,15 @@ class CoinmarketcapAnalyzer(object):
 
     # We are returning a negative number if there was a drop in price
     def btc_price_difference_percentage(self, old_price, new_price):
-        if new_price == old_price:
-            return 0
         try:
-            getcontext().prec = 3
-            change_percent = ((new_price-old_price)/old_price) * Decimal(100)
-            return Decimal(change_percent)
+            old_price = Decimal(old_price)
+            new_price = Decimal(new_price)
+
+            if new_price == old_price:
+                return 0
+
+            change_percent = ((new_price - old_price) / old_price) * Decimal(100)
+            return round(Decimal(change_percent), 4)
         except ZeroDivisionError, InvalidOperation:
             return 0
 
