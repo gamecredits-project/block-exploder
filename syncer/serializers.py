@@ -1,5 +1,3 @@
-import logging
-
 class VoutSerializer(object):
     @staticmethod
     def to_database(vout):
@@ -49,7 +47,6 @@ class TransactionSerializer(object):
                 formatted['vout'].append(VoutSerializer.to_database(v))
             elif v.index:
                 formatted['vout'].append(VoutSerializer.to_database(v))
-                logging.info("nesto")
 
         return formatted
 
