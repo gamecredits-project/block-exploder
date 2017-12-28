@@ -1,5 +1,3 @@
-import logging
-
 class VoutSerializer(object):
     @staticmethod
     def to_database(vout):
@@ -11,17 +9,6 @@ class VoutSerializer(object):
             "type": vout.type,
             "reqSigs": vout.reqSigs,
             "spent": vout.spent
-        }
-
-    @staticmethod
-    def to_database_rpc(vout_rpc):
-        return {
-            "value": vout_rpc.value,
-            "asm": vout_rpc.asm,
-            "addresses": vout_rpc.addresses,
-            "type": vout_rpc.type,
-            "reqSigs": vout_rpc.reqSigs,
-            "spent": vout_rpc.spent
         }
 
 class VinSerializer(object):
@@ -38,7 +25,7 @@ class VinSerializer(object):
 
 class TransactionSerializer(object):
     @staticmethod
-    def to_database(tr, is_rpc=None):
+    def to_database(tr):
         formatted = {
             "version": tr.version,
             "locktime": tr.locktime,
@@ -54,19 +41,16 @@ class TransactionSerializer(object):
         for v in tr.vin:
             formatted['vin'].append(VinSerializer.to_database(v))
 
-        if not is_rpc:
-            for v in tr.vout:
+        for index, v in enumerate(tr.vout):
+            if v.index is None:
+                v.index = index
+                formatted['vout'].append(VoutSerializer.to_database(v))
+            elif v.index:
                 formatted['vout'].append(VoutSerializer.to_database(v))
 
-            return formatted
-        else:
-            for v in tr.vout:
-                formatted['vout'].append(VoutSerializer.to_database_rpc(v))
+        return formatted
 
 
-            return formatted
-
-        
 class BlockSerializer(object):
     @staticmethod
     def to_database(block):
