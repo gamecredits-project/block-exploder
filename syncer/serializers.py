@@ -5,11 +5,11 @@ class VoutSerializer(object):
             "value": vout.value,
             "asm": vout.asm,
             "addresses": vout.addresses,
+            "index": vout.index,
             "type": vout.type,
             "reqSigs": vout.reqSigs,
             "spent": vout.spent
         }
-
 
 class VinSerializer(object):
     @staticmethod
@@ -37,11 +37,16 @@ class TransactionSerializer(object):
             "blocktime": tr.blocktime
         }
 
+
         for v in tr.vin:
             formatted['vin'].append(VinSerializer.to_database(v))
 
-        for v in tr.vout:
-            formatted['vout'].append(VoutSerializer.to_database(v))
+        for index, v in enumerate(tr.vout):
+            if v.index is None:
+                v.index = index
+                formatted['vout'].append(VoutSerializer.to_database(v))
+            elif v.index:
+                formatted['vout'].append(VoutSerializer.to_database(v))
 
         return formatted
 
@@ -95,6 +100,27 @@ class SyncHistorySerializer(object):
             "end_block_height": end_block_height
         }
 
+class PriceHistorySerializer(object):
+    @staticmethod
+    def to_database(price_usd, price_btc, market_cap_usd, timestamp):
+        return {
+            "price_usd": price_usd,
+            "price_btc": price_btc,
+            "market_cap_usd": market_cap_usd,
+            "timestamp": timestamp
+        }
+
+class PriceStatsSerializer(object):
+    @staticmethod
+    def to_database(priceUSD, priceBTC, percentChange24hUSD, percentChange24hBTC, volume24hUSD, timestamp):
+        return {
+            "priceUSD": priceUSD,
+            "priceBTC": priceBTC,
+            "percentChange24hUSD": percentChange24hUSD,
+            "percentChange24hBTC": percentChange24hBTC,
+            "volume24hUSD": volume24hUSD,
+            "timestamp": timestamp
+        }
 
 class NetworkStatsSerializer(object):
     @staticmethod

@@ -607,6 +607,69 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /network/price-history:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_price_history
+      summary: Get price history of GameCredits
+      parameters:
+        - name: until
+          in: query
+          description: To timestamp you want to see the history.
+          required: false
+          type: integer
+        - name: since
+          in: query
+          description: From timestamp you want to see the history.
+          required: false
+          type: integer
+        - name: limit
+          in: query
+          description: Number of price history info to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 3000
+          default: 20
+        - name: offset
+          in: query
+          description: Number of price history info to skip.
+          required: false
+          type: integer
+          minimum: 0
+          maximum: 3000
+          default: 0
+      responses:
+        200:
+          description: An array of price history information
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PriceHistory'
+        400:
+          description: Limit too large
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/price-stats:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_price_stats
+      summary: Get price stats of GameCredits
+      responses:
+        200:
+          description: GAME price statistics
+          schema:
+            $ref: '#/definitions/PriceStats'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
   /client/sync_history:
     get:
       summary: Latest sync history information
@@ -776,7 +839,7 @@ definitions:
         type: string
         description: Identifier of the block containing this transaction
       locktime:
-        type: string
+        type: integer
         description: Transaction lock time
       total:
         type: number
@@ -928,7 +991,7 @@ definitions:
           type: string
         description: Array of id's of transactions in this block
       time:
-        type: string
+        type: integer
         description: Unix timestamp representing the time when this block was mined
       nonce:
         type: number
@@ -997,6 +1060,9 @@ definitions:
       coinSupply:
         type: integer
         description: Current GameCredits supply
+      coinMaxSupply:
+        type: integer
+        description: Maximum GameCredits supply
       hashrate:
         type: integer
         description: The estimated number of hashes per second that GameCredits network is performing
@@ -1047,6 +1113,57 @@ definitions:
       priceUSD:
         type: number
         format: float
+
+  PriceHistory:
+    type: object
+    properties:
+      priceUSD:
+        type: number
+        format: float
+        description: |
+          Price of GAME in USD
+      priceBTC:
+        type: number
+        format: float
+        description: |
+         Price of GAME in BTC
+      marketCapUSD:
+        type: integer
+        description: MarketCap of GAME in USD
+      timestamp:
+        type: integer
+        description: Unix timestamp of the price
+
+  PriceStats:
+    type: object
+    properties:
+      priceUSD:
+        type: number
+        format: decimal
+        description: |
+          Current price of GAME in USD
+      priceBTC:
+        type: number
+        format: decimal
+        description: |
+          Current price of GAME in BTC
+      percentChange24hUSD:
+        type: number
+        format: float
+        description: |
+          24h percent change of GAME in USD
+      percentChange24hBTC:
+        type: number
+        format: float
+        description: |
+         24h percent change of GAME in BTC
+      volume24hUSD:
+        type: number
+        format: float
+        description: 24h volume value in USD
+      timestamp:
+        type: integer
+        description: Unix timestamp of the price
 
   SyncHistory:
     type: object

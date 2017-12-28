@@ -14,6 +14,7 @@ setup(
         'flask_cors',
         'flask>=0.10.1',
         'flask_socketio',
+        'gevent',
     ],
     setup_requires=[
         'pytest_runner'

@@ -2,6 +2,12 @@
   template: src=templates/socket-supervisor.conf dest=/etc/supervisor/conf.d/socket-supervisor.conf
   become: True
 
+- name: Copy the socket production configuration file
+  template: src=templates/config.py dest={{ code_directory }}/socket/config.py
+  when:
+    - production == True
+  become: True
+
 - name: Restart the supervisor process
   supervisorctl: name=socket state=restarted
   become: True

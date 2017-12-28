@@ -5,7 +5,8 @@ import time
 from factories import MongoBlockFactory, MongoTransactionFactory
 from serializers import BlockSerializer, TransactionSerializer, \
     HashrateSerializer, SyncHistorySerializer, NetworkStatsSerializer, \
-    ClientInfoSerializer, ClientSyncProgressSerializer, PriceSerializer
+    ClientInfoSerializer, ClientSyncProgressSerializer, PriceSerializer,\
+    PriceHistorySerializer, PriceStatsSerializer
 from pymongo import MongoClient
 
 
@@ -25,6 +26,8 @@ class MongoDatabaseGateway(object):
         self.network_stats = database.network_stats
         self.sync_history = database.sync_history
         self.client_info = database.client_info
+        self.price_history = database.price_history
+        self.price_stats = database.price_stats
 
         self.cache_size = config.getint('syncer', 'cache_size')
 
@@ -273,6 +276,51 @@ class MongoDatabaseGateway(object):
         self.sync_history.insert_one(
             SyncHistorySerializer.to_database(start_time, end_time, start_block_height, end_block_height)
         )
+
+    def put_price_history_info(self, price_usd, price_btc, market_cap_usd, timestamp):
+        self.price_history.insert_one(
+            PriceHistorySerializer.to_database(price_usd, price_btc, market_cap_usd, timestamp)
+        )
+
+    def get_old_btc_price(self, timestamp):
+        # This should be used in staging or production
+        one_day = 86400
+
+        # This is used for development purposes beacuse we don't want to wait a whole day to test this
+        one_hour = 3600
+        two_minutes = 120
+
+        # We use these three minutes to create a time lapse where we want to look for old prices
+        # Three minutes are used because we insert new price every 5 minutes
+        three_minutes = 240
+
+        old_timestamp = timestamp - one_day
+        result = self.price_history.find({
+            'timestamp': {'$gte': old_timestamp - three_minutes, '$lte': old_timestamp + three_minutes}
+        })
+
+        all_res = []
+        for res in result:
+            all_res.append(res)
+
+        return all_res
+
+    def update_price_stats(self, priceUSD, priceBTC, percentChange24hUSD, percentChange24hBTC, volume24hUSD):
+        stats = self.price_stats.find_one()
+        timestamp = int(time.time())
+
+        if stats is None:
+            self.price_stats.insert_one(
+                PriceStatsSerializer.to_database(priceUSD, priceBTC,
+                    percentChange24hUSD, percentChange24hBTC,
+                    volume24hUSD, timestamp))
+        else:
+            self.price_stats.update_one(
+                {'_id': stats['_id']},
+                {"$set": PriceStatsSerializer.to_database(priceUSD, priceBTC,
+                    percentChange24hUSD, percentChange24hBTC,
+                        volume24hUSD, timestamp)}
+                )
 
     #########################
     #    CLIENT METHODS     #

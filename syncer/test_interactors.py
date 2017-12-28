@@ -1,9 +1,15 @@
 import unittest
 import copy
 import os
+import requests
+import json
+import time
+import datetime
+from decimal import *
 import ConfigParser
 from mock import MagicMock
-from interactors import Blockchain
+from pymongo import MongoClient
+from interactors import Blockchain, CoinmarketcapAnalyzer
 from test_gateways import generate_test_data
 from gateways import get_mongo_connection, MongoDatabaseGateway
 from serializers import BlockSerializer, TransactionSerializer

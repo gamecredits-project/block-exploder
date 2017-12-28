@@ -71,13 +71,14 @@ class SyncHistorySerializer(object):
 
 class NetworkStatsSerializer(object):
     @staticmethod
-    def to_web(stats, hash_rate, num_blocks, num_transactions):
+    def to_web(stats, hash_rate, num_blocks, num_transactions, max_coin_supply):
         return {
             "coinSupply": stats["supply"],
             "hashrate": hash_rate["hashrate"],
             "blockchainSize": stats["blockchain_size"],
             "numBlocks": num_blocks,
-            "numTransactions": num_transactions
+            "numTransactions": num_transactions,
+            "coinMaxSupply": max_coin_supply
         }
 
 
@@ -86,6 +87,30 @@ class PriceSerializer(object):
     def to_web(price):
         return {
             "priceUSD": price
+        }
+
+
+class PriceHistorySerializer(object):
+    @staticmethod
+    def to_web(price_history):
+        return {
+            "priceUSD": price_history["price_usd"],
+            "priceBTC": price_history["price_btc"],
+            "marketCapUSD": price_history["market_cap_usd"],
+            "timestamp": price_history["timestamp"]
+        }
+
+
+class PriceStatsSerializer(object):
+    @staticmethod
+    def to_web(price_stats):
+        return {
+            "priceUSD": price_stats["priceUSD"],
+            "priceBTC": price_stats["priceBTC"],
+            "percentChange24hUSD": price_stats["percentChange24hUSD"],
+            "percentChange24hBTC": price_stats["percentChange24hBTC"],
+            "volume24hUSD": price_stats["volume24hUSD"],
+            "timestamp": price_stats["timestamp"]
         }
 
 

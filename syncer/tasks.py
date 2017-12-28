@@ -1,4 +1,5 @@
-from interactors import Blockchain, BlockchainSyncer, BlockchainAnalyzer
+from interactors import Blockchain, BlockchainSyncer, BlockchainAnalyzer,\
+CoinmarketcapAnalyzer
 from gateways import MongoDatabaseGateway
 from pymongo import MongoClient
 from bitcoinrpc.authproxy import AuthServiceProxy
@@ -11,6 +12,8 @@ import os
 import raven
 import logging
 import time
+import datetime
+from decimal import *
 from raven.contrib.celery import register_signal, register_logger_signal
 
 
@@ -102,12 +105,63 @@ class HalfMinuteTask(Task):
         price = analizer.get_game_price()
         analizer.save_game_price(price)
 
+class FiveMinuteTask(Task):
+    """
+    Checks for new information from Coinmarketcap about GameCredits
+    on every 5 minutes, because Coinmarketcap api refreshes every
+    5 minutes, and inserts it to database
+    """
+    @only_one(key="FiveMinuteTask", timeout=config.getint('syncer', 'task_lock_timeout'))
+    def run(self, **kwargs):
+        client = MongoClient()
+        database = MongoDatabaseGateway(client.exploder, config)
+        coinmarketcap_analyzer = CoinmarketcapAnalyzer(database, config)
+
+        # Information from CoinMarketCap
+        coinmarketcap_info = coinmarketcap_analyzer.get_coinmarketcap_game_info()
+
+        # Our time that we are inserting our price, this has to be int because of the time calculations
+        price_timestamp = int(time.time())
+
+        # Method that saves price info and timestamp
+        coinmarketcap_analyzer.save_price_history(
+            coinmarketcap_info['price_usd'],
+            coinmarketcap_info['price_btc'],
+            coinmarketcap_info['market_cap_usd'],
+            price_timestamp
+        )
+
+        # Gets GAME old price, 24h ago
+        old_price = coinmarketcap_analyzer.get_old_btc_price(price_timestamp)
+        # If we have information about the price 24h ago
+        if old_price:
+            try:
+                old_price = Decimal(max(old_price))
+                # Round old_price number by 8 decimals
+                old_price = round(Decimal(old_price), 8)
+
+                new_price = Decimal(coinmarketcap_info['price_btc'])
+                # Round new_price number by 8 decimals
+                new_price = round(Decimal(new_price), 8)
+                
+                percent_change_24h_btc = coinmarketcap_analyzer.btc_price_difference_percentage(old_price, new_price)
+
+                database.update_price_stats(
+                    float(coinmarketcap_info['price_usd']),
+                    float(coinmarketcap_info['price_btc']),
+                    float(coinmarketcap_info['percent_change_24h_usd']),
+                    float(percent_change_24h_btc),
+                    float(coinmarketcap_info['24h_volume_usd'])
+                )
+            except InvalidOperation as e:
+                logging.error('FIVE_MINUTE_TASK_FAILED ERROR: %s' %e)
 
 app = SyncerCelery('tasks', broker='redis://localhost:6379/0')
 app.conf.result_backend = 'redis://localhost:6379/0'
 app.tasks.register(SyncTask)
 app.tasks.register(DailyTask)
 app.tasks.register(HalfMinuteTask)
+app.tasks.register(FiveMinuteTask)
 
 app.conf.beat_schedule = {
     'sync-every-10-seconds': {
@@ -121,6 +175,10 @@ app.conf.beat_schedule = {
     'every-30-seconds': {
         'task': 'syncer.tasks.HalfMinuteTask',
         'schedule': 30.0,
+    },
+    'info-every-5-minutes': {
+        'task': 'syncer.tasks.FiveMinuteTask',
+        'schedule': crontab(minute='*/5'),
     },
 }
 
