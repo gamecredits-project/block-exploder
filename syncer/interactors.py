@@ -315,7 +315,7 @@ class BlockchainSyncer(object):
             block = BlockFactory.from_rpc(rpc_block, rpc_block_transactions)
             self.blockchain.insert_block(block)
 
-        self.db.flush_cache(True)
+        self.db.flush_cache()
         end_time = datetime.datetime.now()
         diff_time = end_time - start_time
         logging.info("[SYNC_RPC_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
