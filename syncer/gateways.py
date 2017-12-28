@@ -54,14 +54,14 @@ class MongoDatabaseGateway(object):
         self.transactions.create_index([("vout.addresses", pymongo.DESCENDING)])
         self.transactions.create_index([("vin.prev_txid", pymongo.DESCENDING)])
 
-    def flush_cache(self, is_rpc=None):
+    def flush_cache(self):
         if self.block_cache:
             self.blocks.insert_many(
                 [BlockSerializer.to_database(block) for block in self.block_cache.values()])
 
         if self.tr_cache:
             self.transactions.insert_many(
-                [TransactionSerializer.to_database(tr, is_rpc) for tr in self.tr_cache.values()])
+                [TransactionSerializer.to_database(tr) for tr in self.tr_cache.values()])
 
         self.block_cache = {}
         self.tr_cache = {}
@@ -289,7 +289,7 @@ class MongoDatabaseGateway(object):
         # This is used for development purposes beacuse we don't want to wait a whole day to test this
         one_hour = 3600
         two_minutes = 120
-        
+
         # We use these three minutes to create a time lapse where we want to look for old prices
         # Three minutes are used because we insert new price every 5 minutes
         three_minutes = 240
