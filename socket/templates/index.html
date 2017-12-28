@@ -1,14 +1,13 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Flask-SocketIO Test</title>
+    <title>BlockExplorer Development WebSocket</title>
 </head>
 <body>
   <div class="container">
     <h1>Block socket</h1>
-    <button id="transakcijaKonektovan">Konektuj</button>
-    <button id="transakcijaDiskonektovan">Diskonektuj</button>
-    <h1 id="konektovan"></h1>
+    <h1 id="user_connected"></h1>
+
     <h3 id="blockConnected"></h3>
     <table class="table">
       <thead>
@@ -23,6 +22,7 @@
     <tbody id='blockTbody'>
     </tbody>
   </table>
+
   <h1>Transaction socket</h1>
   <h3 id="txConnected"></h3>
   <table class="table">
@@ -33,6 +33,23 @@
     </tr>
   </thead>
   <tbody id='txTbody'>
+  </tbody>
+</table>
+
+<h1>Price statistics socket</h1>
+<h3 id="priceStatsConnected"></h3>
+<table class="table">
+  <thead>
+    <tr id="priceID" style="top: 50px;">
+      <th>Price in USD</th>
+      <th>Price in BTC</th>
+      <th>Percent change for USD</th>
+      <th>Percent change for BTC</th>
+      <th>Volume 24h</th>
+      <th>Timestamp</th>      
+    </tr>
+  </thead>
+  <tbody id='priceStatsTbody'>
   </tbody>
 </table>
 </div>
@@ -47,50 +64,22 @@
 
             blockNamespace = '/block';
             txNamespace = '/tx';
+            priceStatsNamespace = '/price-stats';
 
             var blockSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + blockNamespace);
             var txSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + txNamespace);
-
+            var priceStatsSocket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + priceStatsNamespace);
+            
             blockSocket.on('connect', function() {
                 blockSocket.emit('block_connected');
             });
 
-            txSocket.on('connect', function() {
-                txSocket.emit('tx_connected');
-            });
-
             blockSocket.on('block_response', function(data) {
-               console.log("nesto");
-               $('#blockConnected').text("User: " + data.block_dataa);
+               $('#blockConnected').text("User: " + data.block_data);
             });
 
-            txSocket.on('tx_response', function(data) {
-               $('#txConnected').text("User: " + data.tx_data);
-               // console.log(data.data);
-            });
-
-            $('#transakcijaDiskonektovan').click(function(){
-              txSocket.emit("disconnect_tx");
-
-              console.log("Kliknuo si na diskonekt");
-            });
-
-            $('#transakcijaKonektovan').click(function(){
-              txSocket.emit('tx_connected');
-              console.log("Kliknuo si na konekt");
-            });
-
-            //Proveriti kljuceve pre nego sto pozoves JSON objekat
             blockSocket.on('background_block_sender', function(msg) {
-              // $('#log').append('<br>' + $('<div/>').text(msg.data[0].height).html());
-
-              // $('#myTbody').append(
-              //   '<tr>' +
-              //   '<td>' + msg.data.id + '</td>'+
-              //   '<td>' + msg.data.title + '</td>'+
-              //   '</tr>'
-              // );konektovan
-
+             
               $('#blockTbody').prepend(
                 '<tr>' +
                 '<td>' + msg.latest_block_data.height + '</td>'+
@@ -100,18 +89,55 @@
                 '<td>' + msg.latest_block_data.size + '</td>'+
                 '</tr>'
               );
-              console.log(msg.latest_block_data.height)
+              console.log(msg);
+            });
+
+
+            txSocket.on('connect', function() {
+                txSocket.emit('tx_connected');
+            });
+
+            txSocket.on('tx_response', function(data) {
+               $('#txConnected').text("User: " + data.tx_data);
             });
 
             txSocket.on('background_tx_sender', function(msg) {
-
               $('#txTbody').prepend(
                 '<tr>' +
                 '<td>' + msg.latest_tx_data.txid + '</td>'+
                 '<td>' + msg.latest_tx_data.total + ' GAME'+'</td>'+
                 '</tr>'
               );
-              console.log(msg)
+              console.log(msg);
+            });
+
+
+
+            priceStatsSocket.on('connect', function() {
+              priceStatsSocket.emit('price_stats_connected');
+            });
+
+            priceStatsSocket.on('price_stats_response', function(data) {
+               $('#priceStatsConnected').text("User: " + data.price_stats_data);
+            });
+
+            $('#priceStatsConnected').click(function(){
+              priceStatsSocket.emit('price_stats_connected');
+            });
+
+            priceStatsSocket.on('background_price_stats_sender', function(msg) {
+
+              $('#priceStatsTbody').prepend(
+                '<tr>' +
+                '<td>' + msg.latest_price_stats_data.priceUSD + '</td>'+
+                '<td>' + msg.latest_price_stats_data.priceBTC + '</td>'+
+                '<td>' + msg.latest_price_stats_data.percentChange24hUSD + '%' + '</td>'+
+                '<td>' + msg.latest_price_stats_data.percentChange24hBTC + '%'+'</td>'+
+                '<td>' + msg.latest_price_stats_data.volume24hUSD + '</td>'+
+                '<td>' + msg.latest_price_stats_data.timestamp + '</td>'+
+                '</tr>'
+              );
+              console.log(msg);
             });
         });
     </script>
