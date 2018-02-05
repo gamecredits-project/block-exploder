@@ -47,11 +47,17 @@ def validate_sha256_hash(hash):
 
 def check_parameter_if_int(parameter):
     """
-       Check if :parameter: is a number
-       Currently not in use
+    Check if :parameter: is a number
+    Currently not in use
     """
     try:
         int(parameter)
         return True
     except ValueError:
         return False
+
+def confirmations_from_rpc(rpc, block):
+    confirmations = "rpc.getblock(block)"
+    ovo = "nesto"
+    logging.error("PUCAA %s" % rpc.getblock(block['hash']))
+    return confirmations

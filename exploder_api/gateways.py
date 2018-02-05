@@ -2,7 +2,7 @@ import pymongo
 import sys
 import logging
 
-from helpers import validate_address, check_parameter_if_int
+from helpers import validate_address, check_parameter_if_int, confirmations_from_rpc
 
 class DatabaseGateway(object):
     def __init__(self, database, config):
@@ -40,10 +40,15 @@ class DatabaseGateway(object):
     def get_highest_in_chain(self, chain):
         return self.blocks.find_one({"chain": chain}, sort=[("height", -1)])
 
-    def calculate_block_confirmations(self, block):
+    def calculate_block_confirmations(self, rpc, block):
         highest_in_chain = self.get_highest_in_chain(block['chain'])
-        return highest_in_chain['height'] - block['height']
-
+        if highest_in_chain['chain'] != 'main_chain':
+            block_confirmations = confirmations_from_rpc(rpc, block)
+        else:
+            block_confirmations = highest_in_chain['height'] - block['height']
+        logging.info("Ovo je najvisi u nizu : %s" % highest_in_chain['chain'])
+        return block_confirmations
+        
     def get_block_count(self, chain):
         return self.blocks.find({"chain": chain}).count()
 
@@ -255,14 +260,14 @@ class DatabaseGateway(object):
     ##################
     #  TRANSACTIONS  #
     ##################
-    def get_transaction_by_txid(self, txid):
+    def get_transaction_by_txid(self, rpc, txid):
         tr = self.transactions.find_one({"txid": txid})
 
         if not tr:
             raise KeyError("Transaction with txid %s doesn't exist in the database" % txid)
 
         tr_block = self.get_block_by_hash(tr["blockhash"])
-        tr['confirmations'] = self.calculate_block_confirmations(tr_block)
+        tr['confirmations'] = self.calculate_block_confirmations(rpc, tr_block)
 
         return tr
 
