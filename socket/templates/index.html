@@ -111,8 +111,6 @@
               console.log(msg);
             });
 
-
-
             priceStatsSocket.on('connect', function() {
               priceStatsSocket.emit('price_stats_connected');
             });
@@ -138,6 +136,7 @@
                 '</tr>'
               );
               console.log(msg);
+              console.log("Price stats:");  
             });
         });
     </script>

@@ -44,8 +44,8 @@ class TransactionSerializer(object):
         for index, v in enumerate(tr.vout):
             if v.index is None:
                 v.index = index
-                formatted['vout'].append(VoutSerializer.to_database(v))
-            elif v.index:
+                formatted['vout'].append(VoutSerializer.to_database(v))  
+            elif v.index:     
                 formatted['vout'].append(VoutSerializer.to_database(v))
 
         return formatted
