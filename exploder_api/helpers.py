@@ -57,7 +57,5 @@ def check_parameter_if_int(parameter):
         return False
 
 def confirmations_from_rpc(rpc, block):
-    confirmations = "rpc.getblock(block)"
-    ovo = "nesto"
-    logging.error("PUCAA %s" % rpc.getblock(block['hash']))
+    confirmations = rpc.getblock(block['hash'])['confirmations']
     return confirmations
