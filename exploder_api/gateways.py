@@ -240,16 +240,21 @@ class DatabaseGateway(object):
             {"$unwind": "$vout"},
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
-            {"$group": {"_id": "", "volume": {"$sum":"$vout.value"}}}
+            {"$group": 
+                {
+                    "_id": "", "volume": {"$sum":"$vout.value"},
+                    "used": {"$addToSet": "$vout.addresses"}
+                }
+            }
         ]
 
         result = self.transactions.aggregate(pipeline)
         result = list(result)
-
+        
         if not result:
             return 0
 
-        return result[0]['volume']
+        return result
 
 
     ##################

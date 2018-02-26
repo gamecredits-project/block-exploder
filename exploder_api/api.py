@@ -213,8 +213,15 @@ def post_addresses_volume(addresses_hash):
         if not validate_address(address_hash):
             return "Invalid address hash", 400
 
+    num_of_unused = 0
     total_volume = db.post_addresses_volume(addresses_hash_no_json)
-    return VolumeSerializer.to_web(addresses_hash_no_json, total_volume)
+
+    if total_volume:
+        num_of_unused = total_volume[0]['used']
+        return VolumeSerializer.to_web(addresses_hash_no_json, total_volume[0]['volume'], len(num_of_unused))
+
+    return VolumeSerializer.to_web(addresses_hash_no_json, total_volume, num_of_unused)
+        
 
 
 def get_address_unspent(address_hash, start=None):
