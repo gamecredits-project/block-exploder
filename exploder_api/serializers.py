@@ -46,7 +46,8 @@ class UnspentTransactionSerializer(object):
             "txid": tr["vout"]["txid"],
             "type": tr["vout"]["type"],
             "value": tr["vout"]["value"],
-            "blockTime": tr["blocktime"]
+            "blockTime": tr["blocktime"],
+            "address": tr["vout"]["addresses"]
         }
 
 class HashrateSerializer(object):

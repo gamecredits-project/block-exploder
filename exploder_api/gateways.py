@@ -107,7 +107,7 @@ class DatabaseGateway(object):
                 uns['vout']['index'] = uns['index']
                 results.append(uns)
 
-            return results    
+            return results
 
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
