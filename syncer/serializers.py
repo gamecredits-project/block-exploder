@@ -42,11 +42,8 @@ class TransactionSerializer(object):
             formatted['vin'].append(VinSerializer.to_database(v))
 
         for index, v in enumerate(tr.vout):
-            if v.index is None:
-                v.index = index
-                formatted['vout'].append(VoutSerializer.to_database(v))
-            elif v.index:
-                formatted['vout'].append(VoutSerializer.to_database(v))
+            v.index = index
+            formatted['vout'].append(VoutSerializer.to_database(v))
 
         return formatted
 

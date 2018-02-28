@@ -8,3 +8,5 @@ exploder.egg-info/*
 .eggs
 .idea/
 .vscode
+build/*
+dist/*
