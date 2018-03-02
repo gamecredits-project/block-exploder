@@ -72,7 +72,7 @@ def get_block_confirmations(block_hash):
 
     return {
         "hash": block_hash,
-        "confirmations": db.calculate_block_confirmations(block)
+        "confirmations": db.calculate_block_confirmations(block, rpc)
     }
 
 
@@ -83,7 +83,7 @@ def get_transaction_by_txid(txid):
     if not validate_sha256_hash(txid):
         return "Invalid transaction ID", 400
     try:
-        return TransactionSerializer.to_web(db.get_transaction_by_txid(txid))
+        return TransactionSerializer.to_web(db.get_transaction_by_txid(txid, rpc))
     except KeyError:
         return "Transaction with given ID not found", 404
 
@@ -92,14 +92,14 @@ def get_transaction_confirmations(txid):
     if not validate_sha256_hash(txid):
         return "Invalid transaction ID", 400
     try:
-        tr = db.get_transaction_by_txid(txid)
+        tr = db.get_transaction_by_txid(txid, rpc)
     except KeyError:
         return "Transaction with given txid not found", 404
 
     block = db.get_block_by_hash(tr['blockhash'])
     return {
         "txid": txid,
-        "confirmations": db.calculate_block_confirmations(block)
+        "confirmations": db.calculate_block_confirmations(block, rpc)
     }
 
 
