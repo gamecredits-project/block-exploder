@@ -97,9 +97,16 @@ def get_transaction_confirmations(txid):
         return "Transaction with given txid not found", 404
 
     block = db.get_block_by_hash(tr['blockhash'])
+
+    if block['chain'] == 'main_chain':
+        main_chain = True
+    else:
+        main_chain = False
+
     return {
         "txid": txid,
-        "confirmations": db.calculate_block_confirmations(block, rpc)
+        "confirmations": db.calculate_block_confirmations(block, rpc),
+        "mainChain": main_chain
     }
 
 
