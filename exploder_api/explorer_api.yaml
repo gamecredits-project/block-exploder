@@ -1309,10 +1309,18 @@ definitions:
         items:
           type: string
         description: GameCredits addresses
-      volume:
+      totalVolume:
         type: number
         format: float
         description: Total amount of GameCredits transfered to the given addresses
+      used:
+        type: number
+        format: integer
+        description: Total number of addresses used
+      volumes:
+        type: array
+        items: 
+          $ref: '#/definitions/Volume'
 
   Balance:
     type: object

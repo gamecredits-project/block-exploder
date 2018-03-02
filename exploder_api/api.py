@@ -223,11 +223,11 @@ def post_addresses_volume(addresses_hash):
     num_of_unused = 0
     total_volume = db.post_addresses_volume(addresses_hash_no_json)
 
-    if total_volume:
-        num_of_unused = total_volume[0]['used']
-        return VolumeSerializer.to_web(addresses_hash_no_json, total_volume[0]['volume'], len(num_of_unused))
+    # if total_volume:
+    #     num_of_unused = total_volume[0]['used']
+    #     return VolumeSerializer.to_web(addresses_hash_no_json, total_volume[0]['volume'], len(num_of_unused))
 
-    return VolumeSerializer.to_web(addresses_hash_no_json, total_volume, num_of_unused)
+    # return VolumeSerializer.to_web(addresses_hash_no_json, total_volume, num_of_unused)
         
 
 

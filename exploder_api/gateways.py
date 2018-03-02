@@ -48,7 +48,6 @@ class DatabaseGateway(object):
         else:
             block_confirmations = highest_in_chain['height'] - block['height']
 
-        logging.info("Ovo je najvisi u nizu : %s" % highest_in_chain['chain'])
         return block_confirmations
 
     def get_block_count(self, chain):
@@ -142,7 +141,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": False, "vout.addresses": address}},
+            {"$match": {"vout.spent": True, "vout.addresses": address}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
         ])
@@ -158,7 +157,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses }}},
+            {"$match": {"vout.spent": True, "vout.addresses":{"$in": addresses }}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
         ])
@@ -246,18 +245,30 @@ class DatabaseGateway(object):
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": "$vout"},
             {"$match": {"vout.addresses": {"$in": addresses}}},
-            {"$project": {"vout.addresses": 1, "vout.value": 1}},
-            {"$group": 
+            {"$project": 
+                {"vout.addresses": 1, 
+                "izvod": {"$ne": ["$vout.addresses", "GHr1DdrcVw6zEcGyNqiGD164vpohFp5ftn"]},
+                "vout.value": 1}},
+            {"$group":
                 {
-                    "_id": "", "volume": {"$sum":"$vout.value"},
-                    "used": {"$addToSet": "$vout.addresses"}
+                    "_id": "$vout.addresses",
+                    "volume": {"$sum":"$vout.value"},
+                    "mojko": {"$first":"$izvod"}
+                    # "_id": "", "volume": {"$sum":"$vout.value"}
+                    # "used": {"$addToSet": "$vout.addresses"},
+                    # "ovoNesto": {"$stdDevSamp": "$vout.value"}
                 }
             }
         ]
 
-        result = self.transactions.aggregate(pipeline)
+        result = self.transactions.aggregate(pipeline)        
         result = list(result)
         
+        # for volume in result:
+        #     logging.error("Ovo je rezultat : %s" % volume)
+
+        logging.error("Ovo je rezultat: %s" % result)
+                
         if not result:
             return 0
 
