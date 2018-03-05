@@ -146,18 +146,20 @@ class TransactoinCountSerializer(object):
 
 class VolumeSerializer(object):
     @staticmethod
-    def to_web(address, volume, used_num=None):
-        if used_num >= 0:
-            return {
-                "address": address,
-                "volume": volume,
-                "used": used_num
-            }
-
+    def to_web(address, volume):
         return {
             "address": address,
             "volume": volume
-        }   
+        }
+
+class VolumesSerializer(object):
+    @staticmethod
+    def to_web(address, volume, volumes):
+        return {
+            "address": address,
+            "totalVolume": volume,
+            "volumes": volumes
+        }        
 
 
 

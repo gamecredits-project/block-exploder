@@ -240,39 +240,45 @@ class DatabaseGateway(object):
 
     def post_addresses_volume(self, addresses):
         # Check if the address is unused on the blockchain
-
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": "$vout"},
             {"$match": {"vout.addresses": {"$in": addresses}}},
-            {"$project": 
-                {"vout.addresses": 1, 
-                "izvod": {"$ne": ["$vout.addresses", "GHr1DdrcVw6zEcGyNqiGD164vpohFp5ftn"]},
-                "vout.value": 1}},
+            {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group":
                 {
                     "_id": "$vout.addresses",
-                    "volume": {"$sum":"$vout.value"},
-                    "mojko": {"$first":"$izvod"}
-                    # "_id": "", "volume": {"$sum":"$vout.value"}
-                    # "used": {"$addToSet": "$vout.addresses"},
-                    # "ovoNesto": {"$stdDevSamp": "$vout.value"}
+                    "volume": {"$sum":"$vout.value"}
                 }
             }
         ]
 
         result = self.transactions.aggregate(pipeline)        
         result = list(result)
-        
-        # for volume in result:
-        #     logging.error("Ovo je rezultat : %s" % volume)
 
-        logging.error("Ovo je rezultat: %s" % result)
+        addresses = set(addresses)
+        total_volume = 0
+
+        for _, address in enumerate(set(addresses)):
+            if _ >= len(result):
+                pass
+            else:
+                result[_]['address'] = result[_]['_id'][0].strip('[]')
+                del result[_]['_id']
+                mongo_address = result[_]['address']
                 
+                if mongo_address in addresses:
+                    logging.error("Ovo postoji %s" % mongo_address)
+                    addresses.remove(mongo_address)
+                    total_volume += (result[_]['volume'])
+
+        for address in addresses:
+            result.append({'volume': 0, '_id': address})
+
         if not result:
             return 0
 
-        return result
+        return result, total_volume
 
 
     ##################
