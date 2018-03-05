@@ -1,6 +1,5 @@
 import pymongo
 import sys
-import logging
 
 from helpers import validate_address, check_parameter_if_int, confirmations_from_rpc
 
@@ -268,12 +267,11 @@ class DatabaseGateway(object):
                 mongo_address = result[_]['address']
                 
                 if mongo_address in addresses:
-                    logging.error("Ovo postoji %s" % mongo_address)
                     addresses.remove(mongo_address)
                     total_volume += (result[_]['volume'])
 
         for address in addresses:
-            result.append({'volume': 0, '_id': address})
+            result.append({'volume': 0, 'address': address})
 
         if not result:
             return 0
