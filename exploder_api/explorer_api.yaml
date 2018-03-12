@@ -855,6 +855,9 @@ definitions:
         items:
           $ref: '#/definitions/Vout'
         description: List of transaction outputs
+      mainChain:
+        type: boolean
+        description: True if transaction belongs to main chain false otherwise  
 
   TransactionUnspent:
     type: object
@@ -1022,6 +1025,9 @@ definitions:
         type: number
         format: double
         description: Block work
+      chain:
+        type: string
+        description: Indicates if the block is in main or side chain  
 
   BlockConfirmations:
     type: object
@@ -1087,6 +1093,9 @@ definitions:
       next:
         type: string
         description: Relative url of the next page of transactions, null if there's no more transactions
+      mainChain:
+        type: boolean
+        description: True if belongs to main chain false otherwise
 
   AddressesTransactionsPaginated:
     type: object
