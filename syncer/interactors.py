@@ -202,7 +202,7 @@ class BlockchainSyncer(object):
 
     def _get_network_height(self):
         avg = lambda arr: sum(arr)/len(arr)
-        return int(avg([p['startingheight'] for p in self.rpc.getpeerinfo()]))
+        return int(avg([p['startingheight'] for p in self.rpc.getpeerinfo() if p['version'] >= 80007]))
 
     def _update_sync_progress(self):
         network_height = self._get_network_height()
