@@ -26,8 +26,7 @@
 - name: Clone the GameCredits repository
   git: >
     dest=~/gamecredits 
-    repo=https://github.com/gamecredits-project/GameCredits 
-    version="ubuntu16.04"
+    repo=https://github.com/gamecredits-project/GameCredits
 
 - name: Run autogen
   command: ./autogen.sh

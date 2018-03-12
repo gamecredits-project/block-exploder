@@ -56,12 +56,11 @@ class DatabaseGateway(object):
     #  ADDRESSES  #
     ###############
     def get_address_unspent(self, address, start, limit):
-
         if not start:
             unspent = self.transactions.aggregate([
                 {"$match": {"vout.addresses": address}},
                 {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
                 {"$match": {"vout.spent": False, "vout.addresses": address}},
                 {"$sort": {"blocktime": -1}},
                 {"$limit": limit}
@@ -78,7 +77,7 @@ class DatabaseGateway(object):
         unspent = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
             {"$match": {"vout.spent": False, "vout.addresses": address,
                         "blocktime": {"$lt": start}}},
             {"$sort": {"blocktime": -1}},
@@ -98,7 +97,7 @@ class DatabaseGateway(object):
             pipeline = [
                 {"$match": {"vout.addresses": {"$in": addresses}}},
                 {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
                 {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}},
                 {"$sort": {"blocktime": -1}},
                 {"$limit": limit}
@@ -117,7 +116,7 @@ class DatabaseGateway(object):
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
             {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses},
                         "blocktime" : {"$lt": start}}},
             {"$sort": {"blocktime": -1}},
@@ -140,7 +139,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": True, "vout.addresses": address}},
+            {"$match": {"vout.spent": True, "vout.addresses": address, "main_chain": True}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
         ])
@@ -156,7 +155,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": True, "vout.addresses":{"$in": addresses }}},
+            {"$match": {"vout.spent": True, "main_chain": True, "vout.addresses":{"$in": addresses }}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
         ])
@@ -225,7 +224,7 @@ class DatabaseGateway(object):
         pipeline = [
             {"$match": {"vout.addresses": address}},
             {"$unwind": "$vout"},
-            {"$match": {"vout.addresses": address}},
+            {"$match": {"vout.addresses": address, "main_chain": True}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "$vout.addresses", "volume": {"$sum": "$vout.value"}}}
         ]
@@ -242,7 +241,7 @@ class DatabaseGateway(object):
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": "$vout"},
-            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$match": {"vout.addresses": {"$in": addresses}, "main_chain": True}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group":
                 {

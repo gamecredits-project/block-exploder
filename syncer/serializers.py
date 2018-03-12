@@ -30,6 +30,7 @@ class TransactionSerializer(object):
             "version": tr.version,
             "locktime": tr.locktime,
             "txid": tr.txid,
+            "main_chain": True,
             "vin": [],
             "vout": [],
             "total": tr.total,

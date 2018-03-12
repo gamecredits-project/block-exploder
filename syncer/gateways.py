@@ -245,6 +245,12 @@ class MongoDatabaseGateway(object):
                 '$set': {"vout.%s.spent" % vout_index: True}
             })
 
+    def mark_transaction_side_chain(self, txid, is_main):
+        self.transactions.update_one({
+            'txid': txid
+        },{
+            '$set': {"main_chain": is_main}
+        })
     #########################
     #   NETWORK METHODS    #
     #########################

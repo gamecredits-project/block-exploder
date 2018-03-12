@@ -97,9 +97,9 @@ class Blockchain(object):
         # Current block appends to the main chain
         if block.previousblockhash == highest_block.hash:
             added_block = self._append_to_main_chain(block)
-
             if self.unspent_tracking:
                 self.update_unspent(added_block.tx)
+                self.db.update_transaction_chain(block.tx, True)
 
             return {
                 "block": added_block,
@@ -114,6 +114,8 @@ class Blockchain(object):
                 block = self._create_fork_of_main_chain(block, fork_point)
             else:
                 block = self._grow_sidechain(block, fork_point)
+
+            self.db.update_transaction_chain(block.tx, False)
 
             if self.unspent_tracking:
                 self.update_unspent(block.tx)
@@ -137,6 +139,9 @@ class Blockchain(object):
         for tr in transactions:
             for vin in tr.vin:
                 self.db.mark_output_spent(vin.prev_txid, vin.vout_index)
+
+    def update_transaction_chain(self, transactions):
+        [self.db.mark_transaction_side_chain(tr.txid) for tr in transactions]
 
     def reconverge(self, new_top_block):
         logging.info("[RECONVERGE] New top block is now %s" % new_top_block)
@@ -283,7 +288,7 @@ class BlockchainSyncer(object):
         end_time = datetime.datetime.now()
         diff_time = end_time - start_time
         logging.info("[SYNC_STREAM_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
-        return parsed
+        return parsed 
 
     def sync_rpc(self):
         start_time = datetime.datetime.now()

@@ -41,6 +41,7 @@ class UnspentTransactionSerializer(object):
         return {
             "asm": tr["vout"]["asm"],
             "index": tr["index"],
+            "mainChain": tr["main_chain"],
             "reqSigs": tr["vout"]["reqSigs"],
             "spent": tr["vout"]["spent"],
             "txid": tr["vout"]["txid"],

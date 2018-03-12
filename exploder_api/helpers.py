@@ -1,6 +1,5 @@
 import os
 import ConfigParser
-import logging
 
 CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
