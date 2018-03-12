@@ -99,7 +99,7 @@ class Blockchain(object):
             added_block = self._append_to_main_chain(block)
             if self.unspent_tracking:
                 self.update_unspent(added_block.tx)
-                self.db.update_transaction_chain(block.tx, True)
+                self.update_transaction_chain(block.tx, True)
 
             return {
                 "block": added_block,
@@ -115,7 +115,7 @@ class Blockchain(object):
             else:
                 block = self._grow_sidechain(block, fork_point)
 
-            self.db.update_transaction_chain(block.tx, False)
+            self.update_transaction_chain(block.tx, False)
 
             if self.unspent_tracking:
                 self.update_unspent(block.tx)
@@ -140,8 +140,8 @@ class Blockchain(object):
             for vin in tr.vin:
                 self.db.mark_output_spent(vin.prev_txid, vin.vout_index)
 
-    def update_transaction_chain(self, transactions):
-        [self.db.mark_transaction_side_chain(tr.txid) for tr in transactions]
+    def update_transaction_chain(self, transactions, is_main):
+        [self.db.mark_transaction_side_chain(tr.txid, is_main) for tr in transactions]
 
     def reconverge(self, new_top_block):
         logging.info("[RECONVERGE] New top block is now %s" % new_top_block)
