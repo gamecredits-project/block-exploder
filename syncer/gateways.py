@@ -251,6 +251,7 @@ class MongoDatabaseGateway(object):
         },{
             '$set': {"main_chain": is_main}
         })
+        
     #########################
     #   NETWORK METHODS    #
     #########################
