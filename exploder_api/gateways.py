@@ -1,7 +1,7 @@
 import pymongo
 import sys
 
-from helpers import validate_address, check_parameter_if_int, confirmations_from_rpc
+from helpers import validate_address, check_parameter_if_int
 
 class DatabaseGateway(object):
     def __init__(self, database, config):
@@ -43,7 +43,7 @@ class DatabaseGateway(object):
         highest_in_chain = self.get_highest_in_chain(block['chain'])
 
         if highest_in_chain['chain'] != 'main_chain':
-            block_confirmations = confirmations_from_rpc(rpc, block)
+            block_confirmations = -1
         else:
             block_confirmations = highest_in_chain['height'] - block['height']
 
