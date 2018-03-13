@@ -301,7 +301,7 @@ class DatabaseGateway(object):
         return list(tr)
 
     def get_latest_transactions(self, limit, offset):
-        return list(self.transactions.find()
+        return list(self.transactions.find({"main_chain": True})
                     .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit))
 
     def get_transaction_count(self):
