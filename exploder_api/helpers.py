@@ -54,7 +54,3 @@ def check_parameter_if_int(parameter):
         return True
     except ValueError:
         return False
-
-def confirmations_from_rpc(rpc, block):
-    confirmations = rpc.getblock(block['hash'])['confirmations']
-    return confirmations
