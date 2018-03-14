@@ -139,7 +139,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": True, "vout.addresses": address, "main_chain": True}},
+            {"$match": {"vout.spent": False, "vout.addresses": address, "main_chain": True}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
         ])
@@ -155,7 +155,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": True, "main_chain": True, "vout.addresses":{"$in": addresses }}},
+            {"$match": {"vout.spent": False, "main_chain": True, "vout.addresses":{"$in": addresses }}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
         ])
