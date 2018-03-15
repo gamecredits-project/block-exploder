@@ -21,6 +21,8 @@ CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
 config.read(CONFIG_FILE)
 
+mongo_user = config.get('syncer', 'mongo_user')
+mongo_pass = config.get('syncer', 'mongo_pass')
 
 class SyncerCelery(Celery):
     def on_configure(self):
@@ -45,7 +47,9 @@ class SyncTask(Task):
     """
     @only_one(key="SingleTask", timeout=config.getint('syncer', 'task_lock_timeout'))
     def run(self, **kwargs):
-        client = MongoClient()
+        client = MongoClient('127.0.0.1', 
+                    username=mongo_user,
+                    password=mongo_pass)
         database = MongoDatabaseGateway(client.exploder, config)
         blockchain = Blockchain(database, config)
         rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
@@ -59,7 +63,9 @@ class SyncTask(Task):
 class DailyTask(Task):
     @only_one(key="SingleDailyTask", timeout=config.getint('syncer', 'task_lock_timeout'))
     def run(self, **kwargs):
-        client = MongoClient()
+        client = MongoClient('127.0.0.1', 
+                    username=mongo_user,
+                    password=mongo_pass)
         database = MongoDatabaseGateway(client.exploder, config)
         rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
                                       % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
@@ -92,7 +98,9 @@ class DailyTask(Task):
 class HalfMinuteTask(Task):
     @only_one(key="SingleHalfMinuteTask", timeout=config.getint('syncer', 'task_lock_timeout'))
     def run(self, **kwargs):
-        client = MongoClient()
+        client = MongoClient('127.0.0.1', 
+                    username=mongo_user,
+                    password=mongo_pass)
         database = MongoDatabaseGateway(client.exploder, config)
         rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
                                       % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
@@ -113,7 +121,9 @@ class FiveMinuteTask(Task):
     """
     @only_one(key="FiveMinuteTask", timeout=config.getint('syncer', 'task_lock_timeout'))
     def run(self, **kwargs):
-        client = MongoClient()
+        client = MongoClient('127.0.0.1', 
+                    username=mongo_user,
+                    password=mongo_pass)
         database = MongoDatabaseGateway(client.exploder, config)
         coinmarketcap_analyzer = CoinmarketcapAnalyzer(database, config)
 

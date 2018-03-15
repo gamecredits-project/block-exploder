@@ -1,6 +1,9 @@
 import pymongo
 from decimal import Decimal
 import time
+import os
+
+import ConfigParser
 
 from factories import MongoBlockFactory, MongoTransactionFactory
 from serializers import BlockSerializer, TransactionSerializer, \
@@ -9,12 +12,19 @@ from serializers import BlockSerializer, TransactionSerializer, \
     PriceHistorySerializer, PriceStatsSerializer
 from pymongo import MongoClient
 
-
 MAIN_CHAIN = 'main_chain'
 
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
+
+mongo_user = config.get('syncer', 'mongo_user')
+mongo_pass = config.get('syncer', 'mongo_pass')
 
 def get_mongo_connection():
-    return MongoClient()
+    return MongoClient('127.0.0.1', 
+                    username=mongo_user,
+                    password=mongo_pass)
 
 
 class MongoDatabaseGateway(object):

@@ -13,3 +13,6 @@
 - name: Limit ssh attempts
   ufw: rule=limit port=ssh
   become: True
+
+- name: Allow from office ip
+  ufw: rule=allow port=27017 from_ip=46.240.133.9

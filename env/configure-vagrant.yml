@@ -50,3 +50,6 @@
     - ssl_certificate_key: "/home/gameadmin/certs/blockexplorer.gamecredits.com.key"
     - https: False
     - with_ui: True
+    - mongo_user: mongo
+    - mongo_pass: mongopass
+    
