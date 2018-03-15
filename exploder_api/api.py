@@ -24,13 +24,8 @@ config.read(CONFIG_FILE)
 rpc_user = config.get('syncer', 'rpc_user')
 rpc_password = config.get('syncer', 'rpc_password')
 rpc_port = config.getint('syncer', 'rpc_port')
-mongo_user = config.get('syncer', 'mongo_user')
-mongo_pass = config.get('syncer', 'mongo_pass')
 
-
-mongo = MongoClient('127.0.0.1', 
-                    username=mongo_user,
-                    password=mongo_pass)
+mongo = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
                     
 db = DatabaseGateway(database=mongo.exploder, config=config)
 rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:%s"

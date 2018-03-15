@@ -1,6 +1,12 @@
 from pymongo import MongoClient
+import os
+import ConfigParser
 
-client = MongoClient()
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
+
+client = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
 
 db = client.exploder
 

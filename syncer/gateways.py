@@ -18,13 +18,8 @@ CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
 config.read(CONFIG_FILE)
 
-mongo_user = config.get('syncer', 'mongo_user')
-mongo_pass = config.get('syncer', 'mongo_pass')
-
 def get_mongo_connection():
-    return MongoClient('127.0.0.1', 
-                    username=mongo_user,
-                    password=mongo_pass)
+    return MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
 
 
 class MongoDatabaseGateway(object):

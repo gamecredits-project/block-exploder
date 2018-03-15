@@ -14,7 +14,7 @@ config.read(CONFIG_FILE)
 
 
 def generate_hashrate_history(now, days=30):
-    client = MongoClient()
+    client = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
     database = MongoDatabaseGateway(client.exploder, config)
     rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
                                   % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))

@@ -1,10 +1,15 @@
 from pymongo import MongoClient
 
 from syncer.serializers import SyncHistorySerializer
+import os
+import ConfigParser
 
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
 
 def populate_sync_history():
-    client = MongoClient()
+    client = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
     db = client.exploder
     db.sync_history.insert_many(
         [

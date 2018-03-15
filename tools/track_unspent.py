@@ -2,7 +2,12 @@ import threading
 import pymongo
 from pymongo import MongoClient
 import time
+import os
+import ConfigParser
 
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
 
 class TransactionThread(threading.Thread):
     def __init__(self, threadID, name, transactions, interval):
@@ -43,7 +48,7 @@ class TransactionThread(threading.Thread):
 
 
 if __name__ == '__main__':
-    client = MongoClient()
+    client = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
     db = client.exploder
 
     num_threads = 16

@@ -8,7 +8,7 @@ CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
 config.read(CONFIG_FILE)
 
-mongo = MongoClient()
+mongo = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
 
 class TestGateways(object):
     def __init__(self, database, config):
