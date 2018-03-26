@@ -292,6 +292,18 @@ class DatabaseGateway(object):
 
         return tr
 
+    def get_transactions_by_txids(self, txid_array, rpc):
+        trs = list(self.transactions.find({"txid": {"$in": txid_array}}))
+        
+        if not trs:
+            raise KeyError("Transactions with txids: %s doesn't exist in the database" % txid_array)
+
+        for tr in trs:
+            tr_block = self.get_block_by_hash(tr["blockhash"])
+            tr['confirmations'] = self.calculate_block_confirmations(tr_block, rpc)
+
+        return trs
+
     def get_transactions_by_blockhash(self, blockhash):
         tr = self.transactions.find({"blockhash": blockhash})
 

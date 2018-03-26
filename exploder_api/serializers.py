@@ -138,6 +138,15 @@ class SearchSerializer(object):
         }
 
 
+class TransactionConfirmatonSerializer(object):
+    @staticmethod
+    def to_web(txs):
+        return {
+            "txid": txs['txid'],
+            "confirmations": txs['confirmations']
+        }
+
+
 class TransactoinCountSerializer(object):
     @staticmethod
     def to_web(address, num):

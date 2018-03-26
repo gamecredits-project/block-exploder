@@ -9,10 +9,11 @@ from serializers import TransactionSerializer, BlockSerializer, HashrateSerializ
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
     SearchSerializer, TransactoinCountSerializer, VolumeSerializer, \
     BalanceSerializer, UnspentTransactionSerializer, AddressSerializer, PriceHistorySerializer, \
-    PriceStatsSerializer, VolumesSerializer
+    PriceStatsSerializer, VolumesSerializer, TransactionConfirmatonSerializer
 
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid
+from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid, check_if_transaction_post_key_is_valid
+
 
 ######################
 #  INITIALIZE STUFF  #
@@ -103,6 +104,22 @@ def get_transaction_confirmations(txid):
         "confirmations": db.calculate_block_confirmations(block, rpc)
     }
 
+def post_transaction_confirmations(txids_hash):
+    if not check_if_transaction_post_key_is_valid(txids_hash):
+        return "Bad request", 400
+    
+    for txid in txids_hash['transactions']:
+        if not validate_sha256_hash(txid):
+            return "Invalid transaction ID", 400
+
+    try:
+        txids_hash_no_json = txids_hash['transactions']
+
+        tx_data = db.get_transactions_by_txids(txids_hash_no_json, rpc)
+    except KeyError:
+        return "Transactions with given txids not found", 404
+
+    return [TransactionConfirmatonSerializer.to_web(tx) for tx in tx_data]
 
 def get_latest_transactions(limit, offset):
     if not isinstance(offset, int):
@@ -304,10 +321,13 @@ def post_addresses_balance(addresses_hash):
 #############
 def send_raw_transaction(hex):
     try:
-        rpc.sendrawtransaction(hex)
+        txid = rpc.sendrawtransaction(hex)
     except JSONRPCException as e:
         return e.error, 400
 
+    return {
+            'txid': txid
+        }
 
 def get_latest_hashrates(limit):
     hash_rates = db.get_latest_hashrates(limit)

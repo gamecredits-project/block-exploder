@@ -33,6 +33,14 @@ def check_if_address_post_key_is_valid(address_hash):
     else:
         return False
 
+def check_if_transaction_post_key_is_valid(transactions_hash):
+    """
+    Check if :transaction_hash: has a appropriate body
+    """
+    if 'transactions' in transactions_hash:
+        return True
+    else:
+        return False
 
 def validate_sha256_hash(hash):
     """

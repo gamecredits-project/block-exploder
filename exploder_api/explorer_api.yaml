@@ -182,6 +182,39 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+  /transactions/confirmations:
+    post:
+      consumes: 
+        - application/json
+      produces:
+        - application/json
+      summary: Get number of confirmations for the transactions with the given txids
+      operationId: exploder_api.api.post_transaction_confirmations
+      description: |
+        Returns number of confirmations for the given transactions.
+        Confirmations are calculated as the number of blocks in the blockchain after the block that contains this transaction.
+      tags:
+        - Transactions
+      parameters:
+        - in: body
+          name: txids_hash
+          description: Area for transactions hash list
+          schema:
+            $ref: '#/definitions/MultipleTransactionConfirmations'
+      responses:
+        200:
+          description: Number of confirmations
+          schema:
+            $ref: '#/definitions/TransactionConfirmations'
+        400:
+          description: Invalid transaction ID
+        404:
+          description: Transaction with given txid doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
   /transactions/{txid}/confirmations:
     get:
       summary: Get number of confirmations for the transaction with the given txid
@@ -820,6 +853,16 @@ definitions:
         type: array
         items:
           type: string
+
+  MultipleTransactionConfirmations:
+    type: object
+    properties:
+      transactions:
+        type: array
+        description: Unique identifier of a transaction
+        items:
+          type: string
+          format: hash
 
   Transaction:
     type: object
