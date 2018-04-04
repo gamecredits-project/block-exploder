@@ -845,7 +845,10 @@ definitions:
         type: integer
         format: timestamp
         description: Timestamp that points to the next transactions page, null if there's no more transactions
-
+      valueSort:
+        type: boolean
+        description: | 
+          Optional parameter for sorting by descending value, default is blocktime descending 
   MultipleAddresses:
     type: object
     properties:

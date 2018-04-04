@@ -266,6 +266,7 @@ def get_address_unspent(address_hash, start=None):
 
 def post_addresses_unspent(addresses_hash):
     start = None
+    value_sort = False
 
     if not check_if_address_post_key_is_valid(addresses_hash):
         return "Bad post request", 400
@@ -280,7 +281,11 @@ def post_addresses_unspent(addresses_hash):
         if not validate_address(address_hash):
             return "Invalid address hash", 400
 
-    unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=50)
+    if 'valueSort' in addresses_hash:
+        if addresses_hash['valueSort'] == True:
+            value_sort = True
+
+    unspent = db.post_addresses_unspent(addresses_hash_no_json, start, value_sort=value_sort, limit=50)
 
     if len(unspent) == 50:
         last_unspent_transaction = unspent[len(unspent)-1]
