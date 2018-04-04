@@ -259,8 +259,6 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate(pipeline)        
         result = list(result)
 
-        logging.error("Addresses %s" % addresses)
-        # addresses.reverse()
         addresses = set(addresses)
         total_volume = 0
 
@@ -276,21 +274,12 @@ class DatabaseGateway(object):
                     addresses.remove(mongo_address)
                     total_volume += (result[_]['volume'])
 
-        # result.reverse()
         for address in addresses:
             result.append({'volume': 0, 'address': address})
 
         if not result:
             return 0
-#         "GP3NyVye2DX1SfYxLpzJtbG9hrgEUq9Kdq",
-# "GSbjz7pBsmGe17onkZyTVS6jCoJ4MozRMS",
-# "GREEQPc95XqkcXDr9cQr948Kw1mqN1c8vW",
-# "GS3XxqynBYUsn78Lcd6F3iH1W7XjxiRgZH"    
 
-        result.reverse()
-        # logging.error(result)
-        logging.error("Set %s" % sorted(addresses))
-        logging.error("Result %s" % result)
         return result, total_volume
 
 
@@ -307,6 +296,18 @@ class DatabaseGateway(object):
         tr['confirmations'] = self.calculate_block_confirmations(tr_block, rpc)
 
         return tr
+
+    def get_transactions_by_txids(self, txid_array, rpc):
+        trs = list(self.transactions.find({"txid": {"$in": txid_array}}))
+        
+        if not trs:
+            raise KeyError("Transactions with txids: %s doesn't exist in the database" % txid_array)
+
+        for tr in trs:
+            tr_block = self.get_block_by_hash(tr["blockhash"])
+            tr['confirmations'] = self.calculate_block_confirmations(tr_block, rpc)
+
+        return trs    
 
     def get_transactions_by_blockhash(self, blockhash):
         tr = self.transactions.find({"blockhash": blockhash})
