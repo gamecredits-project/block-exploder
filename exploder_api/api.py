@@ -14,6 +14,7 @@ from serializers import TransactionSerializer, BlockSerializer, HashrateSerializ
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid, check_if_transaction_post_key_is_valid
 
+import json
 
 ######################
 #  INITIALIZE STUFF  #
@@ -32,6 +33,7 @@ db = DatabaseGateway(database=mongo.exploder, config=config)
 rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:%s"
                        % (rpc_user, rpc_password, rpc_port))
 
+import logging
 
 ############
 #  BLOCKS  #
@@ -328,8 +330,8 @@ def post_addresses_balance(addresses_hash):
 def send_raw_transaction(hex):
     try:
         txid = rpc.sendrawtransaction(hex)
-    except JSONRPCException as e:
-        return e.error, 400
+    except Exception as e:
+        return {"error": str(e)}, 400
 
     return {
             'txid': txid

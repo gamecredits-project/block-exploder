@@ -176,7 +176,7 @@ app.conf.beat_schedule = {
     'every-30-seconds': {
         'task': 'syncer.tasks.HalfMinuteTask',
         'schedule': 30.0,
-    },
+    },  
     'info-every-5-minutes': {
         'task': 'syncer.tasks.FiveMinuteTask',
         'schedule': crontab(minute='*/5'),
