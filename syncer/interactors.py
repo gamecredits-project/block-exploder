@@ -144,21 +144,27 @@ class Blockchain(object):
         [self.db.mark_transaction_side_chain(tr.txid, is_main) for tr in transactions]
 
     def reconverge(self, new_top_block):
+        '''
+        Sidechain is now mainchain
+        '''
         logging.info("[RECONVERGE] New top block is now %s" % new_top_block)
         sidechain_blocks = sorted(self.db.get_blocks_by_chain(chain=new_top_block.chain), key=lambda b: b.height)
-
+        
         sidechain_blocks.append(new_top_block)
-
+        
         first_in_sidechain = sidechain_blocks[0]
         fork_point = self.db.get_block_by_hash(first_in_sidechain.previousblockhash)
         main_chain_blocks = self.db.get_blocks_higher_than(height=fork_point.height)
-
+                
         new_sidechain_id = self._get_unique_chain_identifier()
         for block in main_chain_blocks:
             self.db.update_block(block.hash, {"chain": new_sidechain_id})
 
         for block in sidechain_blocks:
             self.db.update_block(block.hash, {"chain": self.config.get('syncer', 'main_chain')})
+            # After updating blocks, also update transactions for those blocks
+            self.update_transaction_chain(block.tx, True)
+
         self.db.update_block(fork_point.hash, {"nextblockhash": first_in_sidechain.hash})
 
         new_top_block.chain = self.config.get('syncer', 'main_chain')

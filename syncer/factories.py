@@ -40,6 +40,7 @@ class MongoTransactionFactory(object):
             return None
 
         return Transaction(
+            main_chain=tr['main_chain'],
             blocktime=tr['blocktime'],
             version=tr['version'],
             blockhash=tr['blockhash'],
