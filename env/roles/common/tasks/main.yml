@@ -20,3 +20,7 @@
     line="export LC_ALL='en_US.UTF-8'"
     state=present
     insertafter=EOF
+
+- name: Create the logs directory
+  file: path={{ ansible_env.HOME }}/logs state=directory
+  become: True
