@@ -4,6 +4,7 @@
 *.cprofile
 exploder.egg-info/*
 *.zip
+.pytest_cache/
 .cache
 .eggs
 .idea/

@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
 
   # Create the blockexplorer VM
   config.vm.define "blockexplorer" do |blockexplorer|
-    blockexplorer.vm.box = "thedivic/gamecredits"
+    blockexplorer.vm.box = "bento/ubuntu-16.04"
     blockexplorer.vm.synced_folder "..", "/exploder"
     # blockexplorer.vm.synced_folder "../../gamecredits-pip", "/gamecredits-pip"
 

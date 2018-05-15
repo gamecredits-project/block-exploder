@@ -9,14 +9,15 @@
     - redis
     - nginx
     - application
-    - configure-gamecreditsd
+    - compile-gamecreditsd
     - celery
     - fail2ban
-    - socket
+    # - socket
   vars:
     - rpc_user: "1e772fd4-acaf-4a1a-9970-ff957dbf9b99"
     - rpc_password: "3ea23bcd-4312-47dc-8246-5a290dab6447"
     - rpc_port: 8332
+    - regtest:
     - server_name: "blockexplorer.gamecredits.com"
     - code_dir: "/exploder"
     - log_dir: "{{ ansible_env.HOME }}/logs"
@@ -32,7 +33,7 @@
     - sentry_path: ""
     - bootstrap_dir: "{{ ansible_env.HOME }}/bootstrap"
     - ipify_url: "https://api.ipify.org/"
-    - production: False
+    - production: True
     - bootstrap_dir_server_path: "/bootstrap/"
     - game_price_url: "https://api.coinmarketcap.com/v1/ticker/gamecredits"
     - unspent_tracking: False
@@ -50,6 +51,6 @@
     - ssl_certificate_key: "/home/gameadmin/certs/blockexplorer.gamecredits.com.key"
     - https: False
     - with_ui: True
-    - mongo_user: mongo
+    - mongo_user: mongouser
     - mongo_pass: mongopass
     

@@ -27,6 +27,26 @@ def generate_test_data(num_blocks, config):
 
     return blocks
 
+def generate_unspent_spent_test_data(config):
+    rpc = get_rpc_connection(
+        rpc_user=config.get('syncer', 'rpc_user'),
+        rpc_password=config.get('syncer', 'rpc_password'),
+        rpc_port=config.get('syncer', 'rpc_port')
+    )
+
+    # Unspent transaction in block height 122913
+    # This transaction was spent in 123373 block
+    block_heights = range(122913, 123374)
+    
+    block_hashes = [rpc.getblockhash(height) for height in block_heights]
+    rpc_blocks = [rpc.getblock(block_hash) for block_hash in block_hashes]
+
+    blocks = []
+    for block in rpc_blocks:
+        block_transactions = [rpc.getrawtransaction(tx, 1) for tx in block['tx']]
+        blocks.append(BlockFactory.from_rpc(block, block_transactions))
+
+    return blocks
 
 class MongoDbGatewayTestCase(unittest.TestCase):
     @classmethod
