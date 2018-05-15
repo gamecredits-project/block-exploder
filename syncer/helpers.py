@@ -1,8 +1,11 @@
-import redis
 import os
+import sys
+import redis
 import requests
 from zipfile import ZipFile
-
+import shutil
+import errno
+from binascii import hexlify
 
 REDIS_CLIENT = redis.Redis()
 
@@ -88,3 +91,13 @@ def get_client_ip(url):
         return json_data['ip']
     except requests.exceptions.RequestException:
         return None
+ 
+def copytree(src, dest):
+    try:
+        shutil.copytree(src, dest)
+    except OSError as e:
+        # If the error was caused because the source wasn't a directory
+        if e.errno == errno.ENOTDIR:
+            shutil.copy(src, dest)
+        else:
+            print('Directory not copied. Error: %s' % e)

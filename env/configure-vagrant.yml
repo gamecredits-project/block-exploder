@@ -24,7 +24,7 @@
     - blocks_dir: "{{ ansible_env.HOME }}/.gamecredits/blocks"
     - exploder_conf_dir: "{{ ansible_env.HOME }}/.exploder"
     - syncer_cache_size: 1000
-    - syncer_stream_sync_limit: 99
+    - syncer_stream_sync_limit: 98
     - syncer_task_lock_timeout: 3600
     - sentry_logging: False
     - sentry_token1: ""

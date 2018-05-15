@@ -332,7 +332,7 @@ def send_raw_transaction(hex):
         txid = rpc.sendrawtransaction(hex)
     except Exception as e:
         return {"error": str(e)}, 400
-
+                
     return {
             'txid': txid
         }

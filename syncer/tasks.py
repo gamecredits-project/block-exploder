@@ -1,26 +1,73 @@
-from interactors import Blockchain, BlockchainSyncer, BlockchainAnalyzer,\
-CoinmarketcapAnalyzer
-from gateways import MongoDatabaseGateway
-from pymongo import MongoClient
-from bitcoinrpc.authproxy import AuthServiceProxy
+import os
+import time
+import datetime
+import logging
+from termcolor import colored
+import ConfigParser
+from decimal import *
 from celery import Celery
 from celery.task import Task
 from celery.schedules import crontab
-from helpers import only_one, generate_bootstrap, get_client_ip
-import ConfigParser
-import os
+from celery.signals import celeryd_init
 import raven
-import logging
-import time
-import datetime
-from decimal import *
 from raven.contrib.celery import register_signal, register_logger_signal
+from pymongo import MongoClient
+from bitcoinrpc.authproxy import AuthServiceProxy
+from gamecredits.factories import BlockFactory
+from gateways import MongoDatabaseGateway
+from indexes import BlockIndexes 
+from interactors import Blockchain, BlockchainSyncer, BlockchainAnalyzer,\
+CoinmarketcapAnalyzer
+from helpers import only_one, generate_bootstrap, get_client_ip, copytree
 
 
 CONFIG_FILE = os.environ['EXPLODER_CONFIG']
 config = ConfigParser.RawConfigParser()
 config.read(CONFIG_FILE)
 
+class Conditions(object):
+    """
+    Defines what conditions need to be met before some of the tasks can be 
+    executed.
+    """
+    def __init__(self, rpc):
+        # Headers of blocks need to be synced first before Gamecredits client
+        # can get blocks from other peers
+        self.headers_synced = False
+
+        self.rpc = rpc
+    
+    def get_network_height(self):
+        avg = lambda arr: sum(arr)/len(arr)
+        return int(avg([p['synced_blocks'] for p in self.rpc.getpeerinfo() if p['version'] >= 80007]))
+
+    def get_blokchain_info(self):
+        return self.rpc.getblockchaininfo()
+
+rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
+                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
+blk_dir = config.get('syncer', 'blocks_dir')
+index_tmp = os.path.isdir(blk_dir+'/indext')
+conditions = Conditions(rpc_client)
+block_index = BlockIndexes(blk_dir, BlockFactory)
+
+logging.warning(colored("Started block syncing, this will take awhile..", "yellow"))
+
+while conditions.headers_synced == False:
+    blockchain_info = conditions.get_blokchain_info()
+
+    logging.warning("Catching up with headers: blocks %s, headers %s" % (
+        blockchain_info['blocks'], blockchain_info['headers']
+    ))
+
+    if blockchain_info['headers'] == blockchain_info['blocks']:
+        copytree(blk_dir+'/index', blk_dir+'/indext')
+        # block _index = BlockIndexes(blk_dir, BlockFactory)
+        logging.warning(colored("Started collecting indexes, please wait..", "yellow"))
+        block_index.indexes_to_cache()
+        logging.warning(colored("Indexes collected", "green"))
+        conditions.headers_synced = True
+    time.sleep(15)
 
 class SyncerCelery(Celery):
     def on_configure(self):
@@ -30,13 +77,11 @@ class SyncerCelery(Celery):
             path = config.get('syncer', 'sentry_path')
             sentry_url = "https://%s:%s@%s" % (token1, token2, path)
             client = raven.Client(sentry_url)
-
             # register a custom filter to filter out duplicate logs
             register_logger_signal(client, loglevel=logging.WARNING)
 
             # hook into the Celery error handler
             register_signal(client)
-
 
 class SyncTask(Task):
     """
@@ -49,9 +94,9 @@ class SyncTask(Task):
         database = MongoDatabaseGateway(client.exploder, config)
         blockchain = Blockchain(database, config)
         rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
-                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
-        syncer = BlockchainSyncer(database, blockchain, rpc_client, config)
-
+                                    % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
+        
+        syncer = BlockchainSyncer(database, blockchain, rpc_client, config, block_index)
         # This is where the real work is done
         syncer.sync_auto()
 
@@ -63,7 +108,7 @@ class DailyTask(Task):
 
         database = MongoDatabaseGateway(client.exploder, config)
         rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
-                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
+                                    % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
 
         analizer = BlockchainAnalyzer(database, rpc_client, config)
         # Save hash_rate
@@ -88,7 +133,7 @@ class DailyTask(Task):
             config.get('syncer', 'datadir_path'),
             bootstrap_dir
         )
-
+    
 
 class HalfMinuteTask(Task):
     @only_one(key="SingleHalfMinuteTask", timeout=config.getint('syncer', 'task_lock_timeout'))
@@ -96,7 +141,7 @@ class HalfMinuteTask(Task):
         client = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
         database = MongoDatabaseGateway(client.exploder, config)
         rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
-                                      % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
+                                    % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
 
         analizer = BlockchainAnalyzer(database, rpc_client, config)
         # Calculate and save sync progress
@@ -105,7 +150,7 @@ class HalfMinuteTask(Task):
         # Save GameCredits usd price
         price = analizer.get_game_price()
         analizer.save_game_price(price)
-
+                
 class FiveMinuteTask(Task):
     """
     Checks for new information from Coinmarketcap about GameCredits
