@@ -19,6 +19,9 @@ class BlockIndex(object):
         return "DBBlockIndex(%s, height=%d, file_no=%d, file_pos=%d)" \
                % (self.hash, self.height, self.file, self.data_pos)
 
+BLOCK_HAVE_DATA = 8
+BLOCK_HAVE_UNDO = 16               
+
 class BlockIndexes(object):
     def __init__(self, blk_path, block_factory):
         self.blk_path = blk_path
@@ -120,9 +123,6 @@ class BlockIndexes(object):
         return self.block_indexes
 
 class DBBlockIndex(object):
-    BLOCK_HAVE_DATA = 8
-    BLOCK_HAVE_UNDO = 16
-    
     def __init__(self, key, value):
         self.hash = key
         # decoded_value =  value.encode('hex') + '\n'
@@ -140,11 +140,17 @@ class DBBlockIndex(object):
         n_tx, i = self.read_varint(value[pos:])
         pos += i
 
-        self.file_no, i = self.read_varint(value[pos:])
-        pos += i
+        if status & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO):
+            self.file_no, i = self.read_varint(value[pos:])
+            pos += i
+        else:
+            self.file_no = -1    
 
-        self.data_pos, i = self.read_varint(value[pos:])
-        pos += i
+        if status & BLOCK_HAVE_DATA:
+            self.data_pos, i = self.read_varint(value[pos:])
+            pos += i
+        else:
+            self.data_pos = -1    
 
         undo_pos, i = self.read_varint(value[pos:])
         pos += i

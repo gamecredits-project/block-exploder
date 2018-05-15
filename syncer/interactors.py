@@ -286,6 +286,11 @@ class BlockchainSyncer(object):
         blk_dir = self.config.get('syncer', 'blocks_dir')
 
         for blk_index in block_indexes[blocks_in_db:limit]:
+            if blk_index.data_pos == -1 or blk_index.file_no == -1:
+                logging.error("[SYNC_STREAM] bad index files switching to rpc..")
+                self.sync_rpc()
+                break
+
             try:
                 # logging.error(blk_index)
                 blk_file = os.path.join(blk_dir, "blk%05d.dat" % blk_index.file_no)

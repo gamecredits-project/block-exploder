@@ -33,10 +33,10 @@
     - sentry_path: ""
     - bootstrap_dir: "{{ ansible_env.HOME }}/bootstrap"
     - ipify_url: "https://api.ipify.org/"
-    - production: True
+    - production: False
     - bootstrap_dir_server_path: "/bootstrap/"
     - game_price_url: "https://api.coinmarketcap.com/v1/ticker/gamecredits"
-    - unspent_tracking: False
+    - unspent_tracking: True
     - geo_ip_url: "https://freegeoip.net"
     - address_min_length: 26
     - address_max_length: 34

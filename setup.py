@@ -15,6 +15,8 @@ setup(
         'flask>=0.10.1',
         'flask_socketio',
         'gevent',
+        'plyvel',
+        'termcolor',
     ],
     setup_requires=[
         'pytest_runner'
