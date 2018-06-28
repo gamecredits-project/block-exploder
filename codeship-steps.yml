@@ -1,0 +1,1398 @@
+swagger: '2.0'
+info:
+  title: GAME Blockchain Explorer API
+  description: Explore the GameCredits Network
+  version: "0.0.1"
+basePath: /api
+produces:
+  - application/json
+paths:
+  /blocks/latest:
+    get:
+      summary: Latest blocks
+      operationId: exploder_api.api.get_latest_blocks
+      description: |
+        List latest :limit: blocks in the GameCredits blockchain and skip :offset: blocks
+      parameters:
+        - name: limit
+          in: query
+          description: Number of blocks to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 25
+        - name: offset
+          in: query
+          description: Number of blocks to skip.
+          required: false
+          type: integer
+          minimum: 0
+          default: 0
+      tags:
+        - Blocks
+      responses:
+        200:
+          description: An array of blocks
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Block'
+        400:
+          description: Offset too large
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /blocks/{block_hash}:
+    get:
+      summary: Get a single block by hash
+      operationId: exploder_api.api.get_block_by_hash
+      description: |
+        Return a single block with a given blockhash
+      tags:
+        - Blocks
+      parameters:
+        - $ref: '#/parameters/block_hash'
+      responses:
+        200:
+          description: Return block
+          schema:
+            $ref: '#/definitions/Block'
+        400:
+          description: Invalid block hash
+        404:
+          description: Block with given hash doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /blocks/{block_hash}/confirmations:
+    get:
+      summary: Get number of confirmations for the block with the given blockhash
+      operationId: exploder_api.api.get_block_confirmations
+      description: |
+        Returns number of confirmations for the given block.
+        Confirmations are calculated as the number of blocks after this block in the blockchain.
+      tags:
+        - Blocks
+      parameters:
+        - $ref: '#/parameters/block_hash'
+      responses:
+        200:
+          description: Number of confirmations
+          schema:
+            $ref: '#/definitions/BlockConfirmations'
+        400:
+          description: Invalid block hash
+        404:
+          description: Block with given hash doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /blocks:
+    get:
+      summary: Get block by height
+      operationId: exploder_api.api.get_block_by_height
+      description: |
+        Provide height as a query parameter and get the block with that height
+      tags:
+        - Blocks
+      parameters:
+        - name: height
+          in: query
+          description: Height of the block.
+          required: true
+          type: integer
+          minimum: 0
+      responses:
+        200:
+          description: Block with given height
+          schema:
+            $ref: '#/definitions/Block'
+        400:
+          description: Block height too large
+        404:
+          description: Block with given height doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /transactions/latest:
+    get:
+      summary: Latest transactions
+      operationId: exploder_api.api.get_latest_transactions
+      description: |
+        List latest  <limit> transactions in the GameCredits blockchain and skip <offset> transactions
+      parameters:
+        - name: limit
+          in: query
+          description: Number of transactions to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 25
+        - name: offset
+          in: query
+          description: Number of transactions to skip.
+          required: false
+          type: integer
+          minimum: 0
+          default: 0
+      tags:
+        - Transactions
+      responses:
+        200:
+          description: An array of transactions
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+        400:
+          description: Offset too large
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /transactions/{txid}:
+    get:
+      tags:
+        - Transactions
+      operationId: exploder_api.api.get_transaction_by_txid
+      summary: Get a single transaction by ID
+      parameters:
+        - $ref: '#/parameters/txid'
+      responses:
+        200:
+          description: Return transaction
+          schema:
+            $ref: '#/definitions/Transaction'
+        400:
+          description: Invalid transaction ID
+        404:
+          description: Transaction with given txid doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /transactions/confirmations:
+    post:
+      consumes: 
+        - application/json
+      produces:
+        - application/json
+      summary: Get number of confirmations for the transactions with the given txids
+      operationId: exploder_api.api.post_transaction_confirmations
+      description: |
+        Returns number of confirmations for the given transactions.
+        Confirmations are calculated as the number of blocks in the blockchain after the block that contains this transaction.
+      tags:
+        - Transactions
+      parameters:
+        - in: body
+          name: txids_hash
+          description: Area for transactions hash list
+          schema:
+            $ref: '#/definitions/MultipleTransactionConfirmations'
+      responses:
+        200:
+          description: Number of confirmations
+          schema:
+            $ref: '#/definitions/TransactionConfirmations'
+        400:
+          description: Invalid transaction ID
+        404:
+          description: Transaction with given txid doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /transactions/{txid}/confirmations:
+    get:
+      summary: Get number of confirmations for the transaction with the given txid
+      operationId: exploder_api.api.get_transaction_confirmations
+      description: |
+        Returns number of confirmations for the given transaction.
+        Confirmations are calculated as the number of blocks in the blockchain after the block that contains this transaction.
+      tags:
+        - Transactions
+      parameters:
+        - $ref: '#/parameters/txid'
+      responses:
+        200:
+          description: Number of confirmations
+          schema:
+            $ref: '#/definitions/TransactionConfirmations'
+        400:
+          description: Invalid transaction ID
+        404:
+          description: Transaction with given txid doesn't exist
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /transactions:
+    get:
+      tags:
+        - Transactions
+      operationId: exploder_api.api.get_transactions_by_blockhash
+      summary: Get transactions by blockhash
+      parameters:
+        - name: blockhash
+          in: query
+          description: Block identifier.
+          required: true
+          type: string
+      responses:
+        200:
+          description: Return array of transactions filtered by blockhash
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Transaction'
+        400:
+          description: Invalid block hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/{address_hash}:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_transactions
+      summary: Return an array of transactions to given address
+      description: |
+        Return a list of transactions that this address appears (in descending order by blocktime)
+      parameters:
+        - $ref: '#/parameters/address_hash'
+        - name: start
+          in: query
+          description: Timestamp of the start transaction, used for pagination
+          required: false
+          type: integer
+          minimum: 0
+      responses:
+        200:
+          description: Returns transactions
+          schema:
+            $ref: '#/definitions/TransactionsPaginated'
+        400:
+          description: Invalid address hash; Start too large
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /addresses:
+    post:
+      tags:
+        - Adresses
+      operationId: exploder_api.api.post_addresses_transactions
+      summary: Return an array of transactions for given addresses
+      description: |
+          Returns 50 latest transactions that these addresses appear in (in descending order by blocktime)
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddressesAndStart'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: Returns transactions
+          schema:
+            $ref: '#/definitions/AddressesTransactionsPaginated'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/{address_hash}/volume:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_volume
+      summary: Return the volume of an address
+      description: |
+        Volume is the total amount of GameCredits transfered to a given address
+      parameters:
+        - $ref: '#/parameters/address_hash'
+      responses:
+        200:
+          description: Return volume
+          schema:
+            $ref: '#/definitions/Volume'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/volume:
+    post:
+      operationId: exploder_api.api.post_addresses_volume
+      summary: Return the total volume of the given addresses
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddresses'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: Return the total volume of the given addresses
+          schema:
+            $ref: '#/definitions/MultipleAddressesVolume'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/{address_hash}/transaction-count:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_num_transactions
+      summary: Return the number of transactions for a given address
+      description: |
+        Number of transactions this address appears in
+      parameters:
+        - $ref: '#/parameters/address_hash'
+      responses:
+        200:
+          description: Return number of transactions
+          schema:
+            $ref: '#/definitions/TransactionCount'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/transaction-count:
+    post:
+      operationId: exploder_api.api.post_addresses_num_transactions
+      summary: Return the number of transactions for a given list of addresses
+      description: |
+        Number of transactions these addresses appear in
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddresses'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: Return number of transactions of all addresses
+          schema:
+            $ref: '#/definitions/MultipleAddressesTransactionCount'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/{address_hash}/balance:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_balance
+      summary: Return the balance of an address
+      description: |
+        Balance is the total amount of GameCredits transfered to a given address that has not yet been spent
+      parameters:
+        - $ref: '#/parameters/address_hash'
+      responses:
+        200:
+          description: Return balance
+          schema:
+            $ref: '#/definitions/Balance'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/balance:
+    post:
+      operationId: exploder_api.api.post_addresses_balance
+      summary: Return the balance sum for the given list of addresses
+      description: |
+        Balance is the total amount of GameCredits transfered to the given addresses that has not yet been spent
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddresses'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: Return balance sum of all addresses
+          schema:
+            $ref: '#/definitions/MultipleAddressesBalance'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/{address_hash}/unspent:
+    get:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.get_address_unspent
+      summary: Return an array of unspent outputs to given address and it's estimated balance
+      parameters:
+        - $ref: '#/parameters/address_hash'
+        - name: start
+          in: query
+          description: Timestamp of the start transaction, used for pagination
+          required: false
+          type: integer
+          minimum: 0
+      responses:
+        200:
+          description: |
+            Returns 50 latest transactions that this address appears in (in descending order by blocktime)
+          schema:
+            $ref: '#/definitions/TransactionUnspent'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /addresses/unspent:
+    post:
+      tags:
+        - Addresses
+      operationId: exploder_api.api.post_addresses_unspent
+      summary: Return the number of unspent transactions for the given addresses
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: addresses_hash
+          description: Area for addresses list
+          schema:
+            $ref: '#/definitions/MultipleAddressesAndStart'
+      tags:
+        - Addresses
+      responses:
+        200:
+          description: |
+            Returns 50 latest unspent transactions that these addresses appear in (in descending order by blocktime)
+          schema:
+            $ref: '#/definitions/TransactionsUnspent'
+        400:
+          description: Invalid address hash
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/pushtx:
+    post:
+      operationId: exploder_api.api.send_raw_transaction
+      summary: Submit a raw transaction to the GameCredits network
+      consumes:
+        - application/json
+      parameters:
+        - name: hex
+          in: formData
+          description: Raw transaction in hexadecimal format
+          required: true
+          type: string
+      tags:
+        - Network
+      responses:
+        200:
+          description: Transmitted the transaction successfully
+        400:
+          description: Bad transaction
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/hashrates:
+    get:
+      summary: Latest hashrates
+      operationId: exploder_api.api.get_latest_hashrates
+      description: |
+        List latest  <limit> hashrates in the GameCredits blockchain
+      parameters:
+        - name: limit
+          in: query
+          description: Number of hashrates to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 10
+      tags:
+        - Network
+      responses:
+        200:
+          description: An array of hashrates
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Hashrate'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/info:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_network_stats
+      summary: Get basic network information
+      responses:
+        200:
+          description: Return network information
+          schema:
+            $ref: '#/definitions/NetworkInfo'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/bootstrap:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_bootstrap_link
+      summary: Get bootstrap.dat link
+      responses:
+        200:
+          description: Return bootstrap.dat link
+          schema:
+            $ref: '#/definitions/Bootstrap'
+        404:
+          description: Bootstrap.dat doesn't exist on the server
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/price:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_usd_price
+      summary: Get GameCredits USD price from coinmarketcap
+      responses:
+        200:
+          description: Return USD price
+          schema:
+            $ref: '#/definitions/Price'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/price-history:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_price_history
+      summary: Get price history of GameCredits
+      parameters:
+        - name: until
+          in: query
+          description: To timestamp you want to see the history.
+          required: false
+          type: integer
+        - name: since
+          in: query
+          description: From timestamp you want to see the history.
+          required: false
+          type: integer
+        - name: limit
+          in: query
+          description: Number of price history info to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 3000
+          default: 20
+        - name: offset
+          in: query
+          description: Number of price history info to skip.
+          required: false
+          type: integer
+          minimum: 0
+          maximum: 3000
+          default: 0
+      responses:
+        200:
+          description: An array of price history information
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PriceHistory'
+        400:
+          description: Limit too large
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /network/price-stats:
+    get:
+      tags:
+        - Network
+      operationId: exploder_api.api.get_price_stats
+      summary: Get price stats of GameCredits
+      responses:
+        200:
+          description: GAME price statistics
+          schema:
+            $ref: '#/definitions/PriceStats'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /client/sync_history:
+    get:
+      summary: Latest sync history information
+      operationId: exploder_api.api.get_latest_sync_history
+      description: |
+        List latest  <limit> sync history info of the GameCredits blockchain and skip <offset> history
+      parameters:
+        - name: limit
+          in: query
+          description: Number of sync history info to return.
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 25
+        - name: offset
+          in: query
+          description: Number of sync history info to skip.
+          required: false
+          type: integer
+          minimum: 0
+          default: 0
+      tags:
+        - Client
+      responses:
+        200:
+          description: An array of sync history information
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/SyncHistory'
+        400:
+          description: Offset too large
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /client/info:
+    get:
+      summary: Get basic client information
+      operationId: exploder_api.api.get_client_info
+      tags:
+        - Client
+      responses:
+        200:
+          description: An array of sync history information
+          schema:
+            $ref: '#/definitions/ClientInfo'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /search/{search_param}:
+    get:
+      tags:
+        - Search
+      operationId: exploder_api.api.search
+      summary: Search blockchain for specific block hash, block height, transaction or address
+      parameters:
+        - $ref: '#/parameters/search_param'
+      responses:
+        200:
+          description: Return whether sent parameter is block hash, block height, transaction, address or null
+          schema:
+            $ref: '#/definitions/SearchParamType'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+parameters:
+  block_hash:
+    name: block_hash
+    description: Unique block identifier
+    in: path
+    type: string
+    required: true
+  block_height:
+    name: block_height
+    description: Unique block height
+    in: path
+    type: string
+    required: true
+  txid:
+    name: txid
+    description: Unique transaction identifier
+    in: path
+    type: string
+    required: true
+  address_hash:
+    name: address_hash
+    description: Unique address identifier
+    in: path
+    type: string
+    required: true
+  search_param:
+    name: search_param
+    description: Block hash, address hash, block heigth or transaction id
+    in: path
+    type: string
+    required: true
+
+definitions:
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
+
+  Address:
+    type: object
+    properties:
+      address:
+        type: string
+        description: Unique identifier of the address
+      volume:
+        type: number
+        description: Total volume of GameCredits transfered to this address
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+
+  MultipleAddressesAndStart:
+    type: object
+    properties:
+      addresses:
+        type: array
+        description: Address this output is referencing
+        items:
+          type: string
+      start:
+        type: integer
+        format: timestamp
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
+      valueSort:
+        type: boolean
+        description: | 
+          Optional parameter for sorting by descending value, default is blocktime descending 
+  MultipleAddresses:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+
+  MultipleTransactionConfirmations:
+    type: object
+    properties:
+      transactions:
+        type: array
+        description: Unique identifier of a transaction
+        items:
+          type: string
+          format: hash
+
+  Transaction:
+    type: object
+    properties:
+      txid:
+        type: string
+        description: Unique identifier of a transaction
+      blocktime:
+        type: integer
+        description: |
+          Unix timestamp representing the time the block
+          containing this transaction was mined
+      version:
+        type: integer
+        description: A version number to track software/protocol upgrades
+      blockhash:
+        type: string
+        description: Identifier of the block containing this transaction
+      locktime:
+        type: integer
+        description: Transaction lock time
+      total:
+        type: number
+        format: float
+        description: Total value transfered in this transaction
+      vin:
+        type: array
+        items:
+          $ref: '#/definitions/Vin'
+        description: List of transaction inputs
+      vout:
+        type: array
+        items:
+          $ref: '#/definitions/Vout'
+        description: List of transaction outputs
+      mainChain:
+        type: boolean
+        description: True if transaction belongs to main chain false otherwise  
+
+  TransactionUnspent:
+    type: object
+    properties:
+      address:
+        type: string
+        description: Address hash for this request
+      next:
+        type: string
+        description: Relative url of the next page of transactions, null if there's no more transactions
+      utxo:
+        type: array
+        items:
+          $ref: '#/definitions/Utxo'
+        description: List of utxo objects
+
+  TransactionsUnspent:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: Hashes of all address for this request
+      next:
+        type: string
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
+      utxo:
+        type: array
+        items:
+          $ref: '#/definitions/Utxo'
+        description: List of unspent transactions objects (utxo for short)
+
+  Utxo:
+    type: object
+    properties:
+      asm:
+        type: string
+        description: Output Script
+      index:
+        type: integer
+        description:  Index of this output in the parent transaction
+      reqSigs:
+        type: integer
+        description: Number of signatures required to spend this transaction
+      spent:
+        type: boolean
+        description: Is this output spent
+      txid:
+        type: string
+        description: Identifier of the parent transaction
+      type:
+        type: string
+        description: Type of the output
+      value:
+        type: integer
+        description: Value of this output
+      blocktime:
+        type: integer
+        description: Timestamp of the block
+
+  Vout:
+    type: object
+    properties:
+      index:
+        type: integer
+        description: Index of this output in the parent transaction
+      reqSigs:
+        type: integer
+        description: Number of signatures required to spend this transaction
+      value:
+        type: number
+        format: float
+        description: Value of this output in GAME
+      txid:
+        type: string
+        description: Identifier of the parent transaction
+      address:
+        type: string
+        description: Address this output is referencing
+      type:
+        type: string
+        description: Type of the output
+      asm:
+        type: string
+        description: Output Script
+      spent:
+        type: boolean
+        description: Is this output spent
+
+  Vin:
+    type: object
+    properties:
+      vout_index:
+        type: integer
+        description: Index of the output to spend in it's containing transaction
+      prev_txid:
+        type: string
+        description: Identifier of the transaction containing the output to be spent
+      sequence:
+        type: integer
+        description: Sequence number
+      hex:
+        type: string
+        description: Input Script in hexadecimal format
+      txid:
+        type: string
+        description: Identifier of the parent transaction
+      coinbase:
+        type: string
+        description: Coinbase data for generation transactions
+
+  Block:
+    type: object
+    properties:
+      hash:
+        type: string
+        description: Unique identifier, a hash of the block header
+      size:
+        type: number
+        description: Size of the block in bytes
+      height:
+        type: integer
+        description: Position of the block in the blockchain
+      version:
+        type: number
+        description: A version number to track software/protocol upgrades
+      merkleroot:
+        type: string
+        description: Root of the merkle tree
+      tx:
+        type: array
+        items:
+          type: string
+        description: Array of id's of transactions in this block
+      time:
+        type: integer
+        description: Unix timestamp representing the time when this block was mined
+      nonce:
+        type: number
+        description: A counter used for the proof-of-work algorithm
+      bits:
+        type: string
+        description: Difficulty bits in hexadeximal format
+      difficulty:
+        type: string
+        description: Mining difficulty in hexadecimal format
+      chainwork:
+        type: string
+        description: Cumulative work produced to get to this block in the chain
+      previousblockhash:
+        type: string
+        description: Hash of the previous block in the chain
+      nextblockhash:
+        type: string
+        description: Hash of the next block in the chain
+      target:
+        type: string
+        description: Mining target in hexadecimal format
+      total:
+        type: number
+        format: double
+        description: Total GAME transfered in all transactions inside this block
+      work:
+        type: number
+        format: double
+        description: Block work
+      chain:
+        type: string
+        description: Indicates if the block is in main or side chain  
+
+  BlockConfirmations:
+    type: object
+    properties:
+      hash:
+        type: string
+        description: Unique identifier, a hash of the block header
+      confirmations:
+        type: integer
+        description: Number of blocks in the blockchain after this block
+
+  TransactionConfirmations:
+    type: object
+    properties:
+      txid:
+        type: string
+        description: Unique identifier of a transaction
+      confirmations:
+        type: integer
+        description: Number of blocks in the blockchain after the block containing this transaction
+
+  Hashrate:
+    type: object
+    properties:
+      hashrate:
+        type: integer
+        description: The estimated number of hashes per second the GameCredits network is performing
+      timestamp:
+        type: number
+        format: float
+        description: |
+          Unix timestamp representing the time the hashrate was calculated
+  NetworkInfo:
+    type: object
+    properties:
+      coinSupply:
+        type: integer
+        description: Current GameCredits supply
+      coinMaxSupply:
+        type: integer
+        description: Maximum GameCredits supply
+      hashrate:
+        type: integer
+        description: The estimated number of hashes per second that GameCredits network is performing
+      blockchainSize:
+        type: number
+        format: float
+        description: Size of the blockchain (in GB)
+      numBlocks:
+        type: integer
+        description: Total number of blocks in the main chain
+      numTransactions:
+        type: integer
+        description: Total number of transactions
+
+  TransactionsPaginated:
+    type: object
+    properties:
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+      next:
+        type: string
+        description: Relative url of the next page of transactions, null if there's no more transactions
+      mainChain:
+        type: boolean
+        description: True if belongs to main chain false otherwise
+
+  AddressesTransactionsPaginated:
+    type: object
+    properties:
+      transactions:
+        type: array
+        items:
+          $ref: '#/definitions/Transaction'
+      next:
+        type: integer
+        description: Timestamp that points to the next transactions page, null if there's no more transactions
+
+  Bootstrap:
+    type: object
+    properties:
+      url:
+        type: string
+      generated:
+        type: integer
+
+  Price:
+    type: object
+    properties:
+      priceUSD:
+        type: number
+        format: float
+
+  PriceHistory:
+    type: object
+    properties:
+      priceUSD:
+        type: number
+        format: float
+        description: |
+          Price of GAME in USD
+      priceBTC:
+        type: number
+        format: float
+        description: |
+         Price of GAME in BTC
+      marketCapUSD:
+        type: integer
+        description: MarketCap of GAME in USD
+      timestamp:
+        type: integer
+        description: Unix timestamp of the price
+
+  PriceStats:
+    type: object
+    properties:
+      priceUSD:
+        type: number
+        format: decimal
+        description: |
+          Current price of GAME in USD
+      priceBTC:
+        type: number
+        format: decimal
+        description: |
+          Current price of GAME in BTC
+      percentChange24hUSD:
+        type: number
+        format: float
+        description: |
+          24h percent change of GAME in USD
+      percentChange24hBTC:
+        type: number
+        format: float
+        description: |
+         24h percent change of GAME in BTC
+      volume24hUSD:
+        type: number
+        format: float
+        description: 24h volume value in USD
+      timestamp:
+        type: integer
+        description: Unix timestamp of the price
+
+  SyncHistory:
+    type: object
+    properties:
+      startTime:
+        type: number
+        format: float
+        description: |
+          Unix timestamp representing the time sync started
+      endTime:
+        type: number
+        format: float
+        description: |
+          Unix timestamp representing the time sync ended
+      startBlockHeight:
+        type: integer
+        description: Position of the block in the blockchain when the sync started
+      endBlockHeight:
+        type: integer
+        description: Position of the block in the blockchain when the sync ended
+
+  ClientInfo:
+    type: object
+    properties:
+      ip:
+        type: string
+        description: IP of our client
+      version:
+        type: string
+        description: Version of GameCredits wallet that blockexplorer uses
+      peerInfo:
+        type: array
+        items:
+          $ref: '#/definitions/PeerInfo'
+        description: Information about each connected network node
+      syncProgress:
+        type: number
+        format: float
+        description: Sync progress (in percentage)
+
+  PeerInfo:
+    type: object
+    properties:
+      addr:
+        type: string
+        description: The ip address and port of the peer
+      latitude:
+        type: number
+        format: float
+        description: Coordinate that specifies the north–south position of a point on the Earth's surface
+      longitude:
+        type: number
+        format: float
+        description: Coordinate that specifies the east-west position of a point on the Earth's surface
+      services:
+        type: string
+        description: The services
+      lastsend:
+        type: integer
+        description: The time in seconds since epoch (Jan 1 1970 GMT) of the last send
+      lastrecv:
+        type: integer
+        description: The time in seconds since epoch (Jan 1 1970 GMT) of the last receive
+      bytessent:
+        type: integer
+        description: The total bytes sent
+      bytesrecv:
+        type: integer
+        description: The total bytes received
+      conntime:
+        type: integer
+        description: The connection time in seconds since epoch (Jan 1 1970 GMT)
+      pingtime:
+        type: integer
+        description: Ping time
+      version:
+        type: integer
+        description: The peer version, such as 7001
+      subver:
+        type: string
+        description: The string version
+      inbound:
+        type: boolean
+        description: Inbound (true) or Outbound (false)
+      startingheight:
+        type: integer
+        description: The starting height (block) of the peer
+      banscore:
+        type: integer
+        description: The ban score
+      syncnode:
+        type: boolean
+        description: If sync node
+
+  SearchParamType:
+    type: object
+    properties:
+      searchBy:
+        type: string
+        description: Block hash, transaction id or address hash with which this search was performed
+      type:
+        type: string
+        description: Type of the search parameter (block, transaction, address or null)
+
+  TransactionCount:
+    type: object
+    properties:
+      address:
+        type: string
+        description: GameCredits address
+      transactionCount:
+        type: integer
+        description: Number of transactions this address appears in
+
+  MultipleAddressesTransactionCount:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: GameCredits addresses
+      transactionCount:
+        type: integer
+        description: Number of transactions these addresses appears in
+
+  Volume:
+    type: object
+    properties:
+      address:
+        type: string
+        description: GameCredits address
+      volume:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to a given address
+
+  MultipleAddressesVolume:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: GameCredits addresses
+      totalVolume:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to the given addresses
+      volumes:
+        type: array
+        items: 
+          $ref: '#/definitions/Volume'
+
+  Balance:
+    type: object
+    properties:
+      address:
+        type: string
+        description: GameCredits address
+      balance:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to a given address that has not yet been spent
+
+  MultipleAddressesBalance:
+    type: object
+    properties:
+      addresses:
+        type: array
+        items:
+          type: string
+        description: GameCredits addresses
+      balance:
+        type: number
+        format: float
+        description: Total amount of GameCredits transfered to a given address that has not yet been spent
