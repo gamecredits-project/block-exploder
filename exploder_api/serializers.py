@@ -12,6 +12,7 @@ class BlockSerializer(object):
             "nonce": mongo_block["nonce"],
             "bits": mongo_block["bits"],
             "difficulty": mongo_block["difficulty"],
+            "chain": mongo_block["chain"],
             "chainwork": mongo_block["chainwork"],
             "previousblockhash": mongo_block["previousblockhash"],
             "nextblockhash": mongo_block["nextblockhash"],
@@ -29,6 +30,7 @@ class TransactionSerializer(object):
             "blocktime": tr["blocktime"],
             "version": tr["version"],
             "blockhash": tr["blockhash"],
+            "mainChain": tr["main_chain"],
             "locktime": tr["locktime"],
             "total": tr["total"],
             "vin": tr["vin"],
@@ -41,12 +43,14 @@ class UnspentTransactionSerializer(object):
         return {
             "asm": tr["vout"]["asm"],
             "index": tr["index"],
+            "mainChain": tr["main_chain"],
             "reqSigs": tr["vout"]["reqSigs"],
             "spent": tr["vout"]["spent"],
             "txid": tr["vout"]["txid"],
             "type": tr["vout"]["type"],
             "value": tr["vout"]["value"],
-            "blockTime": tr["blocktime"]
+            "blockTime": tr["blocktime"],
+            "address": tr["vout"]["addresses"]
         }
 
 class HashrateSerializer(object):
@@ -134,6 +138,15 @@ class SearchSerializer(object):
         }
 
 
+class TransactionConfirmatonSerializer(object):
+    @staticmethod
+    def to_web(txs):
+        return {
+            "txid": txs['txid'],
+            "confirmations": txs['confirmations']
+        }
+
+
 class TransactoinCountSerializer(object):
     @staticmethod
     def to_web(address, num):
@@ -150,6 +163,16 @@ class VolumeSerializer(object):
             "address": address,
             "volume": volume
         }
+
+class VolumesSerializer(object):
+    @staticmethod
+    def to_web(address, volume, volumes):
+        return {
+            "address": address,
+            "totalVolume": volume,
+            "volumes": volumes
+        }        
+
 
 
 class BalanceSerializer(object):

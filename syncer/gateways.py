@@ -1,6 +1,9 @@
 import pymongo
 from decimal import Decimal
 import time
+import os
+
+import ConfigParser
 
 from factories import MongoBlockFactory, MongoTransactionFactory
 from serializers import BlockSerializer, TransactionSerializer, \
@@ -9,12 +12,14 @@ from serializers import BlockSerializer, TransactionSerializer, \
     PriceHistorySerializer, PriceStatsSerializer
 from pymongo import MongoClient
 
-
 MAIN_CHAIN = 'main_chain'
 
+CONFIG_FILE = os.environ['EXPLODER_CONFIG']
+config = ConfigParser.RawConfigParser()
+config.read(CONFIG_FILE)
 
 def get_mongo_connection():
-    return MongoClient()
+    return MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
 
 
 class MongoDatabaseGateway(object):
@@ -245,6 +250,13 @@ class MongoDatabaseGateway(object):
                 '$set': {"vout.%s.spent" % vout_index: True}
             })
 
+    def mark_transaction_side_chain(self, txid, is_main):
+        self.transactions.update_one({
+            'txid': txid
+        },{
+            '$set': {"main_chain": is_main}
+        })
+        
     #########################
     #   NETWORK METHODS    #
     #########################

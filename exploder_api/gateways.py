@@ -1,6 +1,5 @@
 import pymongo
 import sys
-import logging
 
 from helpers import validate_address, check_parameter_if_int
 
@@ -40,9 +39,15 @@ class DatabaseGateway(object):
     def get_highest_in_chain(self, chain):
         return self.blocks.find_one({"chain": chain}, sort=[("height", -1)])
 
-    def calculate_block_confirmations(self, block):
+    def calculate_block_confirmations(self, block, rpc):
         highest_in_chain = self.get_highest_in_chain(block['chain'])
-        return highest_in_chain['height'] - block['height']
+
+        if highest_in_chain['chain'] != 'main_chain':
+            block_confirmations = -1
+        else:
+            block_confirmations = highest_in_chain['height'] - block['height']
+
+        return block_confirmations
 
     def get_block_count(self, chain):
         return self.blocks.find({"chain": chain}).count()
@@ -51,12 +56,11 @@ class DatabaseGateway(object):
     #  ADDRESSES  #
     ###############
     def get_address_unspent(self, address, start, limit):
-
         if not start:
             unspent = self.transactions.aggregate([
                 {"$match": {"vout.addresses": address}},
                 {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
                 {"$match": {"vout.spent": False, "vout.addresses": address}},
                 {"$sort": {"blocktime": -1}},
                 {"$limit": limit}
@@ -73,7 +77,7 @@ class DatabaseGateway(object):
         unspent = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
             {"$match": {"vout.spent": False, "vout.addresses": address,
                         "blocktime": {"$lt": start}}},
             {"$sort": {"blocktime": -1}},
@@ -88,14 +92,19 @@ class DatabaseGateway(object):
 
         return results
 
-    def post_addresses_unspent(self, addresses, start, limit):
+    def post_addresses_unspent(self, addresses, start, limit, value_sort=False):
+        sort = "blocktime"
+
+        if value_sort:
+            sort = "vout.value"
+
         if not start:
             pipeline = [
                 {"$match": {"vout.addresses": {"$in": addresses}}},
                 {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+                {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
                 {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses}}},
-                {"$sort": {"blocktime": -1}},
+                {"$sort": {sort: -1}},
                 {"$limit": limit}
             ]
 
@@ -107,15 +116,15 @@ class DatabaseGateway(object):
                 uns['vout']['index'] = uns['index']
                 results.append(uns)
 
-            return results    
+            return results
 
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "index"}},
-            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1}},
+            {"$project": {"vout": 1, "txid": 1, "index": 1, "blocktime": 1, "main_chain": 1}},
             {"$match": {"vout.spent": False, "vout.addresses": {"$in": addresses},
                         "blocktime" : {"$lt": start}}},
-            {"$sort": {"blocktime": -1}},
+            {"$sort": {sort: -1}},
             {"$limit": limit}
         ]
 
@@ -125,7 +134,7 @@ class DatabaseGateway(object):
         for uns in unspent:
             uns['vout']['txid'] = uns['txid']
             uns['vout']['index'] = uns['index']
-            results.append(uns)
+            results.append(uns)         
 
         return results
 
@@ -135,7 +144,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": address}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": False, "vout.addresses": address}},
+            {"$match": {"vout.spent": False, "vout.addresses": address, "main_chain": True}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "$vout.addresses", "balance": {"$sum": "$vout.value"}}}
         ])
@@ -151,7 +160,7 @@ class DatabaseGateway(object):
         result = self.transactions.aggregate([
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": {"path": "$vout", "includeArrayIndex": "vout_index"}},
-            {"$match": {"vout.spent": False, "vout.addresses":{"$in": addresses }}},
+            {"$match": {"vout.spent": False, "main_chain": True, "vout.addresses":{"$in": addresses }}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "vout", "balance": {"$sum": "$vout.value"}}}
         ])
@@ -220,7 +229,7 @@ class DatabaseGateway(object):
         pipeline = [
             {"$match": {"vout.addresses": address}},
             {"$unwind": "$vout"},
-            {"$match": {"vout.addresses": address}},
+            {"$match": {"vout.addresses": address, "main_chain": True}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
             {"$group": {"_id": "$vout.addresses", "volume": {"$sum": "$vout.value"}}}
         ]
@@ -234,37 +243,71 @@ class DatabaseGateway(object):
 
     def post_addresses_volume(self, addresses):
         # Check if the address is unused on the blockchain
-
         pipeline = [
             {"$match": {"vout.addresses": {"$in": addresses}}},
             {"$unwind": "$vout"},
-            {"$match": {"vout.addresses": {"$in": addresses}}},
+            {"$match": {"vout.addresses": {"$in": addresses}, "main_chain": True}},
             {"$project": {"vout.addresses": 1, "vout.value": 1}},
-            {"$group": {"_id": "", "volume": {"$sum":"$vout.value"}}}
+            {"$group":
+                {
+                    "_id": "$vout.addresses",
+                    "volume": {"$sum":"$vout.value"}
+                }
+            }
         ]
 
-        result = self.transactions.aggregate(pipeline)
+        result = self.transactions.aggregate(pipeline)        
         result = list(result)
+
+        addresses = set(addresses)
+        total_volume = 0
+
+        for _, address in enumerate(set(addresses)):
+            if _ >= len(result):
+                pass
+            else:
+                result[_]['address'] = result[_]['_id'][0].strip('[]')
+                del result[_]['_id']
+                mongo_address = result[_]['address']
+                
+                if mongo_address in addresses:
+                    addresses.remove(mongo_address)
+                    total_volume += (result[_]['volume'])
+
+        for address in addresses:
+            result.append({'volume': 0, 'address': address})
 
         if not result:
             return 0
 
-        return result[0]['volume']
+        return result, total_volume
 
 
     ##################
     #  TRANSACTIONS  #
     ##################
-    def get_transaction_by_txid(self, txid):
+    def get_transaction_by_txid(self, txid, rpc):
         tr = self.transactions.find_one({"txid": txid})
 
         if not tr:
             raise KeyError("Transaction with txid %s doesn't exist in the database" % txid)
 
         tr_block = self.get_block_by_hash(tr["blockhash"])
-        tr['confirmations'] = self.calculate_block_confirmations(tr_block)
+        tr['confirmations'] = self.calculate_block_confirmations(tr_block, rpc)
 
         return tr
+
+    def get_transactions_by_txids(self, txid_array, rpc):
+        trs = list(self.transactions.find({"txid": {"$in": txid_array}}))
+        
+        if not trs:
+            raise KeyError("Transactions with txids: %s doesn't exist in the database" % txid_array)
+
+        for tr in trs:
+            tr_block = self.get_block_by_hash(tr["blockhash"])
+            tr['confirmations'] = self.calculate_block_confirmations(tr_block, rpc)
+
+        return trs    
 
     def get_transactions_by_blockhash(self, blockhash):
         tr = self.transactions.find({"blockhash": blockhash})
@@ -275,7 +318,7 @@ class DatabaseGateway(object):
         return list(tr)
 
     def get_latest_transactions(self, limit, offset):
-        return list(self.transactions.find()
+        return list(self.transactions.find({"main_chain": True})
                     .sort("blocktime", pymongo.DESCENDING).skip(offset).limit(limit))
 
     def get_transaction_count(self):

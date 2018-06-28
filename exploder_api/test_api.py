@@ -227,6 +227,50 @@ class TransactionsTestCase(unittest.TestCase):
         json_data = json.loads(res.text)
         self.assertGreaterEqual(json_data["confirmations"], 0)
 
+    def test_post_transasctions_confirmations(self):
+        # First find some address hash
+        get_params = {
+            "limit": 2
+        }
+        result = requests.get(self.url + "transactions/latest", get_params)
+        self.assertEquals(result.status_code, 200)
+        self.assertTrue(result.text)
+        data = json.loads(result.text)
+
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+        post_data = {
+            'transactions': [
+                data[0]["txid"]
+            ]
+        }
+
+        result = requests.post(self.url + "transactions/confirmations", data=json.dumps(post_data), headers=headers)
+        self.assertEqual(result.status_code, 200)
+        self.assertTrue(result.text)
+    
+    def test_post_transactions_confirmations_bad_tx(self):
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+        post_data = {
+            'transactions': [
+                'somefakehash'
+            ]
+        }
+
+        result = requests.post(self.url + "transactions/confirmations", data=json.dumps(post_data), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
+
+    def test_post_transactions_confirmations_bad_post_data(self):
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+        post_data = {
+            'sometransactionidontknow': [
+                'somehash'
+            ]
+        }
+
+        result = requests.post(self.url + "transactions/confirmations", data=json.dumps(post_data), headers=headers)
+        self.assertEqual(result.status_code, 400)
+        self.assertTrue(result.text)
 
 class AddressesTestCase(unittest.TestCase):
     @classmethod
@@ -434,10 +478,9 @@ class AddressesTestCase(unittest.TestCase):
         result = requests.post(self.url + "addresses/volume", data=json.dumps(params), headers=headers)
         self.assertEqual(result.status_code, 200)
         json_load = json.loads(result.text)
-
         self.assertEqual(json_load['address'],params['addresses'])
-        self.assertTrue(isinstance(json_load['volume'], (int, float)))
-
+        self.assertTrue(isinstance(json_load['totalVolume'], (int, float)))
+        
     def test_get_address_volume_for_unused_address(self):
         # Volume for unused address should be 0
         unused = "GVukVukVukeHjpNa1kRPydyW7TzAXhW4ud"
@@ -511,23 +554,6 @@ class AddressesTestCase(unittest.TestCase):
         result = requests.post(self.url + "addresses/balance", data= json.dumps(params), headers=headers)
         self.assertEqual(result.status_code, 400)
         self.assertTrue(result.text)
-
-    def test_get_address_transaction_count(self):
-        # First find some address hash
-        params = {
-            "limit": 2
-        }
-        result = requests.get(self.url + "transactions/latest", params)
-        self.assertEquals(result.status_code, 200)
-        self.assertTrue(result.text)
-        data = json.loads(result.text)
-
-        hash = data[0]["vout"][0]["addresses"][0]
-        res = requests.get(self.url + "addresses/" + hash + "/transaction-count")
-        self.assertEquals(res.status_code, 200)
-        d = json.loads(res.text)
-        self.assertEquals(d["address"], hash)
-        self.assertTrue(isinstance(d["transactionCount"], int))
 
     def test_get_address_transaction_count(self):
         # First find some address hash

@@ -14,7 +14,7 @@ config.read(CONFIG_FILE)
 
 
 def generate_hashrate_history(now, days=30):
-    client = MongoClient()
+    client = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
     database = MongoDatabaseGateway(client.exploder, config)
     rpc_client = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"
                                   % (config.get('syncer', 'rpc_user'), config.get('syncer', 'rpc_password')))
@@ -23,7 +23,7 @@ def generate_hashrate_history(now, days=30):
     seconds_in_day = 86400
     for x in xrange(days):
         hash_rate = analizer.get_network_hash_rate(end_time=now)
-        analizer.save_network_hash_rate(hash_rate=hash_rate, time=now)
+        analizer.save_network_hash_rate(hash_rate=hash_rate, timestamp=now)
         now -= seconds_in_day
         print "hash_rate: %r, timestamp: %r" % (hash_rate, now)
 

@@ -9,10 +9,12 @@ from serializers import TransactionSerializer, BlockSerializer, HashrateSerializ
     NetworkStatsSerializer, SyncHistorySerializer, ClientInfoSerializer, PriceSerializer, \
     SearchSerializer, TransactoinCountSerializer, VolumeSerializer, \
     BalanceSerializer, UnspentTransactionSerializer, AddressSerializer, PriceHistorySerializer, \
-    PriceStatsSerializer
+    PriceStatsSerializer, VolumesSerializer, TransactionConfirmatonSerializer
 
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid
+from helpers import validate_address, validate_sha256_hash, check_if_address_post_key_is_valid, check_if_transaction_post_key_is_valid
+
+import json
 
 ######################
 #  INITIALIZE STUFF  #
@@ -25,11 +27,13 @@ rpc_user = config.get('syncer', 'rpc_user')
 rpc_password = config.get('syncer', 'rpc_password')
 rpc_port = config.getint('syncer', 'rpc_port')
 
-mongo = MongoClient()
+mongo = MongoClient('mongodb://%s:%s@127.0.0.1/exploder' %(config.get('syncer', 'mongo_user'), config.get('syncer', 'mongo_pass')))
+                    
 db = DatabaseGateway(database=mongo.exploder, config=config)
 rpc = AuthServiceProxy("http://%s:%s@127.0.0.1:%s"
                        % (rpc_user, rpc_password, rpc_port))
 
+import logging
 
 ############
 #  BLOCKS  #
@@ -72,7 +76,7 @@ def get_block_confirmations(block_hash):
 
     return {
         "hash": block_hash,
-        "confirmations": db.calculate_block_confirmations(block)
+        "confirmations": db.calculate_block_confirmations(block, rpc)
     }
 
 
@@ -83,7 +87,7 @@ def get_transaction_by_txid(txid):
     if not validate_sha256_hash(txid):
         return "Invalid transaction ID", 400
     try:
-        return TransactionSerializer.to_web(db.get_transaction_by_txid(txid))
+        return TransactionSerializer.to_web(db.get_transaction_by_txid(txid, rpc))
     except KeyError:
         return "Transaction with given ID not found", 404
 
@@ -92,16 +96,33 @@ def get_transaction_confirmations(txid):
     if not validate_sha256_hash(txid):
         return "Invalid transaction ID", 400
     try:
-        tr = db.get_transaction_by_txid(txid)
+        tr = db.get_transaction_by_txid(txid, rpc)
     except KeyError:
         return "Transaction with given txid not found", 404
 
     block = db.get_block_by_hash(tr['blockhash'])
+
     return {
         "txid": txid,
-        "confirmations": db.calculate_block_confirmations(block)
+        "confirmations": db.calculate_block_confirmations(block, rpc)
     }
 
+def post_transaction_confirmations(txids_hash):
+    if not check_if_transaction_post_key_is_valid(txids_hash):
+        return "Bad request", 400
+    
+    for txid in txids_hash['transactions']:
+        if not validate_sha256_hash(txid):
+            return "Invalid transaction ID", 400
+
+    try:
+        txids_hash_no_json = txids_hash['transactions']
+
+        tx_data = db.get_transactions_by_txids(txids_hash_no_json, rpc)
+    except KeyError:
+        return "Transactions with given txids not found", 404
+
+    return [TransactionConfirmatonSerializer.to_web(tx) for tx in tx_data]
 
 def get_latest_transactions(limit, offset):
     if not isinstance(offset, int):
@@ -213,8 +234,9 @@ def post_addresses_volume(addresses_hash):
         if not validate_address(address_hash):
             return "Invalid address hash", 400
 
-    total_volume = db.post_addresses_volume(addresses_hash_no_json)
-    return VolumeSerializer.to_web(addresses_hash_no_json, total_volume)
+    volumes, total_volume = db.post_addresses_volume(addresses_hash_no_json)
+
+    return VolumesSerializer.to_web(addresses_hash_no_json, total_volume, volumes)
 
 
 def get_address_unspent(address_hash, start=None):
@@ -246,6 +268,7 @@ def get_address_unspent(address_hash, start=None):
 
 def post_addresses_unspent(addresses_hash):
     start = None
+    value_sort = False
 
     if not check_if_address_post_key_is_valid(addresses_hash):
         return "Bad post request", 400
@@ -260,7 +283,11 @@ def post_addresses_unspent(addresses_hash):
         if not validate_address(address_hash):
             return "Invalid address hash", 400
 
-    unspent = db.post_addresses_unspent(addresses_hash_no_json, start, limit=50)
+    if 'valueSort' in addresses_hash:
+        if addresses_hash['valueSort'] == True:
+            value_sort = True
+
+    unspent = db.post_addresses_unspent(addresses_hash_no_json, start, value_sort=value_sort, limit=50)
 
     if len(unspent) == 50:
         last_unspent_transaction = unspent[len(unspent)-1]
@@ -302,10 +329,13 @@ def post_addresses_balance(addresses_hash):
 #############
 def send_raw_transaction(hex):
     try:
-        rpc.sendrawtransaction(hex)
-    except JSONRPCException as e:
-        return e.error, 400
-
+        txid = rpc.sendrawtransaction(hex)
+    except Exception as e:
+        return {"error": str(e)}, 400
+                
+    return {
+            'txid': txid
+        }
 
 def get_latest_hashrates(limit):
     hash_rates = db.get_latest_hashrates(limit)

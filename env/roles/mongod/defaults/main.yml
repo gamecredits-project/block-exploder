@@ -1,0 +1,4 @@
+# To allow more ips in the mongo database, follow the next pattern:
+# No space between ip's
+# ip,ip,ip,ip,ip
+allowed_ip: 192.168.0.1

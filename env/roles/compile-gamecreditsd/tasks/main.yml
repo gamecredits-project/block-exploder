@@ -20,14 +20,14 @@
     - automake
     - pkg-config
     - unzip
+    - libevent-dev    
     - libtool
   become: True
 
 - name: Clone the GameCredits repository
   git: >
     dest=~/gamecredits 
-    repo=https://github.com/gamecredits-project/GameCredits 
-    version="ubuntu16.04"
+    repo=https://github.com/gamecredits-project/GameCredits
 
 - name: Run autogen
   command: ./autogen.sh
@@ -36,7 +36,7 @@
 
 # Ubuntu 16.04 flags, without these the compilation fails
 - name: Run configure
-  command: "./configure CXXFLAGS=\" -DBOOST_VARIANT_USE_RELAXED_GET_BY_DEFAULT=1 -fPIC\" --with-incompatible-bdb"
+  command: "./configure --with-incompatible-bdb"
   args:
     chdir: ~/gamecredits
 

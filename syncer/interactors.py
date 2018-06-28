@@ -1,12 +1,19 @@
 import os
-from gamecredits.helpers import has_length, is_block_file
+import sys
+import struct
 import datetime
+import mmap
 import time
+import stat
+import plyvel
 import itertools
 import logging
 import requests
 import json
 from decimal import *
+
+from helpers import copytree
+from gamecredits.helpers import has_length, is_block_file
 from gamecredits.factories import BlockFactory
 from gamecredits.constants import SUBSIDY_HALVING_INTERVAL
 from bitcoinrpc.authproxy import JSONRPCException
@@ -97,9 +104,9 @@ class Blockchain(object):
         # Current block appends to the main chain
         if block.previousblockhash == highest_block.hash:
             added_block = self._append_to_main_chain(block)
-
             if self.unspent_tracking:
                 self.update_unspent(added_block.tx)
+                self.update_transaction_chain(block.tx, True)
 
             return {
                 "block": added_block,
@@ -114,6 +121,8 @@ class Blockchain(object):
                 block = self._create_fork_of_main_chain(block, fork_point)
             else:
                 block = self._grow_sidechain(block, fork_point)
+
+            self.update_transaction_chain(block.tx, False)
 
             if self.unspent_tracking:
                 self.update_unspent(block.tx)
@@ -138,34 +147,42 @@ class Blockchain(object):
             for vin in tr.vin:
                 self.db.mark_output_spent(vin.prev_txid, vin.vout_index)
 
+    def update_transaction_chain(self, transactions, is_main):
+        [self.db.mark_transaction_side_chain(tr.txid, is_main) for tr in transactions]
+
     def reconverge(self, new_top_block):
+        '''
+        Sidechain is now mainchain
+        '''
         logging.info("[RECONVERGE] New top block is now %s" % new_top_block)
         sidechain_blocks = sorted(self.db.get_blocks_by_chain(chain=new_top_block.chain), key=lambda b: b.height)
-
+        
         sidechain_blocks.append(new_top_block)
-
+        
         first_in_sidechain = sidechain_blocks[0]
         fork_point = self.db.get_block_by_hash(first_in_sidechain.previousblockhash)
         main_chain_blocks = self.db.get_blocks_higher_than(height=fork_point.height)
-
+                
         new_sidechain_id = self._get_unique_chain_identifier()
         for block in main_chain_blocks:
             self.db.update_block(block.hash, {"chain": new_sidechain_id})
 
         for block in sidechain_blocks:
             self.db.update_block(block.hash, {"chain": self.config.get('syncer', 'main_chain')})
+            # After updating blocks, also update transactions for those blocks
+            self.update_transaction_chain(block.tx, True)
+
         self.db.update_block(fork_point.hash, {"nextblockhash": first_in_sidechain.hash})
 
         new_top_block.chain = self.config.get('syncer', 'main_chain')
         self.db.set_highest_block(new_top_block)
-        return new_top_block
-
+        return new_top_block        
 
 class BlockchainSyncer(object):
     """
     Supports syncing from block dat files and using RPC.
     """
-    def __init__(self, database, blockchain, rpc_client, config):
+    def __init__(self, database, blockchain, rpc_client, config, block_indexes):
         self.config = config
 
         logging.basicConfig(
@@ -177,6 +194,9 @@ class BlockchainSyncer(object):
 
         # Reference to the Blockchain interactor
         self.blockchain = blockchain
+
+        # Instance of BlockIndexes (LevelDB block indexes interactor)
+        self.block_indexes = block_indexes
 
         # Find all of the block dat files inside the given block directory
         if os.path.isdir(config.get('syncer', 'blocks_dir')):
@@ -197,7 +217,7 @@ class BlockchainSyncer(object):
 
     def _get_network_height(self):
         avg = lambda arr: sum(arr)/len(arr)
-        return int(avg([p['startingheight'] for p in self.rpc.getpeerinfo()]))
+        return int(avg([p['startingheight'] for p in self.rpc.getpeerinfo() if p['version'] >= 80007]))
 
     def _update_sync_progress(self):
         network_height = self._get_network_height()
@@ -233,8 +253,9 @@ class BlockchainSyncer(object):
         end_block = self.db.get_highest_block()
         end_time = time.time()
         # Check if there were any new blocks
-        if end_block.height > start_block.height:
-            self.db.put_sync_history(start_time, end_time, start_block.height, end_block.height)
+        if end_block and start_block:
+            if end_block.height > start_block.height:
+                self.db.put_sync_history(start_time, end_time, start_block.height, end_block.height)
 
     def sync_stream(self, sync_limit):
         start_time = datetime.datetime.now()
@@ -246,44 +267,51 @@ class BlockchainSyncer(object):
             blocks_in_db = highest_known.height
 
         network_height = self._get_network_height()
-        limit_calc = int((network_height - blocks_in_db) * self.stream_sync_limit / 100)
+
+        limit_calc = int(network_height * self.stream_sync_limit / 100)
+        
+        # This is stupid solution for the stuck sync bug at 98.xxxx %
+        little_over = int(network_height / 1000)
         if sync_limit:
             limit = min([sync_limit, limit_calc])
         else:
-            limit = limit_calc
+            limit = limit_calc + little_over
 
         # Continue parsing where we left off
         if highest_known:
             self.blk_files = self.blk_files[highest_known.dat['index']:]
 
         parsed = 0
-        for (i, f) in enumerate(self.blk_files):
-            stream = open(f, 'r')
+        block_indexes = self.block_indexes.get_block_indexes_cache()
+        blk_dir = self.config.get('syncer', 'blocks_dir')
 
-            # Seek to the end of the last parsed block in the first iteration
-            if i == 0 and highest_known:
-                stream.seek(highest_known.dat['end'])
+        for blk_index in block_indexes[blocks_in_db:limit]:
+            if blk_index.data_pos == -1 or blk_index.file_no == -1:
+                logging.error("[SYNC_STREAM] bad index files switching to rpc..")
+                self.sync_rpc()
+                break
 
-            while has_length(stream, 80) and parsed < limit:
-                # parse block from stream
-                try:
-                    block = BlockFactory.from_stream(stream)
-                    self.blockchain.insert_block(block)
-                    parsed += 1
+            try:
+                # logging.error(blk_index)
+                blk_file = os.path.join(blk_dir, "blk%05d.dat" % blk_index.file_no)
+                stream = open(blk_file, 'r')
+                stream.seek(blk_index.data_pos-8)
+                block = BlockFactory.from_stream(stream)
+                self.blockchain.insert_block(block)
+                parsed += 1
+                if block.height % 1000 == 0:
+                    self._print_progress()
 
-                    if block.height % 1000 == 0:
-                        self._print_progress()
-                except ValueError:
-                    logging.info("Incomplete block in .dat file, wait a little bit.")
-                    stream.close()
-                    break
+            except ValueError:
+                logging.info("Incomplete block in .dat file, wait a little bit.")
+                stream.close()
 
         self.db.flush_cache()
 
         end_time = datetime.datetime.now()
         diff_time = end_time - start_time
         logging.info("[SYNC_STREAM_COMPLETE] %s, duration: %s seconds" % (end_time, diff_time.total_seconds()))
-        return parsed
+        return parsed 
 
     def sync_rpc(self):
         start_time = datetime.datetime.now()
@@ -436,7 +464,6 @@ class BlockchainAnalyzer(object):
     def save_game_price(self, price):
         if price:
             self.db.update_game_price(price)
-
 
 
 class CoinmarketcapAnalyzer(object):

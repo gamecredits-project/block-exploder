@@ -18,6 +18,14 @@
   copy: src=files/mongod-supervisor.conf dest=/etc/supervisor/conf.d/mongod-supervisor.conf
   become: True
 
+- name: Update supervisorctl
+  command: "supervisorctl update"
+  become: True
+
+- name: Copy the mongod conf file
+  copy: src=files/mongod.conf dest=/etc/mongod.conf
+  become: True
+
 - name: Start the mongod supervisor process
   supervisorctl: name=mongod state=present
   become: True
